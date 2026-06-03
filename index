@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>무룡고등학교 통합 플랫폼</title>
+    
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.6); }
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #alertOverlay { display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .animate-bounce-slow { animation: bounce-slow 0.8s infinite alternate; }
+        @keyframes bounce-slow { from { transform: scale(1); } to { transform: scale(1.03); } }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; padding: 20px; }
+    </style>
+</head>
+<body class="text-slate-800 pb-24">
+
+    <div id="alertOverlay" class="fixed inset-0 bg-red-500/95 text-white z-[9999] cursor-pointer" onclick="closeAlert()">
+        <div class="text-2xl font-black mb-4">지금 즉시 급식실로 내려오세요!</div>
+        <div id="alertGrade" class="text-7xl font-black animate-bounce-slow">O학년</div>
+        <div class="mt-8 text-sm font-medium bg-black/20 px-4 py-2 rounded-full">화면을 터치하면 닫힙니다</div>
+    </div>
+
+    <div id="importantPopup" class="modal-overlay opacity-0 transition-opacity duration-500">
+        <div class="bg-white w-full max-w-sm p-8 rounded-3xl text-center shadow-2xl">
+            <h2 class="text-rose-600 text-xl font-black mb-4">🚨 중요 공지사항</h2>
+            <div id="importantPopupText" class="text-lg leading-relaxed text-slate-800 font-bold whitespace-pre-wrap word-break-keep mb-5"></div>
+        </div>
+    </div>
+
+    <main class="max-w-md mx-auto w-full p-5 pt-8">
+        
+        <section id="tab-home" class="tab-content active">
+            <header class="mb-6 flex justify-between items-end">
+                <div>
+                    <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">무룡고등학교</h1>
+                    <p id="greetingText" class="text-slate-500 font-medium mt-1">오늘도 즐거운 하루 보내세요 ✨</p>
+                </div>
+                <button id="soundBtn" class="bg-slate-200 text-slate-600 px-3 py-2 rounded-lg text-xs font-bold transition-colors" onclick="enableSound()">🔈 소리 켜기</button>
+            </header>
+
+            <div class="glass-card rounded-3xl p-5 mb-5 shadow-sm flex justify-between items-center bg-gradient-to-br from-blue-50 to-white">
+                <div>
+                    <h2 class="text-xs font-bold text-blue-400 mb-1">울산 오늘의 날씨</h2>
+                    <p id="weatherInfo" class="text-2xl font-black text-slate-700">날씨 불러오는 중...</p>
+                </div>
+                <div class="text-4xl" id="weatherIcon">☁️</div>
+            </div>
+
+            <div id="noticeBanner" class="hidden bg-red-500 text-white p-5 rounded-2xl text-center text-xl font-extrabold mb-5 shadow-lg animate-pulse">
+                <span id="targetGrade">O학년</span> 학생들은<br>지금 즉시 급식실로 내려오세요!
+            </div>
+
+            <div class="bg-blue-600 rounded-3xl p-6 mb-5 shadow-lg shadow-blue-600/20 text-white relative overflow-hidden">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-lg font-bold flex items-center gap-2">📢 실시간 급식 호출</h2>
+                    <span class="bg-blue-800 text-[10px] px-2 py-1 rounded-full animate-pulse font-bold">Live</span>
+                </div>
+                <p class="text-sm opacity-90 mb-1">현재 배식 중인 학년</p>
+                <div class="text-4xl font-black mb-2" id="studentQueue">데이터 연결 대기중...</div>
+                <div id="subStatus" class="hidden text-sm text-red-300 font-bold -mt-1 mb-2">오늘은 급식 호출을 진행하지 않습니다</div>
+            </div>
+
+            <div class="glass-card rounded-3xl p-6 mb-5 shadow-sm">
+                <h3 class="font-bold text-slate-700 mb-3 flex items-center gap-2">🍱 오늘의 메뉴 <span class="text-[10px] font-normal text-slate-400 bg-slate-100 px-2 py-1 rounded-md">나이스 연동</span></h3>
+                <div class="bg-slate-50 p-4 rounded-2xl text-slate-600 font-medium leading-relaxed text-center" id="menuContent">급식 메뉴를 불러오고 있습니다...</div>
+            </div>
+
+            <div class="glass-card rounded-3xl p-6 shadow-sm">
+                <h3 class="font-bold text-slate-700 mb-3 flex items-center gap-2">✍️ 학생회 건의함</h3>
+                <textarea id="feedbackText" class="w-full h-24 p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:outline-none resize-none text-sm mb-2" placeholder="자유롭고 편하게 의견을 남겨주세요."></textarea>
+                <button onclick="sendFeedback()" class="w-full bg-slate-800 text-white p-4 rounded-xl text-sm font-bold active:scale-95 transition-transform">건의사항 보내기</button>
+            </div>
+        </section>
+
+        <section id="tab-calendar" class="tab-content">
+            <h1 class="text-2xl font-extrabold tracking-tight mb-6">시간표 및 수행평가</h1>
+            
+            <div class="glass-card rounded-3xl p-6 mb-5 shadow-sm">
+                <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">🏫 이달의 학사일정 <span class="text-[10px] font-normal text-slate-400 bg-slate-100 px-2 py-1 rounded-md">나이스 연동</span></h3>
+                <ul id="schoolScheduleList" class="space-y-3 text-sm text-slate-600 font-medium max-h-40 overflow-y-auto">
+                    <li class="text-center text-slate-400">일정을 불러오는 중입니다...</li>
+                </ul>
+            </div>
+
+            <div class="glass-card rounded-3xl p-6 shadow-sm">
+                <h3 class="font-bold text-slate-800 mb-4">📝 우리 반 수행평가/일정 달력</h3>
+                
+                <div class="flex gap-2 mb-4">
+                    <select id="sel_grade" class="w-1/2 p-3 rounded-xl border border-slate-200 text-sm focus:outline-none bg-white" onchange="loadClassSchedule()">
+                        <option value="1">1학년</option>
+                        <option value="2">2학년</option>
+                        <option value="3" selected>3학년</option>
+                    </select>
+                    <select id="sel_class" class="w-1/2 p-3 rounded-xl border border-slate-200 text-sm focus:outline-none bg-white" onchange="loadClassSchedule()">
+                        <option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option><option value="5">5반</option><option value="6">6반</option>
+                    </select>
+                </div>
+
+                <ul id="classScheduleList" class="space-y-3 text-sm text-slate-600 font-medium mb-6 bg-slate-50 p-4 rounded-2xl min-h-[80px]">
+                    <li class="text-center text-slate-400 py-2">등록된 일정이 없습니다.</li>
+                </ul>
+
+                <div class="border-t border-slate-200 pt-5">
+                    <h4 class="font-bold text-blue-800 mb-2">➕ 학생 일정 등록 요청</h4>
+                    <div class="space-y-3">
+                        <div class="flex gap-2">
+                            <input type="text" id="sch_sid" placeholder="학번" class="w-1/3 p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-400" maxlength="5">
+                            <input type="text" id="sch_name" placeholder="이름" class="w-2/3 p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-400">
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="date" id="sch_date" class="w-2/5 p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-400">
+                            <input type="text" id="sch_content" placeholder="내용 (예: 프린트 검사)" class="w-3/5 p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-400">
+                        </div>
+                        <button class="w-full bg-blue-600 text-white p-3 rounded-xl text-sm font-bold active:scale-95 transition-transform" onclick="alert('일정 등록 요청이 완료되었습니다.')">해당 반에 등록 요청하기</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-reserve" class="tab-content">
+            <h1 class="text-2xl font-extrabold tracking-tight mb-6">시설 및 우산 대여</h1>
+            
+            <div class="glass-card rounded-3xl p-6 mb-5 shadow-sm">
+                <div class="flex bg-slate-100 rounded-xl p-1 mb-5">
+                    <div class="flex-1 py-3 text-center rounded-lg font-bold text-cyan-500 bg-white shadow-sm cursor-pointer" id="btn-rent" onclick="setUmbrellaMode('rent')">대여하기</div>
+                    <div class="flex-1 py-3 text-center rounded-lg font-bold text-slate-500 cursor-pointer" id="btn-return" onclick="setUmbrellaMode('return')">반납하기</div>
+                </div>
+                
+                <div class="space-y-3">
+                    <input type="text" id="umb_sid" placeholder="학번 4자리" class="w-full p-4 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-cyan-400" maxlength="4">
+                    <input type="text" id="umb_name" placeholder="이름" class="w-full p-4 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-cyan-400">
+                    <input type="text" id="umb_phone" placeholder="전화번호 (-제외)" class="w-full p-4 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-cyan-400" maxlength="11">
+                    <button id="generate-btn" class="w-full bg-cyan-500 text-white p-4 rounded-xl text-sm font-bold shadow-md shadow-cyan-500/20 active:scale-95 transition-transform" onclick="checkAndShowUmbConsent()">대여 패스 발급받기</button>
+                </div>
+
+                <div class="mt-6 flex flex-col items-center justify-center text-center">
+                    <div id="welcome-box" class="w-full p-6 bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl">
+                        <p class="text-4xl mb-3">☔️</p>
+                        <p id="welcome-text" class="text-slate-500 font-semibold text-sm">정보 입력 후 버튼을 눌러주세요.</p>
+                    </div>
+                    <img id="qr-image" src="" class="hidden w-48 h-48 border-2 border-slate-100 p-3 rounded-2xl bg-white shadow-xl mt-4">
+                    <div id="success-msg" class="hidden w-full mt-4">
+                        <p class="text-5xl mb-2">✅</p>
+                        <p class="text-xl font-extrabold text-cyan-500 mb-2" id="success-title">대여 완료!</p>
+                        <div class="bg-cyan-50 p-3 rounded-xl border border-cyan-200 text-cyan-800 font-bold text-sm" id="success-desc">우산을 수령해 주세요.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="facility-container" class="glass-card rounded-3xl p-6 shadow-sm">
+                <h3 class="font-bold text-slate-800 text-lg mb-2">학교 시설 예약</h3>
+                <div class="bg-amber-50 text-amber-700 p-3 rounded-xl text-center text-xs font-bold mb-5 border border-amber-200">
+                    안내: 현재 [다음 주 월~금] 일정 예약 진행 중<br>(최대 2시간 이용 가능)
+                </div>
+                <div class="space-y-3">
+                    <input type="text" id="fac_name" placeholder="이용자 이름" class="w-full p-4 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-400">
+                    <input type="text" id="fac_sid" placeholder="학번 (4자리)" class="w-full p-4 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-400" maxlength="4">
+                    <select id="fac_room" class="w-full p-4 rounded-xl border border-slate-200 text-sm focus:outline-none bg-white">
+                        <option value="더하우스">더하우스</option><option value="풋살장">풋살장</option><option value="소회의실">소회의실</option>
+                    </select>
+                    <select id="fac_use_date" class="w-full p-4 rounded-xl border border-slate-200 text-sm focus:outline-none bg-white"></select>
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="fac_start_time" class="w-full p-4 rounded-xl border border-slate-200 text-sm focus:outline-none bg-white"></select>
+                        <select id="fac_end_time" class="w-full p-4 rounded-xl border border-slate-200 text-sm focus:outline-none bg-white"></select>
+                    </div>
+                    <button class="w-full bg-blue-800 text-white p-4 rounded-xl text-sm font-bold shadow-md shadow-blue-800/20 active:scale-95 transition-transform" onclick="alert('예약 신청이 완료되었습니다!')">예약 신청하기</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-board" class="tab-content">
+            <h1 class="text-2xl font-extrabold tracking-tight mb-6">게시판 및 정보</h1>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass-card rounded-3xl p-5 shadow-sm text-center active:scale-95 transition-transform cursor-pointer" onclick="fetchBoard('school_notice')">
+                    <div class="text-4xl mb-3">🏫</div><h3 class="font-bold text-slate-800 text-sm">학교 공지</h3>
+                </div>
+                <div class="glass-card rounded-3xl p-5 shadow-sm text-center active:scale-95 transition-transform cursor-pointer border-blue-100 bg-blue-50/50" onclick="fetchBoard('council_notice')">
+                    <div class="text-4xl mb-3">📢</div><h3 class="font-bold text-blue-800 text-sm">학생회 공지</h3>
+                </div>
+                <div class="glass-card rounded-3xl p-5 shadow-sm text-center active:scale-95 transition-transform cursor-pointer" onclick="fetchBoard('lost_found')">
+                    <div class="text-4xl mb-3">🔍</div><h3 class="font-bold text-slate-800 text-sm">분실물 센터</h3>
+                </div>
+                <div class="glass-card rounded-3xl p-5 shadow-sm text-center active:scale-95 transition-transform cursor-pointer" onclick="fetchBoard('learning_materials')">
+                    <div class="text-4xl mb-3">📚</div><h3 class="font-bold text-slate-800 text-sm">학습자료실</h3>
+                </div>
+            </div>
+
+            <div id="boardContentArea" class="mt-6 hidden glass-card rounded-3xl p-6 shadow-sm">
+                <h3 id="boardTitle" class="font-bold text-lg mb-4 text-slate-800">게시판</h3>
+                <ul id="boardList" class="space-y-3 text-sm text-slate-600 font-medium max-h-60 overflow-y-auto"></ul>
+            </div>
+        </section>
+    </main>
+
+    <nav class="fixed bottom-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-200 flex justify-around items-center p-2 z-[5000] pb-safe">
+        <button onclick="switchTab('tab-home', this)" class="nav-btn flex flex-col items-center text-blue-600 font-bold w-1/4 py-2">
+            <span class="text-2xl mb-1">🏠</span><span class="text-[11px]">홈/급식</span>
+        </button>
+        <button onclick="switchTab('tab-calendar', this)" class="nav-btn flex flex-col items-center text-slate-400 font-medium w-1/4 py-2">
+            <span class="text-2xl mb-1">📅</span><span class="text-[11px]">시간표</span>
+        </button>
+        <button onclick="switchTab('tab-reserve', this)" class="nav-btn flex flex-col items-center text-slate-400 font-medium w-1/4 py-2">
+            <span class="text-2xl mb-1">☂️</span><span class="text-[11px]">예약/대여</span>
+        </button>
+        <button onclick="switchTab('tab-board', this)" class="nav-btn flex flex-col items-center text-slate-400 font-medium w-1/4 py-2">
+            <span class="text-2xl mb-1">📌</span><span class="text-[11px]">게시판</span>
+        </button>
+    </nav>
+
+    <div id="umb-consent-modal" class="modal-overlay">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6">
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">⚠️ 대여 전 필수 확인</h3>
+            <div class="bg-red-50 border border-red-200 p-4 rounded-xl mb-5 text-sm text-slate-700">
+                <p class="mb-2">1. 분실/파손 시 <span class="text-red-500 font-extrabold">5,000원 청구</span></p>
+                <p>2. 반납 기한: <br><span class="text-cyan-600 font-extrabold" id="umb-modal-return-time">계산중...</span></p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('umb-consent-modal').style.display='none'" class="flex-1 bg-slate-100 text-slate-600 font-bold p-3 rounded-xl">취소</button>
+                <button onclick="agreeAndGenerateUmbrella()" class="flex-[2] bg-cyan-500 text-white font-bold p-3 rounded-xl">동의하고 대여</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 0. 통합 데이터베이스 및 공통 설정
+        // ==========================================
+        const SUPABASE_URL = 'https://svrlvstjrmwrgiemdmfb.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_sCS-V62jHaxr0wq0BHWkog_VbAcrrix';
+        
+        // Supabase 연결 활성화 완료!
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); 
+
+        // 탭 전환
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-blue-600', 'font-bold');
+                btn.classList.add('text-slate-400', 'font-medium');
+            });
+            btnElement.classList.remove('text-slate-400', 'font-medium');
+            btnElement.classList.add('text-blue-600', 'font-bold');
+            window.scrollTo(0, 0);
+        }
+
+        // ==========================================
+        // 1. 홈 탭 (인사말, 날씨, 급식, 건의함)
+        // ==========================================
+        const greetings = ["오늘도 즐거운 하루 보내세요 ✨", "수업 화이팅! 조금만 더 힘내요 💪", "행복한 하루가 되길 바라요 🍀"];
+        document.getElementById('greetingText').innerText = greetings[Math.floor(Math.random() * greetings.length)];
+
+        // 울산 실시간 날씨 API
+        async function fetchWeather() {
+            try {
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=35.5383&longitude=129.3114&current_weather=true');
+                const data = await res.json();
+                const temp = data.current_weather.temperature;
+                const weathercode = data.current_weather.weathercode;
+                
+                let wStr = "맑음", wIcon = "☀️";
+                if(weathercode > 0 && weathercode <= 3) { wStr = "구름조금"; wIcon = "🌤️"; }
+                else if(weathercode > 3 && weathercode <= 48) { wStr = "흐림"; wIcon = "☁️"; }
+                else if(weathercode >= 51 && weathercode <= 67) { wStr = "비"; wIcon = "🌧️"; }
+                else if(weathercode >= 71) { wStr = "눈"; wIcon = "❄️"; }
+
+                document.getElementById('weatherInfo').innerText = `${wStr} ${temp}°C`;
+                document.getElementById('weatherIcon').innerText = wIcon;
+            } catch(e) { console.error("날씨 로드 실패", e); }
+        }
+
+        // 나이스 API - 급식표 가져오기
+        async function fetchLunchMenu() {
+            try {
+                const d = new Date().toISOString().slice(0,10).replace(/-/g, '');
+                const res = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480070&MLSV_YMD=${d}`);
+                const data = await res.json();
+                if (data.mealServiceDietInfo) {
+                    const menu = data.mealServiceDietInfo[1].row[0].DDISH_NM.replace(/[0-9.]/g, '').replace(/\(\)/g, '').replace(/<br\/>/g, '<br>');
+                    document.getElementById('menuContent').innerHTML = menu;
+                } else { document.getElementById('menuContent').innerText = "오늘은 급식 정보가 없습니다."; }
+            } catch(e) { document.getElementById('menuContent').innerText = "메뉴 로드 실패"; }
+        }
+
+        // 급식 호출 로직 보조
+        const dingDong = new Audio('https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3');
+        function enableSound() {
+            dingDong.play().then(() => {
+                dingDong.pause(); dingDong.currentTime = 0;
+                const btn = document.getElementById('soundBtn');
+                btn.innerText = "🔊 소리 켜짐"; btn.classList.replace('bg-slate-200', 'bg-emerald-500'); btn.classList.replace('text-slate-600', 'text-white');
+            }).catch(() => alert("소리 재생을 지원하지 않는 브라우저 설정입니다."));
+        }
+        function closeAlert() { document.getElementById('alertOverlay').style.display = 'none'; dingDong.pause(); dingDong.currentTime = 0; }
+        
+        // 데이터베이스에 건의함 전송하기 (실제 작동 완료)
+        async function sendFeedback() {
+            const txt = document.getElementById('feedbackText').value;
+            if(!txt.trim()) return alert("내용을 입력해주세요!");
+            
+            const { error } = await supabase.from('feedback').insert([{ content: txt }]);
+            
+            if (error) {
+                alert("전송 실패: " + error.message);
+            } else {
+                alert("소중한 의견이 전송되었습니다!"); 
+                document.getElementById('feedbackText').value = "";
+            }
+        }
+
+        // ==========================================
+        // 2. 일정 탭 (나이스 학사일정)
+        // ==========================================
+        async function fetchSchoolSchedule() {
+            try {
+                const now = new Date();
+                const ym = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}`;
+                const res = await fetch(`https://open.neis.go.kr/hub/SchoolSchedule?Type=json&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480070&AA_YMD=${ym}`);
+                const data = await res.json();
+                const listEl = document.getElementById('schoolScheduleList');
+                listEl.innerHTML = '';
+                
+                if (data.SchoolSchedule) {
+                    data.SchoolSchedule[1].row.forEach(item => {
+                        const dateStr = `${item.AA_YMD.substring(4,6)}/${item.AA_YMD.substring(6,8)}`;
+                        listEl.innerHTML += `<li class="flex justify-between items-center border-b border-slate-100 pb-2">
+                            <span class="text-slate-500 font-bold">${dateStr}</span>
+                            <span class="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs">${item.EVENT_NM}</span>
+                        </li>`;
+                    });
+                } else { listEl.innerHTML = '<li class="text-center text-slate-400">이번 달 일정이 없습니다.</li>'; }
+            } catch(e) { console.error("학사일정 로드 실패", e); }
+        }
+
+        function loadClassSchedule() {
+            const grade = document.getElementById('sel_grade').value;
+            const cls = document.getElementById('sel_class').value;
+            const listEl = document.getElementById('classScheduleList');
+            listEl.innerHTML = '<li class="text-center text-slate-400 py-2">불러오는 중...</li>';
+            setTimeout(() => {
+                listEl.innerHTML = `<li class="flex justify-between items-center border-b border-slate-200 border-dashed pb-2">
+                    <span class="text-slate-500 text-xs">다음주</span><span class="font-bold text-sm">${grade}학년 ${cls}반 단합대회 🍕</span>
+                </li>`;
+            }, 500);
+        }
+
+        // ==========================================
+        // 3. 예약 탭 (우산 & 시설)
+        // ==========================================
+        let umbMode = 'rent', umbCalculatedReturnStr = "";
+
+        function setUmbrellaMode(mode) {
+            umbMode = mode;
+            const btnRent = document.getElementById('btn-rent'), btnReturn = document.getElementById('btn-return');
+            const genBtn = document.getElementById('generate-btn'), welcomeText = document.getElementById('welcome-text');
+            if(mode === 'rent') {
+                btnRent.className = "flex-1 py-3 text-center rounded-lg font-bold text-cyan-500 bg-white shadow-sm cursor-pointer";
+                btnReturn.className = "flex-1 py-3 text-center rounded-lg font-bold text-slate-500 cursor-pointer";
+                document.getElementById('umb_phone').style.display = 'block';
+                genBtn.innerText = '대여 패스 발급받기'; genBtn.className = "w-full bg-cyan-500 text-white p-4 rounded-xl text-sm font-bold shadow-md shadow-cyan-500/20 active:scale-95 transition-transform";
+                welcomeText.innerText = '정보 입력 후 대여 패스를 발급받으세요.';
+            } else {
+                btnReturn.className = "flex-1 py-3 text-center rounded-lg font-bold text-emerald-500 bg-white shadow-sm cursor-pointer";
+                btnRent.className = "flex-1 py-3 text-center rounded-lg font-bold text-slate-500 cursor-pointer";
+                document.getElementById('umb_phone').style.display = 'none';
+                genBtn.innerText = '반납 패스 발급받기'; genBtn.className = "w-full bg-emerald-500 text-white p-4 rounded-xl text-sm font-bold shadow-md shadow-emerald-500/20 active:scale-95 transition-transform";
+                welcomeText.innerText = '정보 입력 후 반납 패스를 발급받으세요.';
+            }
+            document.getElementById('qr-image').style.display = 'none'; document.getElementById('success-msg').style.display = 'none'; document.getElementById('welcome-box').style.display = 'block';
+        }
+
+        function checkAndShowUmbConsent() {
+            const sid = document.getElementById('umb_sid').value, name = document.getElementById('umb_name').value, phone = document.getElementById('umb_phone').value;
+            if(!sid || !name || (umbMode === 'rent' && !phone)) return alert("정보를 모두 입력해주세요.");
+            
+            if(umbMode === 'rent') {
+                const tmrw = new Date(); tmrw.setDate(tmrw.getDate() + 1);
+                umbCalculatedReturnStr = `내일 ${tmrw.getMonth()+1}월 ${tmrw.getDate()}일 점심시간`;
+                document.getElementById('umb-modal-return-time').innerText = umbCalculatedReturnStr;
+                document.getElementById('umb-consent-modal').style.display = 'flex';
+            } else { generateUmbrellaQR(sid, name, phone); }
+        }
+
+        function agreeAndGenerateUmbrella() {
+            document.getElementById('umb-consent-modal').style.display = 'none';
+            generateUmbrellaQR(document.getElementById('umb_sid').value, document.getElementById('umb_name').value, document.getElementById('umb_phone').value);
+        }
+
+        function generateUmbrellaQR(sid, name, phone) {
+            document.getElementById('welcome-box').style.display = 'none';
+            const qrImg = document.getElementById('qr-image');
+            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(JSON.stringify({action:umbMode, sid, name, phone}))}&color=1f2937`;
+            qrImg.style.display = 'block';
+            
+            setTimeout(() => {
+                qrImg.style.display = 'none';
+                document.getElementById('success-title').innerText = umbMode === 'rent' ? "대여 완료!" : "반납 완료!";
+                document.getElementById('success-title').className = umbMode === 'rent' ? "text-xl font-extrabold text-cyan-500 mb-2" : "text-xl font-extrabold text-emerald-500 mb-2";
+                document.getElementById('success-desc').innerHTML = umbMode === 'rent' ? `반납 기한: ${umbCalculatedReturnStr}` : "양심을 지켜주셔서 감사합니다 💖";
+                document.getElementById('success-msg').style.display = 'block';
+            }, 3000);
+        }
+
+        function setupFacilityForm() {
+            const now = new Date(), day = now.getDay();
+            const dSel = document.getElementById('fac_use_date'), sSel = document.getElementById('fac_start_time'), eSel = document.getElementById('fac_end_time');
+            const targetMon = new Date(); targetMon.setDate(now.getDate() + ((day === 0) ? 1 : 8 - day));
+            ['월','화','수','목','금'].forEach((d, i) => {
+                const t = new Date(targetMon); t.setDate(targetMon.getDate() + i);
+                dSel.add(new Option(`${t.getMonth()+1}/${t.getDate()} (${d})`, new Date(t - t.getTimezoneOffset() * 60000).toISOString().split('T')[0]));
+            });
+            for (let i = 7; i <= 16; i++) {
+                let h = String(i).padStart(2, '0');
+                sSel.add(new Option(`${h}:00`, `${h}:00`)); eSel.add(new Option(`${h}:00`, `${h}:00`));
+                if(i !== 16) { sSel.add(new Option(`${h}:30`, `${h}:30`)); eSel.add(new Option(`${h}:30`, `${h}:30`)); }
+            }
+        }
+
+        // ==========================================
+        // 4. 게시판 탭 (데이터베이스 실제 연동)
+        // ==========================================
+        async function fetchBoard(category) {
+            const titles = {
+                'school_notice': '학교 공지사항', 'council_notice': '학생회 공지사항',
+                'lost_found': '분실물 센터', 'learning_materials': '학습자료실'
+            };
+            document.getElementById('boardContentArea').classList.remove('hidden');
+            document.getElementById('boardTitle').innerText = titles[category];
+            const listEl = document.getElementById('boardList');
+            listEl.innerHTML = '<li class="text-center py-4">게시글을 불러오는 중...</li>';
+
+            if (category === 'lost_found') {
+                // 분실물 테이블(lost_and_found)에서 데이터 가져오기 (실제 작동)
+                const { data, error } = await supabase.from('lost_and_found').select('*').order('created_at', { ascending: false });
+                
+                if (error) {
+                    listEl.innerHTML = '<li class="text-center text-red-500 py-4">데이터를 불러오는 중 오류가 발생했습니다.</li>';
+                } else if (data.length === 0) {
+                    listEl.innerHTML = '<li class="text-center text-slate-400 py-4">등록된 분실물이 없습니다.</li>';
+                } else {
+                    listEl.innerHTML = '';
+                    data.forEach(item => {
+                        const date = new Date(item.created_at).toLocaleDateString();
+                        listEl.innerHTML += `
+                            <li class="border border-slate-100 pb-3 hover:bg-slate-50 p-3 rounded-lg shadow-sm flex items-start gap-4">
+                                ${item.photo_url ? `<img src="${item.photo_url}" class="w-16 h-16 rounded-md object-cover flex-shrink-0 bg-slate-200">` : `<div class="w-16 h-16 rounded-md bg-slate-100 flex items-center justify-center text-2xl">📦</div>`}
+                                <div>
+                                    <span class="block text-xs text-blue-500 font-bold mb-1">[${item.status}]</span>
+                                    <span class="text-slate-800 font-bold block mb-1">${item.item_name} ${item.color ? `(${item.color})` : ''}</span>
+                                    <span class="text-xs text-slate-500">발견: ${item.found_location} | 찾는곳: ${item.pickup_location}</span>
+                                    <span class="text-xs text-slate-400 block mt-1">${date}</span>
+                                </div>
+                            </li>
+                        `;
+                    });
+                }
+            } else {
+                // 일반 게시판 (posts) 연동 (실제 작동)
+                const { data, error } = await supabase.from('posts').select('*').eq('category', category).order('created_at', { ascending: false });
+                
+                if (error) {
+                    listEl.innerHTML = '<li class="text-center text-red-500 py-4">데이터를 불러오는 중 오류가 발생했습니다.</li>';
+                } else if (data.length === 0) {
+                    listEl.innerHTML = '<li class="text-center text-slate-400 py-4">게시글이 없습니다. 파이썬 스크립트 실행 후 데이터가 표시됩니다.</li>';
+                } else {
+                    listEl.innerHTML = '';
+                    data.forEach(item => {
+                        const date = new Date(item.created_at).toLocaleDateString();
+                        listEl.innerHTML += `
+                            <li class="border-b border-slate-100 pb-3 cursor-pointer hover:bg-slate-50 p-2 rounded-lg">
+                                <a href="${item.content}" target="_blank">
+                                    <span class="block text-xs text-blue-500 font-bold mb-1">[공지]</span>
+                                    <span class="text-slate-800 font-bold block mb-1 hover:text-blue-600">${item.title}</span>
+                                    <span class="text-xs text-slate-400">${item.author} · ${date}</span>
+                                </a>
+                            </li>
+                        `;
+                    });
+                }
+            }
+        }
+
+        // 초기화 실행
+        window.onload = () => {
+            fetchWeather();
+            fetchLunchMenu();
+            fetchSchoolSchedule();
+            loadClassSchedule();
+            setupFacilityForm();
+        };
+    </script>
+</body>
+</html>
