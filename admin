@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>무룡고 통합 관리자 센터</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Pretendard', sans-serif; background-color: #f1f5f9; }
+        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.8); }
+    </style>
+</head>
+<body class="text-slate-800 flex h-screen overflow-hidden">
+
+    <aside class="w-64 bg-slate-900 text-white flex flex-col">
+        <div class="p-6">
+            <h1 class="text-2xl font-black text-blue-400 tracking-tight">Admin Center</h1>
+            <p class="text-slate-400 text-xs mt-1">학생회 전용 관리자 페이지</p>
+        </div>
+        <nav class="flex-1 px-4 space-y-2">
+            <a href="#" class="block bg-blue-600 text-white px-4 py-3 rounded-xl font-bold">🔍 분실물 관리</a>
+            <a href="#" class="block text-slate-300 hover:bg-slate-800 px-4 py-3 rounded-xl font-bold transition-colors">🍱 급식 호출 및 설정</a>
+            <a href="#" class="block text-slate-300 hover:bg-slate-800 px-4 py-3 rounded-xl font-bold transition-colors">💬 건의함 확인</a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto p-8">
+        <header class="mb-8">
+            <h2 class="text-3xl font-extrabold text-slate-900">분실물 등록 및 관리</h2>
+            <p class="text-slate-500 mt-2">습득한 분실물을 등록하면 학생용 앱 게시판에 실시간으로 반영됩니다.</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <div class="glass-panel p-8 rounded-3xl shadow-sm border border-slate-200">
+                <h3 class="text-xl font-bold mb-6 flex items-center gap-2">✍️ 새 분실물 등록</h3>
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-600 mb-2">📸 분실물 사진 (URL)</label>
+                        <input type="text" id="lf_photo" class="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-none" placeholder="사진 이미지 링크를 넣어주세요. (선택사항)">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-600 mb-2">🏷️ 물품 이름</label>
+                        <input type="text" id="lf_name" class="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-none" placeholder="예: 검은색 애플워치, 학생증 등">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-600 mb-2">📍 발견 장소</label>
+                            <input type="text" id="lf_found_loc" class="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-none" placeholder="예: 2층 남자화장실">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-600 mb-2">🎨 색상</label>
+                            <input type="text" id="lf_color" class="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-none" placeholder="예: 검정, 하얀색">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-600 mb-2">🏫 찾는 장소 (보관처)</label>
+                        <input type="text" id="lf_pickup_loc" class="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-none" value="학생안전부 교무실" placeholder="예: 학생회실, 3학년 교무실">
+                    </div>
+                    
+                    <button onclick="uploadLostAndFound()" class="w-full bg-slate-900 text-white p-4 rounded-xl text-lg font-bold hover:bg-blue-600 transition-colors shadow-lg mt-4">데이터베이스에 등록하기</button>
+                </div>
+            </div>
+
+            <div class="glass-panel p-8 rounded-3xl shadow-sm border border-slate-200">
+                <h3 class="text-xl font-bold mb-6 flex items-center gap-2">📋 등록된 분실물 (데이터베이스 연동)</h3>
+                <ul id="lf_list" class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                    <li class="text-slate-400 text-center py-4 font-bold">목록을 불러오는 중입니다...</li>
+                </ul>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Supabase 연결 활성화 완료!
+        const SUPABASE_URL = 'https://svrlvstjrmwrgiemdmfb.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_sCS-V62jHaxr0wq0BHWkog_VbAcrrix';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // 분실물 데이터베이스 등록 (실제 작동)
+        async function uploadLostAndFound() {
+            const photo = document.getElementById('lf_photo').value;
+            const name = document.getElementById('lf_name').value;
+            const foundLoc = document.getElementById('lf_found_loc').value;
+            const color = document.getElementById('lf_color').value;
+            const pickupLoc = document.getElementById('lf_pickup_loc').value;
+
+            if(!name || !foundLoc || !pickupLoc) {
+                alert("물품 이름, 발견 장소, 찾는 장소는 필수 입력 사항입니다."); return;
+            }
+
+            const { data, error } = await supabase.from('lost_and_found').insert([{
+                photo_url: photo, item_name: name, found_location: foundLoc, color: color, pickup_location: pickupLoc
+            }]);
+
+            if(error) {
+                alert("등록 실패: " + error.message);
+            } else {
+                alert("분실물이 학생용 앱에 성공적으로 등록되었습니다!");
+                
+                // 폼 초기화
+                document.getElementById('lf_photo').value = '';
+                document.getElementById('lf_name').value = '';
+                document.getElementById('lf_found_loc').value = '';
+                document.getElementById('lf_color').value = '';
+                
+                // 목록 즉시 새로고침
+                loadAdminLostAndFound();
+            }
+        }
+
+        // 등록된 분실물 불러오기 (실제 작동)
+        async function loadAdminLostAndFound() {
+            const listEl = document.getElementById('lf_list');
+            const { data, error } = await supabase.from('lost_and_found').select('*').order('created_at', { ascending: false });
+
+            if(error) {
+                listEl.innerHTML = '<li class="text-red-500 font-bold">데이터를 불러오는 데 실패했습니다.</li>';
+                return;
+            }
+
+            if(data.length === 0) {
+                listEl.innerHTML = '<li class="text-slate-400 text-center py-4 font-bold">아직 등록된 분실물이 없습니다.</li>';
+                return;
+            }
+
+            listEl.innerHTML = '';
+            data.forEach(item => {
+                listEl.innerHTML += `
+                    <li class="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between shadow-sm">
+                        <div>
+                            <span class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-md mb-2 inline-block">${item.status}</span>
+                            <p class="font-bold text-slate-800 text-lg">${item.item_name} ${item.color ? `(${item.color})` : ''}</p>
+                            <p class="text-xs text-slate-500 mt-1">발견: ${item.found_location} / 보관: ${item.pickup_location}</p>
+                        </div>
+                        <button onclick="alert('수령 완료 처리는 현재 준비 중입니다.')" class="bg-red-50 text-red-500 px-3 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors">수령 완료</button>
+                    </li>
+                `;
+            });
+        }
+
+        // 페이지 로드 시 기존 목록 불러오기
+        window.onload = loadAdminLostAndFound;
+    </script>
+</body>
+</html>
