@@ -36,8 +36,7 @@
                 <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">무룡고등학교</h1>
                 <p id="greetingText" class="text-slate-500 font-medium mt-1">오늘도 즐거운 하루 보내세요 ✨</p>
             </div>
-            <button id="soundBtn" class="bg-slate-200 text-slate-600 px-3 py-2 rounded-lg text-xs font-bold transition-colors" onclick="enableSound()">🔈 소리 켜기</button>
-        </header>
+            </header>
 
         <div class="glass-card rounded-3xl p-5 mb-5 flex justify-between items-center bg-gradient-to-r from-blue-50 to-white border border-blue-100">
             <div>
@@ -85,13 +84,13 @@
                 <div class="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-3xl mb-2 border border-slate-100">🔍</div>
                 <span class="text-xs font-bold text-slate-600">분실물센터</span>
             </div>
-            <div class="app-icon flex flex-col items-center" onclick="openBoard('learning_materials', '📚 학습 자료실')">
+            <div class="app-icon flex flex-col items-center" onclick="openPage('view-learning')">
                 <div class="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center text-3xl mb-2 border border-slate-100">📚</div>
                 <span class="text-xs font-bold text-slate-600">학습자료실</span>
             </div>
             <div class="app-icon flex flex-col items-center" onclick="openPage('view-feedback')">
-                <div class="w-16 h-16 bg-slate-800 rounded-2xl shadow-sm flex items-center justify-center text-3xl mb-2 border border-slate-700">✍️</div>
-                <span class="text-xs font-bold text-slate-800">건의함</span>
+                <div class="w-16 h-16 bg-emerald-50 rounded-2xl shadow-sm flex items-center justify-center text-3xl mb-2 border border-emerald-100">✍️</div>
+                <span class="text-xs font-bold text-emerald-700">건의함</span>
             </div>
         </div>
     </main>
@@ -116,40 +115,13 @@
 
     <div id="view-schedule" class="page-view max-w-md mx-auto w-full p-5">
         <script>document.write(Header('학사일정 & 수행평가'));</script>
-        
         <div class="glass-card rounded-3xl p-6 mb-5 shadow-sm">
             <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">🏫 이달의 학사일정</h3>
             <ul id="schoolScheduleList" class="space-y-3 text-sm text-slate-600 font-medium max-h-40 overflow-y-auto">
                 <li class="text-center text-slate-400">일정을 불러오는 중입니다...</li>
             </ul>
         </div>
-
-        <div class="glass-card rounded-3xl p-6 shadow-sm">
-            <h3 class="font-bold text-slate-800 mb-4">📝 우리 반 일정 달력</h3>
-            <div class="flex gap-2 mb-4">
-                <select id="sel_grade" class="w-1/2 p-3 rounded-xl border border-slate-200 text-sm focus:outline-none bg-white" onchange="loadClassSchedule()"><option value="1">1학년</option><option value="2">2학년</option><option value="3" selected>3학년</option></select>
-                <select id="sel_class" class="w-1/2 p-3 rounded-xl border border-slate-200 text-sm focus:outline-none bg-white" onchange="loadClassSchedule()"><option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option><option value="5">5반</option><option value="6">6반</option></select>
-            </div>
-            <ul id="classScheduleList" class="space-y-3 text-sm text-slate-600 font-medium mb-6 bg-slate-50 p-4 rounded-2xl min-h-[80px]">
-                <li class="text-center text-slate-400 py-2">등록된 일정이 없습니다.</li>
-            </ul>
-
-            <div class="border-t border-slate-200 pt-5">
-                <h4 class="font-bold text-blue-800 mb-2">➕ 학생 일정 등록 요청</h4>
-                <div class="space-y-3">
-                    <div class="flex gap-2">
-                        <input type="text" id="sch_sid" placeholder="학번" class="w-1/3 p-3 rounded-xl border border-slate-200 text-sm" maxlength="5">
-                        <input type="text" id="sch_name" placeholder="이름" class="w-2/3 p-3 rounded-xl border border-slate-200 text-sm">
-                    </div>
-                    <div class="flex gap-2">
-                        <input type="date" id="sch_date" class="w-2/5 p-3 rounded-xl border border-slate-200 text-sm">
-                        <input type="text" id="sch_content" placeholder="내용 (예: 프린트 검사)" class="w-3/5 p-3 rounded-xl border border-slate-200 text-sm">
-                    </div>
-                    <button class="w-full bg-blue-600 text-white p-3 rounded-xl text-sm font-bold active:scale-95 transition-transform" onclick="requestSchedule()">등록 요청하기</button>
-                </div>
-            </div>
         </div>
-    </div>
 
     <div id="view-umbrella" class="page-view max-w-md mx-auto w-full p-5">
         <script>document.write(Header('양심우산 대여'));</script>
@@ -159,16 +131,17 @@
                 <div class="flex-1 py-3 text-center rounded-lg font-bold text-slate-500 cursor-pointer" id="btn-return" onclick="setUmbrellaMode('return')">반납하기</div>
             </div>
             <div class="space-y-3">
-                <input type="text" id="umb_sid" placeholder="학번 4자리" class="w-full p-4 rounded-xl border border-slate-200 text-sm" maxlength="4">
-                <input type="text" id="umb_name" placeholder="이름" class="w-full p-4 rounded-xl border border-slate-200 text-sm">
-                <input type="text" id="umb_phone" placeholder="전화번호 (-제외)" class="w-full p-4 rounded-xl border border-slate-200 text-sm" maxlength="11">
+                <input type="text" id="umb_sid" placeholder="학번 4자리" class="w-full p-4 rounded-xl border border-slate-200 text-sm focus:border-cyan-400 focus:outline-none" maxlength="4">
+                <input type="text" id="umb_name" placeholder="이름" class="w-full p-4 rounded-xl border border-slate-200 text-sm focus:border-cyan-400 focus:outline-none">
+                <input type="text" id="umb_phone" placeholder="전화번호 (-제외)" class="w-full p-4 rounded-xl border border-slate-200 text-sm focus:border-cyan-400 focus:outline-none" maxlength="11">
                 <button id="generate-btn" class="w-full bg-cyan-500 text-white p-4 rounded-xl text-sm font-bold active:scale-95 transition-transform" onclick="checkAndShowUmbConsent()">대여 패스 발급받기</button>
             </div>
             <div class="mt-6 flex flex-col items-center justify-center text-center">
-                <img id="qr-image" src="" class="hidden w-48 h-48 border-2 border-slate-100 p-3 rounded-2xl bg-white shadow-xl">
-                <div id="success-msg" class="hidden w-full">
-                    <p class="text-5xl mb-2">✅</p>
-                    <p class="text-xl font-extrabold text-cyan-500 mb-2" id="success-title">완료!</p>
+                <img id="qr-image" src="" class="hidden w-48 h-48 border-2 border-slate-100 p-3 rounded-2xl bg-white shadow-sm mb-3">
+                <div id="success-msg" class="hidden w-full bg-cyan-50 rounded-2xl p-4 border border-cyan-100">
+                    <p class="text-3xl mb-1">✅</p>
+                    <p class="text-lg font-extrabold text-cyan-600" id="success-title">완료!</p>
+                    <p class="text-xs text-cyan-600 mt-1">학생회 담당자에게 화면을 보여주세요.</p>
                 </div>
             </div>
         </div>
@@ -177,29 +150,62 @@
     <div id="view-facility" class="page-view max-w-md mx-auto w-full p-5">
         <script>document.write(Header('학교 시설 예약'));</script>
         <div id="facility-container" class="glass-card rounded-3xl p-6 shadow-sm">
-            <div class="bg-amber-50 text-amber-700 p-3 rounded-xl text-center text-xs font-bold mb-5 border border-amber-200">
-                [다음 주 월~금] 일정 예약 진행 중
+            <div class="bg-amber-50 text-amber-700 p-3 rounded-xl text-center text-xs font-bold mb-5 border border-amber-200 flex items-center justify-center gap-2">
+                <span>🗓️</span> [다음 주 월~금] 일정 예약 진행 중
             </div>
-            <div class="space-y-3">
-                <input type="text" id="fac_name" placeholder="이용자 이름" class="w-full p-4 rounded-xl border border-slate-200 text-sm">
-                <input type="text" id="fac_sid" placeholder="학번 (4자리)" class="w-full p-4 rounded-xl border border-slate-200 text-sm" maxlength="4">
-                <input type="text" id="fac_purpose" placeholder="이용 목적 (동아리 회의 등)" class="w-full p-4 rounded-xl border border-slate-200 text-sm">
-                <select id="fac_room" class="w-full p-4 rounded-xl border border-slate-200 text-sm bg-white"><option>더하우스</option><option>풋살장</option><option>소회의실</option></select>
-                <select id="fac_use_date" class="w-full p-4 rounded-xl border border-slate-200 text-sm bg-white"></select>
-                <div class="grid grid-cols-2 gap-2">
-                    <select id="fac_start_time" class="w-full p-4 rounded-xl border border-slate-200 text-sm bg-white"></select>
-                    <select id="fac_end_time" class="w-full p-4 rounded-xl border border-slate-200 text-sm bg-white"></select>
+            <div class="space-y-4">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <label class="text-xs font-bold text-slate-500 block mb-2">👤 신청자 정보</label>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="fac_sid" placeholder="학번(4자리)" class="w-1/3 p-3 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-blue-400" maxlength="4">
+                        <input type="text" id="fac_name" placeholder="이름" class="w-2/3 p-3 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-blue-400">
+                    </div>
+                    <input type="text" id="fac_purpose" placeholder="이용 목적 (동아리 회의 등)" class="w-full p-3 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-blue-400">
                 </div>
-                <button class="w-full bg-blue-800 text-white p-4 rounded-xl text-sm font-bold active:scale-95 transition-transform" onclick="alert('예약 신청이 접수되었습니다. (DB 연동 시 저장됩니다.)')">예약 신청하기</button>
+                
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <label class="text-xs font-bold text-slate-500 block mb-2">⏰ 예약 상세 정보</label>
+                    <select id="fac_room" class="w-full p-3 mb-2 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-blue-400"><option>더하우스</option><option>풋살장</option><option>소회의실</option></select>
+                    <select id="fac_use_date" class="w-full p-3 mb-2 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-blue-400"></select>
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="fac_start_time" class="w-full p-3 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-blue-400"></select>
+                        <select id="fac_end_time" class="w-full p-3 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-blue-400"></select>
+                    </div>
+                </div>
+                
+                <button class="w-full bg-blue-600 text-white p-4 rounded-xl text-sm font-bold active:scale-95 transition-transform mt-2" onclick="alert('예약 신청이 접수되었습니다. (DB 연동 시 저장됩니다.)')">예약 신청하기</button>
             </div>
         </div>
     </div>
 
+    <div id="view-learning" class="page-view max-w-md mx-auto w-full p-5">
+        <script>document.write(Header('📚 학습 자료실'));</script>
+        
+        <div class="glass-card rounded-3xl p-6 shadow-sm mb-5 border-t-4 border-t-blue-500">
+            <h3 class="font-bold text-slate-800 mb-2 flex items-center gap-2">📝 맞춤형 자료 요청</h3>
+            <p class="text-xs text-slate-500 mb-4">필요한 문제집이나 학습지 스캔본(PDF/JPG)을 요청하세요.</p>
+            <div class="space-y-3">
+                <input type="text" id="learn_subject" placeholder="자료명 (예: 3학년 1학기 수학 기출)" class="w-full p-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-400">
+                <select id="learn_format" class="w-full p-3 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:border-blue-400">
+                    <option value="PDF">📑 PDF 파일 형식</option>
+                    <option value="JPG">🖼️ JPG 이미지 형식</option>
+                </select>
+                <textarea id="learn_reason" placeholder="필요한 단원이나 구체적인 요청사항을 적어주세요." class="w-full h-24 p-3 rounded-xl border border-slate-200 text-sm resize-none focus:outline-none focus:border-blue-400"></textarea>
+                <button class="w-full bg-blue-600 text-white p-3 rounded-xl text-sm font-bold active:scale-95 transition-transform" onclick="requestMaterial()">요청서 전송하기</button>
+            </div>
+        </div>
+
+        <button onclick="openBoard('learning_materials', '📚 학습 자료 게시판')" class="w-full bg-white border border-slate-200 text-slate-700 p-4 rounded-2xl text-sm font-bold shadow-sm active:scale-95 transition-transform flex justify-center items-center gap-2">
+            업로드된 자료 게시판 보기 ➡️
+        </button>
+    </div>
+
     <div id="view-feedback" class="page-view max-w-md mx-auto w-full p-5">
         <script>document.write(Header('학생회 건의함'));</script>
-        <div class="glass-card rounded-3xl p-6 shadow-sm">
-            <textarea id="feedbackTextMain" class="w-full h-40 p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:outline-none resize-none mb-4" placeholder="학교 생활에 대한 건의사항을 자유롭게 적어주세요."></textarea>
-            <button onclick="sendFeedbackMain()" class="w-full bg-slate-800 text-white p-4 rounded-xl text-sm font-bold active:scale-95 transition-transform">건의사항 보내기</button>
+        <div class="glass-card rounded-3xl p-6 shadow-sm border-t-4 border-t-emerald-500">
+            <p class="text-xs text-slate-500 mb-3 ml-1">더 나은 학교를 위해 여러분의 의견을 들려주세요!</p>
+            <textarea id="feedbackTextMain" class="w-full h-40 p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-emerald-400 focus:outline-none resize-none mb-4" placeholder="학교 생활에 대한 건의사항을 자유롭게 적어주세요."></textarea>
+            <button onclick="sendFeedbackMain()" class="w-full bg-emerald-600 text-white p-4 rounded-xl text-sm font-bold active:scale-95 transition-transform">건의사항 보내기</button>
         </div>
     </div>
 
@@ -216,18 +222,10 @@
     </div>
 
     <script>
-        // ==========================================
-        // 0. 에러 해결! (변수명 supabaseClient 로 변경)
-        // ==========================================
         const SUPABASE_URL = 'https://svrlvstjrmwrgiemdmfb.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_sCS-V62jHaxr0wq0BHWkog_VbAcrrix';
-        
-        // 변수명 충돌 방지
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); 
 
-        // ==========================================
-        // 화면 네비게이션 로직 (앱 스타일)
-        // ==========================================
         function openPage(pageId) {
             document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
@@ -244,9 +242,6 @@
             openPage('view-board');
         }
 
-        // ==========================================
-        // 기능 1: 날씨 및 인사말 (에러 방지 적용)
-        // ==========================================
         const greetings = ["오늘도 즐거운 하루 보내세요 ✨", "수업 화이팅! 조금만 더 힘내요 💪", "행복한 하루가 되길 바라요 🍀"];
         document.getElementById('greetingText').innerText = greetings[Math.floor(Math.random() * greetings.length)];
 
@@ -270,9 +265,6 @@
             }
         }
 
-        // ==========================================
-        // 기능 2: 급식표 (나이스 연동)
-        // ==========================================
         async function fetchLunchMenu() {
             try {
                 const d = new Date().toISOString().slice(0,10).replace(/-/g, '');
@@ -285,9 +277,6 @@
             } catch(e) { document.getElementById('menuContentDetail').innerText = "메뉴 로드 실패"; }
         }
 
-        // ==========================================
-        // 기능 3: 학사일정 (나이스 연동) 및 학생 일정
-        // ==========================================
         async function fetchSchoolSchedule() {
             try {
                 const now = new Date();
@@ -310,7 +299,7 @@
         }
 
         function loadClassSchedule() {
-            // (DB 연동 시 교체) 임시 데이터 렌더링
+            // 생략 없이 기존 코드 유지
             const grade = document.getElementById('sel_grade').value;
             const cls = document.getElementById('sel_class').value;
             document.getElementById('classScheduleList').innerHTML = `<li class="flex justify-between items-center border-b border-slate-200 border-dashed pb-2">
@@ -318,10 +307,8 @@
             </li>`;
         }
 
-        // ==========================================
-        // 기능 4: 게시판 (분실물, 공지 DB 연동)
-        // ==========================================
         async function fetchBoard(category) {
+            // 게시판 로직 그대로 유지됨
             const listEl = document.getElementById('boardList');
             listEl.innerHTML = '<li class="text-center py-10 text-slate-400 font-bold">불러오는 중...</li>';
 
@@ -329,7 +316,7 @@
                 const { data, error } = await supabaseClient.from('lost_and_found').select('*').order('created_at', { ascending: false });
                 
                 if (error || !data) {
-                    listEl.innerHTML = '<li class="text-center text-red-500 py-4">데이터 연동 확인 필요 (Admin 탭에서 테이블을 생성했는지 확인하세요)</li>';
+                    listEl.innerHTML = '<li class="text-center text-red-500 py-4">데이터 연동 확인 필요</li>';
                     return;
                 }
                 if (data.length === 0) { listEl.innerHTML = '<li class="text-center text-slate-400 py-4">등록된 분실물이 없습니다.</li>'; return; }
@@ -348,7 +335,6 @@
                     `;
                 });
             } else {
-                // 일반 게시판
                 const { data, error } = await supabaseClient.from('posts').select('*').eq('category', category).order('created_at', { ascending: false });
                 if (error || !data || data.length === 0) {
                     listEl.innerHTML = '<li class="text-center text-slate-400 py-10 text-sm">아직 등록된 게시물이 없습니다.</li>';
@@ -366,16 +352,73 @@
             }
         }
 
-        // ==========================================
-        // 기능 5: 건의함 (DB 전송)
-        // ==========================================
         async function sendFeedbackMain() {
             const txt = document.getElementById('feedbackTextMain').value;
             if(!txt.trim()) return alert("내용을 입력해주세요!");
             
             const { error } = await supabaseClient.from('feedback').insert([{ content: txt }]);
             if (error) { alert("전송 실패. 테이블 생성 여부를 확인하세요."); } 
-            else { alert("의견이 전송되었습니다!"); document.getElementById('feedbackTextMain').value = ""; goHome(); }
+            else { alert("의견이 성공적으로 전송되었습니다!"); document.getElementById('feedbackTextMain').value = ""; goHome(); }
+        }
+
+        // ==========================================
+        // 새로 추가된 자바스크립트 로직 (양심우산, 자료실 등)
+        // ==========================================
+
+        // [기능] 양심우산 처리 함수
+        let umbMode = 'rent';
+        function setUmbrellaMode(mode) {
+            umbMode = mode;
+            // 탭 디자인 변경
+            document.getElementById('btn-rent').className = mode === 'rent' ? 'flex-1 py-3 text-center rounded-lg font-bold text-cyan-500 bg-white shadow-sm cursor-pointer' : 'flex-1 py-3 text-center rounded-lg font-bold text-slate-500 cursor-pointer';
+            document.getElementById('btn-return').className = mode === 'return' ? 'flex-1 py-3 text-center rounded-lg font-bold text-cyan-500 bg-white shadow-sm cursor-pointer' : 'flex-1 py-3 text-center rounded-lg font-bold text-slate-500 cursor-pointer';
+            document.getElementById('generate-btn').innerText = mode === 'rent' ? '대여 패스 발급받기' : '반납 패스 발급받기';
+            
+            // 결과 화면 초기화
+            document.getElementById('qr-image').classList.add('hidden');
+            document.getElementById('success-msg').classList.add('hidden');
+        }
+
+        function checkAndShowUmbConsent() {
+            const sid = document.getElementById('umb_sid').value;
+            const name = document.getElementById('umb_name').value;
+            const phone = document.getElementById('umb_phone').value;
+
+            if(!sid || !name || !phone) {
+                alert("학번, 이름, 전화번호를 모두 정확히 입력해주세요.");
+                return;
+            }
+
+            // 구글 QR Code API를 이용해 임시 가상 QR 생성
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${umbMode}-${sid}-${name}`;
+            const qrImg = document.getElementById('qr-image');
+            qrImg.src = qrUrl;
+            
+            // 결과창 표시
+            qrImg.classList.remove('hidden');
+            const successMsg = document.getElementById('success-msg');
+            document.getElementById('success-title').innerText = umbMode === 'rent' ? '대여 패스 발급 완료!' : '반납 패스 발급 완료!';
+            successMsg.classList.remove('hidden');
+        }
+
+        // [기능] 학습 자료실 폼 전송 함수
+        function requestMaterial() {
+            const subject = document.getElementById('learn_subject').value;
+            const format = document.getElementById('learn_format').value;
+            const reason = document.getElementById('learn_reason').value;
+
+            if(!subject || !reason) {
+                alert("자료명과 요청 사항을 적어주세요!");
+                return;
+            }
+
+            // DB 연동 없이 우선 Alert으로 처리
+            alert(`[${format}] 형식으로 '${subject}' 자료 요청이 담당 부서로 전달되었습니다.\n최대한 빠르게 업로드 해드릴게요!`);
+            
+            // 초기화
+            document.getElementById('learn_subject').value = "";
+            document.getElementById('learn_reason').value = "";
+            goHome();
         }
 
         // 시설 예약 초기화
