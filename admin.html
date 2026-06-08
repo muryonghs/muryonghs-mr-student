@@ -2,148 +2,949 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>무룡고 통합 관리자 센터</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>무룡고 통합 관리자 대시보드</title>
+    
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
-        body { font-family: 'Pretendard', sans-serif; background-color: #f1f5f9; }
-        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.8); }
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; }
+        .tab-btn { transition: all 0.2s ease-in-out; }
+        .tab-btn.active { background-color: #1e293b; color: white; border-color: #1e293b; }
+        .tab-content { display: none; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .modal-overlay { display: none; opacity: 0; transition: opacity 0.2s ease-in-out; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-content { transform: scale(0.95); transition: transform 0.2s ease-in-out; max-height: 90vh; overflow-y: auto; }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        
+        /* 스크롤바 숨김 */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="text-slate-800 flex h-screen overflow-hidden">
+<body class="text-slate-800 pb-20">
 
-    <aside class="w-64 bg-slate-900 text-white flex flex-col">
-        <div class="p-6">
-            <h1 class="text-2xl font-black text-blue-400 tracking-tight">Admin Center</h1>
-            <p class="text-slate-400 text-xs mt-1">학생회 전용 관리자 페이지</p>
+    <nav class="bg-white sticky top-0 z-50 shadow-sm border-b border-slate-200">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-lg font-black text-slate-900 tracking-tight">⚙️ 학생회 관리자 센터</h1>
         </div>
-        <nav class="flex-1 px-4 space-y-2">
-            <a href="#" class="block bg-blue-600 text-white px-4 py-3 rounded-xl font-bold">🔍 분실물 관리</a>
-            <a href="#" class="block text-slate-300 hover:bg-slate-800 px-4 py-3 rounded-xl font-bold transition-colors">🍱 급식 호출 및 설정</a>
-            <a href="#" class="block text-slate-300 hover:bg-slate-800 px-4 py-3 rounded-xl font-bold transition-colors">💬 건의함 확인</a>
-        </nav>
-    </aside>
+        <div class="max-w-4xl mx-auto px-4 pb-3 flex gap-2 overflow-x-auto hide-scrollbar">
+            <button onclick="switchTab('lunch')" id="tab-lunch" class="tab-btn active shrink-0 px-4 py-2 rounded-full border border-slate-200 text-sm font-bold text-slate-600 bg-slate-50">🍱 급식/공지</button>
+            <button onclick="switchTab('facility')" id="tab-facility" class="tab-btn shrink-0 px-4 py-2 rounded-full border border-slate-200 text-sm font-bold text-slate-600 bg-slate-50">🏢 시설예약</button>
+            <button onclick="switchTab('umbrella')" id="tab-umbrella" class="tab-btn shrink-0 px-4 py-2 rounded-full border border-slate-200 text-sm font-bold text-slate-600 bg-slate-50">☂️ 양심우산</button>
+            <button onclick="switchTab('board')" id="tab-board" class="tab-btn shrink-0 px-4 py-2 rounded-full border border-slate-200 text-sm font-bold text-slate-600 bg-slate-50">📋 게시판/요청</button>
+        </div>
+    </nav>
 
-    <main class="flex-1 overflow-y-auto p-8">
-        <header class="mb-8">
-            <h2 class="text-3xl font-extrabold text-slate-900">분실물 등록 및 관리</h2>
-            <p class="text-slate-500 mt-2">습득한 분실물을 등록하면 학생용 앱 게시판에 실시간으로 반영됩니다.</p>
-        </header>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            
-            <div class="glass-panel p-8 rounded-3xl shadow-sm border border-slate-200">
-                <h3 class="text-xl font-bold mb-6 flex items-center gap-2">✍️ 새 분실물 등록</h3>
-                <div class="space-y-5">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-600 mb-2">📸 분실물 사진 (URL)</label>
-                        <input type="text" id="lf_photo" class="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-none" placeholder="사진 이미지 링크를 넣어주세요. (선택사항)">
+    <main class="max-w-4xl mx-auto p-4 mt-2">
+        
+        <div id="view-lunch" class="tab-content active space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                    <h2 class="text-sm font-bold text-slate-500 mb-4">📢 배식 순서 제어</h2>
+                    <div class="text-center mb-6">
+                        <div id="l_curGrade" class="text-4xl font-black text-blue-600 mb-2">로딩중...</div>
+                        <div id="l_subStatus" class="text-sm font-bold text-red-500 hidden">오늘은 급식 호출을 진행하지 않습니다</div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-600 mb-2">🏷️ 물품 이름</label>
-                        <input type="text" id="lf_name" class="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-none" placeholder="예: 검은색 애플워치, 학생증 등">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-bold text-slate-600 mb-2">📍 발견 장소</label>
-                            <input type="text" id="lf_found_loc" class="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-none" placeholder="예: 2층 남자화장실">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-600 mb-2">🎨 색상</label>
-                            <input type="text" id="lf_color" class="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-none" placeholder="예: 검정, 하얀색">
+                    <div class="space-y-2">
+                        <button onclick="l_updateIdx('next')" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold active:scale-95 transition-transform">다음 학년/상태 호출</button>
+                        <div class="flex gap-2">
+                            <button onclick="l_updateIdx('reset')" class="flex-1 bg-slate-100 text-slate-600 py-3 rounded-xl font-bold active:scale-95 transition-transform">순서 초기화</button>
+                            <button onclick="l_updateIdx('close')" class="flex-1 bg-red-50 text-red-500 py-3 rounded-xl font-bold active:scale-95 transition-transform">미운영 설정</button>
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-600 mb-2">🏫 찾는 장소 (보관처)</label>
-                        <input type="text" id="lf_pickup_loc" class="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:outline-none" value="학생안전부 교무실" placeholder="예: 학생회실, 3학년 교무실">
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                    <h2 class="text-sm font-bold text-slate-500 mb-4">⏳ 다음 호출 예상시간</h2>
+                    <div class="bg-slate-50 rounded-2xl p-4 text-center mb-4">
+                        <span class="text-xs font-bold text-slate-400 block mb-1">현재 작동 중인 타이머</span>
+                        <div id="l_activeTimerDisplay" class="text-3xl font-black text-slate-400 tabular-nums">타이머 꺼짐</div>
                     </div>
-                    
-                    <button onclick="uploadLostAndFound()" class="w-full bg-slate-900 text-white p-4 rounded-xl text-lg font-bold hover:bg-blue-600 transition-colors shadow-lg mt-4">데이터베이스에 등록하기</button>
+                    <div class="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-3 mb-4">
+                        <span class="text-sm font-bold text-slate-600">추가할 시간</span>
+                        <div><span id="l_tempWaitDisplay" class="text-xl font-black text-slate-800">0</span> <span class="text-sm font-bold text-slate-500">분</span></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mb-2">
+                        <button onclick="l_addWait(1)" class="bg-slate-100 text-slate-700 py-2 rounded-lg font-bold">+1분</button>
+                        <button onclick="l_addWait(5)" class="bg-slate-100 text-slate-700 py-2 rounded-lg font-bold">+5분</button>
+                        <button onclick="l_addWait(10)" class="bg-slate-100 text-slate-700 py-2 rounded-lg font-bold">+10분</button>
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                        <button onclick="l_resetWait()" class="flex-1 border border-slate-200 text-slate-600 py-3 rounded-xl font-bold">0분 (초기화)</button>
+                        <button onclick="l_sendWaitTime()" class="flex-1 bg-slate-800 text-white py-3 rounded-xl font-bold">타이머 전송</button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 md:col-span-2">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h2 class="text-sm font-bold text-red-500 mb-2">🚨 긴급 팝업 (TV/학생화면)</h2>
+                            <textarea id="l_popupInput" class="w-full h-24 p-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white resize-none text-sm mb-2" placeholder="긴급 내용을 적어주세요."></textarea>
+                            <div class="flex gap-2">
+                                <button onclick="l_sendPopup('')" class="flex-1 bg-red-50 text-red-500 py-2 rounded-xl font-bold text-sm">팝업 내리기</button>
+                                <button onclick="l_sendPopup(document.getElementById('l_popupInput').value)" class="flex-1 bg-red-500 text-white py-2 rounded-xl font-bold text-sm">팝업 띄우기</button>
+                            </div>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-500 mb-2">📺 일반 알림판 / TV 배율</h2>
+                            <textarea id="l_noticeInput" class="w-full h-14 p-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white resize-none text-sm mb-2" placeholder="일반 공지 입력"></textarea>
+                            <button onclick="l_saveNotice()" class="w-full bg-slate-800 text-white py-2 rounded-xl font-bold text-sm mb-4">알림판 업데이트</button>
+                            
+                            <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                <span class="text-sm font-bold text-slate-600">TV 화면 글자 크기</span>
+                                <div class="flex items-center gap-3">
+                                    <button onclick="l_changeTvScale(-10)" class="bg-white border border-slate-200 w-8 h-8 rounded-lg font-bold">-</button>
+                                    <span id="l_tvScaleDisplay" class="font-black w-12 text-center">100%</span>
+                                    <button onclick="l_changeTvScale(10)" class="bg-white border border-slate-200 w-8 h-8 rounded-lg font-bold">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-facility" class="tab-content space-y-6">
+            <div class="flex flex-wrap justify-between items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                <button onclick="openUnifiedScanner('facility')" class="bg-emerald-500 text-white px-4 py-2 rounded-xl font-bold shadow-sm flex items-center gap-2 text-sm">📷 학생 QR 스캔</button>
+                <div class="flex gap-2">
+                    <button onclick="f_openBlockModal()" class="bg-amber-500 text-white px-4 py-2 rounded-xl font-bold shadow-sm text-sm">⏰ 시간 차단</button>
+                    <button id="f_blockBtn" onclick="f_toggleGlobalBlock()" class="bg-red-500 text-white px-4 py-2 rounded-xl font-bold shadow-sm text-sm">🛑 전체 차단</button>
+                    <button onclick="f_factoryReset()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold text-sm">초기화</button>
                 </div>
             </div>
 
-            <div class="glass-panel p-8 rounded-3xl shadow-sm border border-slate-200">
-                <h3 class="text-xl font-bold mb-6 flex items-center gap-2">📋 등록된 분실물 (데이터베이스 연동)</h3>
-                <ul id="lf_list" class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-                    <li class="text-slate-400 text-center py-4 font-bold">목록을 불러오는 중입니다...</li>
-                </ul>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="f_list">
+                <div class="text-center text-slate-500 py-10 col-span-full font-bold">예약 목록을 불러오는 중입니다...</div>
+            </div>
+        </div>
+
+        <div id="view-umbrella" class="tab-content space-y-6">
+            <div class="flex flex-wrap justify-between items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                <button onclick="openUnifiedScanner('umbrella')" class="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold shadow-sm flex items-center gap-2 text-sm">📷 우산 QR 스캔</button>
+                <div class="flex gap-2">
+                    <button onclick="u_openBrokenModal()" class="bg-slate-800 text-white px-4 py-2 rounded-xl font-bold shadow-sm text-sm">🛠️ 파손 관리</button>
+                    <button onclick="u_openPdfModal()" class="bg-purple-600 text-white px-4 py-2 rounded-xl font-bold shadow-sm text-sm">📄 PDF 출력</button>
+                    <button onclick="u_resetAll()" class="bg-red-50 text-red-500 border border-red-200 px-4 py-2 rounded-xl font-bold text-sm">초기화</button>
+                </div>
+            </div>
+
+            <h3 class="text-sm font-bold text-slate-500 px-1">전체 이용 내역</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="u_list">
+                <div class="text-center text-slate-500 py-10 col-span-full font-bold">이용 내역을 불러오는 중입니다...</div>
+            </div>
+        </div>
+
+        <div id="view-board" class="tab-content space-y-6">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col h-[500px]">
+                    <h2 class="text-lg font-extrabold text-slate-800 mb-4 flex items-center gap-2">🔍 분실물 관리</h2>
+                    <div class="bg-slate-50 p-4 rounded-2xl mb-4 space-y-2 border border-slate-200">
+                        <input type="text" id="b_lf_name" placeholder="물품명 (예: 검정색 지갑)" class="w-full p-2 rounded-lg border border-slate-200 text-sm">
+                        <div class="flex gap-2">
+                            <input type="text" id="b_lf_found" placeholder="습득 장소" class="w-1/2 p-2 rounded-lg border border-slate-200 text-sm">
+                            <input type="text" id="b_lf_pickup" placeholder="보관 장소" class="w-1/2 p-2 rounded-lg border border-slate-200 text-sm">
+                        </div>
+                        <button onclick="b_addLostFound()" class="w-full bg-slate-800 text-white py-2 rounded-lg font-bold text-sm">새 분실물 등록</button>
+                    </div>
+                    <div class="flex-1 overflow-y-auto space-y-3 pr-2" id="b_lf_list">
+                        </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col h-[500px]">
+                    <h2 class="text-lg font-extrabold text-slate-800 mb-1 flex items-center gap-2">📥 학생 요청 / 건의함 큐</h2>
+                    <p class="text-xs text-slate-500 mb-4">학생들이 요청한 반 일정, 학습자료 업로드, 일반 건의사항입니다.</p>
+                    <div class="flex-1 overflow-y-auto space-y-3 pr-2" id="b_fb_list">
+                        </div>
+                </div>
+
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <h2 class="text-lg font-extrabold text-slate-800 mb-4 flex items-center gap-2">📝 학교/학생회 게시물 작성</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <select id="b_post_category" class="p-3 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:bg-white">
+                        <option value="school_notice">학교 공지 (수동)</option>
+                        <option value="council_notice">학생회 공지</option>
+                        <option value="learning_materials">학습 자료 게시판</option>
+                    </select>
+                    <input type="text" id="b_post_author" placeholder="작성자 (예: 학생회 학습부)" class="p-3 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:bg-white md:col-span-3">
+                </div>
+                <input type="text" id="b_post_title" placeholder="게시물 제목" class="w-full p-3 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:bg-white mb-4">
+                <input type="text" id="b_post_link" placeholder="자료 링크 (구글드라이브, 노션 등 URL 입력)" class="w-full p-3 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:bg-white mb-4">
+                <button onclick="b_addPost()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">게시물 등록하기</button>
             </div>
 
         </div>
+
     </main>
 
+    <div id="modal_scanner" class="fixed inset-0 z-[9999] bg-slate-900/80 backdrop-blur-sm modal-overlay items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[28px] overflow-hidden shadow-2xl modal-content">
+            <div class="bg-slate-900 text-white py-4 px-6 flex justify-between items-center">
+                <h5 class="font-extrabold" id="scanner_title">📷 QR 스캔</h5>
+                <button onclick="closeScanner()" class="text-white opacity-70 hover:opacity-100 text-xl font-bold">✕</button>
+            </div>
+            <div class="p-4 bg-black">
+                <div id="qr-reader" class="w-full rounded-xl overflow-hidden border-2 border-slate-700"></div>
+            </div>
+            <div class="p-4">
+                <button onclick="closeScanner()" class="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-bold hover:bg-slate-200">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal_fac_detail" class="fixed inset-0 z-[9999] bg-slate-900/40 backdrop-blur-sm modal-overlay items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[24px] p-6 shadow-2xl modal-content flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h5 class="text-lg font-extrabold text-slate-900">예약 상세 정보</h5>
+                <button onclick="closeModal('modal_fac_detail')" class="text-slate-400 hover:text-slate-700 text-xl font-black">✕</button>
+            </div>
+            <div class="text-center mb-3" id="f_md_badge"></div>
+            <div class="bg-slate-50 p-4 rounded-2xl mb-4 space-y-3 text-sm">
+                <div class="flex justify-between"><span class="font-bold text-slate-500">신청자</span><span id="f_md_name" class="font-bold text-slate-800"></span></div>
+                <div class="flex justify-between"><span class="font-bold text-slate-500">연락처</span><span id="f_md_phone" class="font-bold text-slate-800"></span></div>
+                <div class="flex justify-between"><span class="font-bold text-slate-500">시설명</span><span id="f_md_room" class="font-bold text-slate-800"></span></div>
+                <div class="flex justify-between"><span class="font-bold text-slate-500">목적</span><span id="f_md_purpose" class="font-bold text-slate-800 text-right w-2/3 break-words"></span></div>
+                <div class="flex justify-between"><span class="font-bold text-slate-500">시간</span><span id="f_md_time" class="font-bold text-slate-800"></span></div>
+            </div>
+            <div class="flex flex-col gap-2" id="f_md_actions"></div>
+        </div>
+    </div>
+
+    <div id="modal_umb_detail" class="fixed inset-0 z-[9999] bg-slate-900/40 backdrop-blur-sm modal-overlay items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[24px] p-6 shadow-2xl modal-content flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h5 class="text-lg font-extrabold text-slate-900" id="u_md_title">우산 상세</h5>
+                <button onclick="closeModal('modal_umb_detail')" class="text-slate-400 hover:text-slate-700 text-xl font-black">✕</button>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-2xl mb-4 space-y-3 text-sm">
+                <div class="flex justify-between"><span class="font-bold text-slate-500">학번</span><span id="u_md_id" class="font-bold text-slate-800"></span></div>
+                <div class="flex justify-between"><span class="font-bold text-slate-500">우산번호</span><span id="u_md_umbNum" class="font-bold text-blue-600"></span></div>
+                <div class="flex justify-between"><span class="font-bold text-slate-500">전화번호</span><span id="u_md_phone" class="font-bold text-slate-800"></span></div>
+                <div class="flex justify-between"><span class="font-bold text-slate-500" id="u_md_l1">대여일시</span><span id="u_md_d1" class="font-bold text-slate-800 text-right w-2/3"></span></div>
+                <div class="flex justify-between"><span class="font-bold text-slate-500" id="u_md_l2">반납일시</span><span id="u_md_d2" class="font-bold text-slate-800 text-right w-2/3"></span></div>
+            </div>
+            
+            <div class="flex justify-center mb-4 p-4 bg-white border border-slate-200 rounded-xl" id="u_md_qr_box">
+                <img id="u_md_qr" src="" class="w-32 h-32 rounded-lg">
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <button id="u_md_btn_manual" class="bg-emerald-500 text-white py-3 rounded-xl font-bold hidden">수동 반납처리</button>
+                <button id="u_md_btn_del" class="border border-red-200 text-red-500 bg-red-50 py-3 rounded-xl font-bold">이 기록 영구 삭제</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal_umb_damage" class="fixed inset-0 z-[9999] bg-slate-900/40 backdrop-blur-sm modal-overlay items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[24px] p-6 shadow-2xl modal-content text-center">
+            <h3 class="text-xl font-black text-slate-900 mb-2">우산 상태 확인</h3>
+            <p class="text-sm text-slate-600 mb-6 leading-relaxed">
+                <strong id="u_dmg_name" class="text-blue-600"></strong> 학생이 반납하는<br>
+                <strong id="u_dmg_umb" class="text-red-500"></strong>번 우산이 파손되었습니까?
+            </p>
+            <div class="flex flex-col gap-2">
+                <button class="bg-emerald-500 text-white py-3 rounded-xl font-bold" onclick="u_executeReturn(false)">정상 반납 (파손 없음)</button>
+                <button class="bg-slate-800 text-white py-3 rounded-xl font-bold" onclick="u_executeReturn(true)">파손됨 (다음 대여 차단)</button>
+                <button class="bg-slate-100 text-slate-600 py-3 rounded-xl font-bold" onclick="closeModal('modal_umb_damage')">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal_umb_broken" class="fixed inset-0 z-[9999] bg-slate-900/40 backdrop-blur-sm modal-overlay items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[24px] p-6 shadow-2xl modal-content flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h5 class="text-lg font-extrabold text-slate-900">파손 우산 관리</h5>
+                <button onclick="closeModal('modal_umb_broken')" class="text-slate-400 hover:text-slate-700 text-xl font-black">✕</button>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">수리 완료 처리 시 다시 대여 가능 상태로 변경됩니다.</p>
+            <div id="u_broken_list" class="space-y-3 max-h-60 overflow-y-auto pr-2"></div>
+        </div>
+    </div>
+
+    <div id="modal_fac_block" class="fixed inset-0 z-[9999] bg-slate-900/40 backdrop-blur-sm modal-overlay items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[24px] p-6 shadow-2xl modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h5 class="text-lg font-extrabold text-amber-500">⏰ 시설/시간 차단</h5>
+                <button onclick="closeModal('modal_fac_block')" class="text-slate-400 hover:text-slate-700 text-xl font-black">✕</button>
+            </div>
+            <div class="space-y-3 mb-5">
+                <select id="f_b_room" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none"><option value="더하우스">더하우스</option><option value="풋살장">풋살장</option><option value="소회의실">소회의실</option></select>
+                <input type="date" id="f_b_date" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none">
+                <div class="flex gap-2">
+                    <select id="f_b_start" class="w-1/2 p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none"></select>
+                    <select id="f_b_end" class="w-1/2 p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none"></select>
+                </div>
+                <input type="text" id="f_b_purpose" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none" placeholder="차단 사유 (선택)">
+            </div>
+            <button onclick="f_submitBlock()" class="w-full bg-amber-500 text-white py-3 rounded-xl font-bold">차단 등록</button>
+        </div>
+    </div>
+
+
     <script>
-        // Supabase 연결 활성화 완료!
-        const SUPABASE_URL = 'https://svrlvstjrmwrgiemdmfb.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_sCS-V62jHaxr0wq0BHWkog_VbAcrrix';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // --- 1. Supabase 초기화 ---
+        const mainDb = supabase.createClient('https://svrlvstjrmwrgiemdmfb.supabase.co', 'sb_publishable_sCS-V62jHaxr0wq0BHWkog_VbAcrrix');
+        const facDb = supabase.createClient('https://uuimbwgcboqcavrouxtv.supabase.co', 'sb_publishable_GR9xwY16SVWEbfc648iOUA_U9za_DaN');
+        const umbDb = supabase.createClient('https://urzbonndueqylygtzlus.supabase.co', 'sb_publishable_rZYklPBEFvoKZxatf_xAig_ceWd_epI');
+        const lunchDb = supabase.createClient('https://aaszccrhporceolrnroz.supabase.co', 'sb_publishable_LMeSKJzTDv8L-boma9QIFA_b8iJ89e9');
 
-        // 분실물 데이터베이스 등록 (실제 작동)
-        async function uploadLostAndFound() {
-            const photo = document.getElementById('lf_photo').value;
-            const name = document.getElementById('lf_name').value;
-            const foundLoc = document.getElementById('lf_found_loc').value;
-            const color = document.getElementById('lf_color').value;
-            const pickupLoc = document.getElementById('lf_pickup_loc').value;
+        // --- 2. 탭 전환 & 유틸리티 ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active', 'bg-slate-900', 'text-white', 'border-slate-900');
+                el.classList.add('bg-slate-50', 'text-slate-600');
+            });
+            
+            document.getElementById(`view-${tabId}`).classList.add('active');
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.remove('bg-slate-50', 'text-slate-600');
+            activeBtn.classList.add('active', 'bg-slate-900', 'text-white', 'border-slate-900');
+        }
 
-            if(!name || !foundLoc || !pickupLoc) {
-                alert("물품 이름, 발견 장소, 찾는 장소는 필수 입력 사항입니다."); return;
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function formatFullDate(dateString) {
+            if (!dateString) return '-';
+            const d = new Date(dateString);
+            return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        }
+
+        // --- 3. QR 스캐너 (통합) ---
+        let html5QrCode = null;
+        let currentScannerMode = ''; // 'facility' or 'umbrella'
+        let scannerProcessing = false;
+
+        function openUnifiedScanner(mode) {
+            currentScannerMode = mode;
+            document.getElementById('scanner_title').innerText = mode === 'facility' ? '🏢 시설예약 QR 스캔' : '☂️ 우산 QR 스캔';
+            openModal('modal_scanner');
+            
+            setTimeout(() => {
+                html5QrCode = new Html5Qrcode("qr-reader");
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (text) => { if(!scannerProcessing) handleQrResult(text); },
+                    (err) => {}
+                ).catch(err => {
+                    alert("카메라 권한을 허용해주세요.");
+                    closeScanner();
+                });
+            }, 300);
+        }
+
+        function closeScanner() {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => { html5QrCode.clear(); html5QrCode = null; }).catch(()=>{});
             }
+            closeModal('modal_scanner');
+        }
 
-            const { data, error } = await supabase.from('lost_and_found').insert([{
-                photo_url: photo, item_name: name, found_location: foundLoc, color: color, pickup_location: pickupLoc
-            }]);
+        async function handleQrResult(decodedText) {
+            scannerProcessing = true;
+            closeScanner();
 
-            if(error) {
-                alert("등록 실패: " + error.message);
-            } else {
-                alert("분실물이 학생용 앱에 성공적으로 등록되었습니다!");
-                
-                // 폼 초기화
-                document.getElementById('lf_photo').value = '';
-                document.getElementById('lf_name').value = '';
-                document.getElementById('lf_found_loc').value = '';
-                document.getElementById('lf_color').value = '';
-                
-                // 목록 즉시 새로고침
-                loadAdminLostAndFound();
+            try {
+                if (currentScannerMode === 'facility') {
+                    // 시설예약 QR (decodedText is ID directly)
+                    const { data, error } = await facDb.from('reservations').select('*').eq('id', decodedText).single();
+                    if (data) {
+                        if(data.status === 'approved') {
+                            const { error: updErr } = await facDb.from('reservations').update({ status: 'used' }).eq('id', decodedText);
+                            if(!updErr) { alert(`✅ [사용 완료] ${data.student_name} (${data.room_name})`); f_loadList(); }
+                        } else {
+                            alert(`❌ 사용 불가한 상태입니다. (${data.status})`);
+                        }
+                    } else { alert("❌ 등록되지 않은 시설 QR입니다."); }
+                } 
+                else if (currentScannerMode === 'umbrella') {
+                    // 양심우산 QR (decodedText is JSON)
+                    const data = JSON.parse(decodedText);
+                    let action = data.action;
+
+                    // 자동 판단 로직
+                    if (!action) {
+                        const { data: chk } = await umbDb.from('umbrella_rentals').select('id').eq('student_id', data.student_id).eq('status', '대여중');
+                        action = (chk && chk.length > 0) ? 'return' : 'rent';
+                    }
+
+                    if (action === 'rent') {
+                        const uNum = prompt(`[우산 대여]\n${data.student_name} 학생에게 빌려줄 우산 번호:`);
+                        if(uNum) {
+                            const { data: bData } = await umbDb.from('umbrella_rentals').select('id').eq('umbrella_number', uNum).eq('status', '대여중');
+                            if(bData && bData.length>0) return alert('❌ 이미 대여중인 우산입니다.');
+                            
+                            const { error } = await umbDb.from('umbrella_rentals').insert([{
+                                student_id: data.student_id, student_name: data.student_name, phone_number: data.phone_number,
+                                umbrella_number: uNum, status: '대여중', rent_date: new Date().toISOString()
+                            }]);
+                            if(!error) { alert('✅ 대여 승인 완료'); u_loadList(); }
+                        }
+                    } else if (action === 'return') {
+                        const { data: rents } = await umbDb.from('umbrella_rentals').select('*').eq('student_id', data.student_id).eq('status', '대여중');
+                        if(rents && rents.length > 0) {
+                            u_pendingReturn = rents[0];
+                            document.getElementById('u_dmg_name').innerText = u_pendingReturn.student_name;
+                            document.getElementById('u_dmg_umb').innerText = u_pendingReturn.umbrella_number;
+                            openModal('modal_umb_damage');
+                        } else { alert("대여 중인 기록이 없습니다."); }
+                    }
+                }
+            } catch(e) {
+                alert("QR 처리 중 오류 발생: 올바른 QR이 아니거나 통신 오류입니다.");
+            } finally {
+                setTimeout(() => { scannerProcessing = false; }, 1500);
             }
         }
 
-        // 등록된 분실물 불러오기 (실제 작동)
-        async function loadAdminLostAndFound() {
-            const listEl = document.getElementById('lf_list');
-            const { data, error } = await supabase.from('lost_and_found').select('*').order('created_at', { ascending: false });
 
-            if(error) {
-                listEl.innerHTML = '<li class="text-red-500 font-bold">데이터를 불러오는 데 실패했습니다.</li>';
-                return;
+        // ==========================================
+        // 1. 급식 및 공지 (Lunch) 로직
+        // ==========================================
+        const l_grades = ["배식 전", "3학년", "2학년", "1학년", "배식 종료", "미운영"];
+        let l_idx = 0; let l_tempWait = 0; let l_liveWaitMin = 0; let l_liveSetAt = null; let l_timerInterval;
+
+        async function initLunch() {
+            const { data } = await lunchDb.from('lunch_status').select('*').eq('id', 1).single();
+            if(data) { l_idx = data.current_index; l_updateColor(); l_updateTimerUI(data.wait_minutes, data.wait_set_at); }
+            
+            const { data: an } = await lunchDb.from('announcements').select('*');
+            if(an) {
+                an.forEach(n => {
+                    if(n.id===1) document.getElementById('l_noticeInput').value = n.content;
+                    if(n.id===2) document.getElementById('l_popupInput').value = n.content;
+                    if(n.id===3) document.getElementById('l_tvScaleDisplay').innerText = (n.content||100)+'%';
+                });
             }
+        }
 
-            if(data.length === 0) {
-                listEl.innerHTML = '<li class="text-slate-400 text-center py-4 font-bold">아직 등록된 분실물이 없습니다.</li>';
-                return;
+        function l_updateColor() {
+            const el = document.getElementById('l_curGrade');
+            const sub = document.getElementById('l_subStatus');
+            el.innerText = l_grades[l_idx] + (l_idx > 0 && l_idx < 4 ? " 배식중" : "");
+            
+            if(l_idx === 5) { el.classList.replace('text-blue-600', 'text-red-500'); sub.classList.remove('hidden'); }
+            else { 
+                sub.classList.add('hidden'); 
+                if(l_idx === 0 || l_idx === 4) el.className = "text-4xl font-black text-slate-400 mb-2";
+                else el.className = "text-4xl font-black text-blue-600 mb-2 animate-pulse";
             }
+        }
 
-            listEl.innerHTML = '';
-            data.forEach(item => {
-                listEl.innerHTML += `
-                    <li class="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between shadow-sm">
-                        <div>
-                            <span class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-md mb-2 inline-block">${item.status}</span>
-                            <p class="font-bold text-slate-800 text-lg">${item.item_name} ${item.color ? `(${item.color})` : ''}</p>
-                            <p class="text-xs text-slate-500 mt-1">발견: ${item.found_location} / 보관: ${item.pickup_location}</p>
+        async function l_updateIdx(cmd) {
+            if(cmd === 'next' && l_idx < 4) l_idx++;
+            else if(cmd === 'reset') { if(confirm("초기화?")) l_idx=0; else return; }
+            else if(cmd === 'close') { if(confirm("미운영?")) l_idx=5; else return; }
+            
+            const { error } = await lunchDb.from('lunch_status').update({ current_index: l_idx, wait_minutes: 0 }).eq('id', 1);
+            if(!error) { l_updateColor(); l_resetWait(); }
+        }
+
+        function l_addWait(m) { l_tempWait += m; document.getElementById('l_tempWaitDisplay').innerText = l_tempWait; }
+        function l_resetWait() { l_tempWait = 0; document.getElementById('l_tempWaitDisplay').innerText = l_tempWait; }
+
+        async function l_sendWaitTime() {
+            if(l_tempWait === 0) {
+                await lunchDb.from('lunch_status').update({ wait_minutes: 0, wait_set_at: new Date().toISOString() }).eq('id',1);
+                l_resetWait(); return;
+            }
+            let rem = 0;
+            if(l_liveSetAt && l_liveWaitMin > 0) {
+                rem = (l_liveWaitMin * 60) - Math.floor((new Date() - new Date(l_liveSetAt))/1000);
+            }
+            if(rem > 0) {
+                await lunchDb.from('lunch_status').update({ wait_minutes: l_liveWaitMin + l_tempWait }).eq('id',1);
+            } else {
+                await lunchDb.from('lunch_status').update({ wait_minutes: l_tempWait, wait_set_at: new Date().toISOString() }).eq('id',1);
+            }
+            alert("타이머가 적용되었습니다."); l_resetWait();
+        }
+
+        function l_updateTimerUI(min, setAt) {
+            l_liveWaitMin = min || 0; l_liveSetAt = setAt;
+            const disp = document.getElementById('l_activeTimerDisplay');
+            if(l_timerInterval) clearInterval(l_timerInterval);
+
+            if(l_liveWaitMin <= 0 || !l_liveSetAt) {
+                disp.innerText = "타이머 꺼짐"; disp.className = "text-xl font-black text-slate-400"; return;
+            }
+            disp.className = "text-4xl font-black text-blue-600 tabular-nums";
+            const start = new Date(l_liveSetAt);
+            
+            l_timerInterval = setInterval(() => {
+                const diff = Math.floor((new Date() - start)/1000);
+                const rem = (l_liveWaitMin * 60) - diff;
+                if(rem <= 0) { disp.innerText = "타이머 꺼짐"; disp.className = "text-xl font-black text-slate-400"; clearInterval(l_timerInterval); }
+                else {
+                    disp.innerText = `${String(Math.floor(rem/60)).padStart(2,'0')}:${String(rem%60).padStart(2,'0')}`;
+                }
+            }, 1000);
+        }
+
+        async function l_saveNotice() {
+            const val = document.getElementById('l_noticeInput').value;
+            const {error} = await lunchDb.from('announcements').upsert({id:1, content:val});
+            if(!error) alert("알림판 업데이트 완료");
+        }
+        async function l_sendPopup(val) {
+            const {error} = await lunchDb.from('announcements').upsert({id:2, content:val});
+            if(!error) alert(val ? "긴급 팝업 띄움" : "팝업 내림");
+        }
+        async function l_changeTvScale(diff) {
+            let cur = parseInt(document.getElementById('l_tvScaleDisplay').innerText.replace('%',''));
+            cur += diff; if(cur<50) cur=50; if(cur>200) cur=200;
+            document.getElementById('l_tvScaleDisplay').innerText = cur + '%';
+            await lunchDb.from('announcements').upsert({id:3, content: cur.toString()});
+        }
+
+
+        // ==========================================
+        // 2. 시설예약 (Facility) 로직
+        // ==========================================
+        let f_list = [];
+        let f_selected = null;
+        let f_isBlocked = false;
+
+        async function initFac() {
+            const { data } = await facDb.from('site_settings').select('is_booking_blocked').eq('id', 1).single();
+            if(data) f_isBlocked = data.is_booking_blocked;
+            f_updateBlockBtn();
+            f_loadList();
+            f_setupTimeSelects();
+        }
+
+        function f_updateBlockBtn() {
+            const b = document.getElementById('f_blockBtn');
+            if(f_isBlocked) { b.innerText = "🟢 전체 차단 해제"; b.classList.replace('bg-red-500', 'bg-emerald-500'); }
+            else { b.innerText = "🛑 전체 차단"; b.classList.replace('bg-emerald-500', 'bg-red-500'); }
+        }
+
+        async function f_toggleGlobalBlock() {
+            if(!confirm(f_isBlocked ? "전체 예약을 활성화할까요?" : "전체 예약을 차단할까요?")) return;
+            const { error } = await facDb.from('site_settings').update({ is_booking_blocked: !f_isBlocked }).eq('id', 1);
+            if(!error) { f_isBlocked = !f_isBlocked; f_updateBlockBtn(); }
+        }
+
+        function f_getBadge(status) {
+            const map = {
+                'pending': '<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-xs font-bold">대기중</span>',
+                'approved': '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs font-bold">승인됨</span>',
+                'standby': '<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-bold">취소대기</span>',
+                'rejected': '<span class="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-bold">거절됨</span>',
+                'cancelled': '<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded-full text-xs font-bold">사용자취소</span>',
+                'blocked': '<span class="bg-slate-800 text-white px-2 py-1 rounded-full text-xs font-bold">시스템차단</span>',
+                'used': '<span class="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-bold">사용완료</span>'
+            };
+            return map[status] || status;
+        }
+
+        async function f_loadList() {
+            const { data } = await facDb.from('reservations').select('*').order('start_time', { ascending: true });
+            f_list = data || [];
+            const container = document.getElementById('f_list');
+            container.innerHTML = '';
+            
+            if(f_list.length === 0) { container.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400 font-bold">예약 내역이 없습니다.</div>'; return; }
+
+            f_list.forEach(r => {
+                const d1 = new Date(r.start_time); const d2 = new Date(r.end_time);
+                const timeStr = `${d1.getMonth()+1}/${d1.getDate()} ${String(d1.getHours()).padStart(2,'0')}:${String(d1.getMinutes()).padStart(2,'0')} - ${String(d2.getHours()).padStart(2,'0')}:${String(d2.getMinutes()).padStart(2,'0')}`;
+                const nameStr = r.status === 'blocked' ? '<span class="text-red-500">차단됨</span>' : `${r.student_name} (${r.student_id})`;
+
+                container.innerHTML += `
+                    <div class="bg-white border border-slate-200 rounded-2xl p-4 cursor-pointer hover:shadow-md transition-shadow" onclick="f_openDetail('${r.id}')">
+                        <div class="flex justify-between items-center mb-2">
+                            ${f_getBadge(r.status)}
+                            <span class="text-[10px] text-slate-400 font-bold">${d1.getMonth()+1}/${d1.getDate()}</span>
                         </div>
-                        <button onclick="alert('수령 완료 처리는 현재 준비 중입니다.')" class="bg-red-50 text-red-500 px-3 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors">수령 완료</button>
-                    </li>
+                        <h4 class="font-extrabold text-slate-800 mb-1">${r.room_name} ${r.is_priority && r.status !== 'blocked' ? '<span class="text-red-500 text-[10px] ml-1">⭐우선</span>' : ''}</h4>
+                        <div class="text-sm font-bold text-slate-600 mb-3">${nameStr}</div>
+                        <div class="bg-slate-50 text-slate-500 text-xs text-center p-2 rounded-lg font-medium">${timeStr}</div>
+                    </div>
                 `;
             });
         }
 
-        // 페이지 로드 시 기존 목록 불러오기
-        window.onload = loadAdminLostAndFound;
+        function f_openDetail(id) {
+            f_selected = f_list.find(x => String(x.id) === String(id));
+            if(!f_selected) return;
+
+            document.getElementById('f_md_badge').innerHTML = f_getBadge(f_selected.status);
+            document.getElementById('f_md_name').innerHTML = f_selected.status === 'blocked' ? '<span class="text-red-500">차단 영역</span>' : `${f_selected.student_name} (${f_selected.student_id})`;
+            document.getElementById('f_md_phone').innerText = f_selected.phone || '-';
+            document.getElementById('f_md_room').innerText = f_selected.room_name;
+            document.getElementById('f_md_purpose').innerText = f_selected.purpose || '-';
+            
+            const d1 = new Date(f_selected.start_time); const d2 = new Date(f_selected.end_time);
+            document.getElementById('f_md_time').innerText = `${d1.getMonth()+1}/${d1.getDate()} ${String(d1.getHours()).padStart(2,'0')}:${String(d1.getMinutes()).padStart(2,'0')} ~ ${String(d2.getHours()).padStart(2,'0')}:${String(d2.getMinutes()).padStart(2,'0')}`;
+
+            const act = document.getElementById('f_md_actions');
+            act.innerHTML = '';
+            
+            if(f_selected.status === 'blocked') {
+                act.innerHTML = `<button class="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-bold" onclick="f_action('unblock')">해당 시간 차단 해제</button>`;
+            } else if(['pending', 'standby'].includes(f_selected.status)) {
+                act.innerHTML = `
+                    <button class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold" onclick="f_action('approve')">✅ 승인 처리하기</button>
+                    <button class="w-full bg-red-50 text-red-500 py-3 rounded-xl font-bold" onclick="f_action('reject')">❌ 거절 (취소)</button>
+                `;
+            } else if(f_selected.status === 'approved') {
+                act.innerHTML = `
+                    <button class="w-full bg-emerald-500 text-white py-3 rounded-xl font-bold mb-2" onclick="f_action('sms')">📱 안내 문자 발송</button>
+                    <div class="flex gap-2">
+                        <button class="flex-1 bg-slate-800 text-white py-3 rounded-xl font-bold text-sm" onclick="f_action('used')">사용 완료</button>
+                        <button class="flex-1 bg-red-50 text-red-500 py-3 rounded-xl font-bold text-sm" onclick="f_action('cancel')">강제 취소</button>
+                    </div>
+                `;
+            } else {
+                act.innerHTML = `<button class="w-full bg-slate-100 text-slate-400 py-3 rounded-xl font-bold" disabled>완료 또는 취소된 예약입니다</button>`;
+            }
+            openModal('modal_fac_detail');
+        }
+
+        async function f_action(type) {
+            if(!f_selected) return;
+            const sId = f_selected.id;
+
+            if(type === 'unblock') {
+                if(confirm("차단을 해제하시겠습니까?")) {
+                    await facDb.from('reservations').delete().eq('id', sId);
+                    closeModal('modal_fac_detail'); f_loadList();
+                }
+            } else if(type === 'sms') {
+                const msg = `[무룡고 시설예약 안내]\n${f_selected.room_name} 예약이 승인되었습니다.\n이용 전 학생회실에서 QR인증 바랍니다.`;
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                window.location.href = `sms:${f_selected.phone}${isIOS?'&':'?'}body=${encodeURIComponent(msg)}`;
+            } else {
+                let status = '';
+                if(type==='approve') status='approved'; if(type==='reject') status='rejected';
+                if(type==='used') status='used'; if(type==='cancel') status='cancelled';
+                if(confirm("상태를 변경하시겠습니까?")) {
+                    await facDb.from('reservations').update({status: status}).eq('id', sId);
+                    closeModal('modal_fac_detail'); f_loadList();
+                }
+            }
+        }
+
+        function f_setupTimeSelects() {
+            const s1=document.getElementById('f_b_start'); const s2=document.getElementById('f_b_end');
+            for(let i=7; i<=16; i++) {
+                let h = String(i).padStart(2,'0');
+                s1.add(new Option(`${h}:00`, `${h}:00`)); s2.add(new Option(`${h}:00`, `${h}:00`));
+                if(i!==16) { s1.add(new Option(`${h}:30`, `${h}:30`)); s2.add(new Option(`${h}:30`, `${h}:30`)); }
+            }
+        }
+
+        function f_openBlockModal() { openModal('modal_fac_block'); }
+        async function f_submitBlock() {
+            const r = document.getElementById('f_b_room').value; const d = document.getElementById('f_b_date').value;
+            const s = document.getElementById('f_b_start').value; const e = document.getElementById('f_b_end').value;
+            const p = document.getElementById('f_b_purpose').value || '관리자 차단';
+            
+            if(!d || !s || !e) return alert("시간을 모두 입력하세요.");
+            const start = new Date(`${d}T${s}`); const end = new Date(`${d}T${e}`);
+            if(start >= end) return alert("종료 시간이 빠릅니다.");
+
+            await facDb.from('reservations').insert([{
+                student_name:'차단', student_id:9999, phone:'000', purpose:p, password:'admin', room_name:r,
+                start_time:start.toISOString(), end_time:end.toISOString(), status:'blocked', is_priority:false
+            }]);
+            alert("차단 완료"); closeModal('modal_fac_block'); f_loadList();
+        }
+
+        async function f_factoryReset() {
+            if(prompt("초기화하려면 '초기화'를 입력하세요.") === '초기화') {
+                await facDb.from('reservations').delete().neq('id', 0);
+                alert("초기화됨"); f_loadList();
+            }
+        }
+
+
+        // ==========================================
+        // 3. 양심우산 (Umbrella) 로직
+        // ==========================================
+        let u_pendingReturn = null;
+
+        async function initUmb() { u_loadList(); }
+
+        async function u_loadList() {
+            const { data } = await umbDb.from('umbrella_rentals').select('*').neq('status', '파손').order('rent_date', { ascending: false });
+            const list = document.getElementById('u_list');
+            list.innerHTML = '';
+            
+            if(!data || data.length === 0) { list.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400 font-bold">기록이 없습니다.</div>'; return; }
+
+            data.forEach(r => {
+                const isRent = r.status === '대여중';
+                const d = new Date(isRent ? r.rent_date : (r.return_date || r.rent_date));
+                const timeStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                const badge = isRent ? '<span class="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-bold">대여중</span>' : '<span class="bg-emerald-100 text-emerald-600 px-2 py-1 rounded-full text-xs font-bold">반납완료</span>';
+                
+                list.innerHTML += `
+                    <div class="bg-white border ${isRent ? 'border-red-200 shadow-sm' : 'border-slate-200'} rounded-2xl p-4 cursor-pointer hover:bg-slate-50 transition-colors" onclick="u_openDetail('${encodeURIComponent(JSON.stringify(r))}')">
+                        <div class="flex justify-between items-center mb-2">${badge}<span class="text-xs text-slate-400">${timeStr}</span></div>
+                        <div class="flex justify-between items-end">
+                            <div><h4 class="font-extrabold text-slate-800">${r.student_name}</h4><span class="text-xs text-slate-500">${r.student_id}</span></div>
+                            <div class="bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg"><span class="text-[10px] text-slate-400 block -mb-1">우산번호</span><strong class="text-blue-600 text-sm">${r.umbrella_number || '-'}</strong></div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function u_openDetail(rowJson) {
+            const r = JSON.parse(decodeURIComponent(rowJson));
+            document.getElementById('u_md_title').innerText = `${r.student_name} 상세`;
+            document.getElementById('u_md_id').innerText = r.student_id;
+            document.getElementById('u_md_umbNum').innerText = `${r.umbrella_number || '-'}번`;
+            document.getElementById('u_md_phone').innerText = r.phone_number || '-';
+            document.getElementById('u_md_d1').innerText = formatFullDate(r.rent_date);
+            document.getElementById('u_md_d2').innerText = formatFullDate(r.return_date);
+
+            const isRent = r.status === '대여중';
+            const action = isRent ? 'return' : 'rent';
+            const qrData = { action: action, student_id: r.student_id, student_name: r.student_name, phone_number: r.phone_number };
+            document.getElementById('u_md_qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(JSON.stringify(qrData))}&color=1e293b`;
+
+            document.getElementById('u_md_btn_manual').style.display = isRent ? 'block' : 'none';
+            document.getElementById('u_md_btn_manual').onclick = () => {
+                u_pendingReturn = r;
+                closeModal('modal_umb_detail');
+                document.getElementById('u_dmg_name').innerText = r.student_name;
+                document.getElementById('u_dmg_umb').innerText = r.umbrella_number;
+                openModal('modal_umb_damage');
+            };
+
+            document.getElementById('u_md_btn_del').onclick = async () => {
+                if(confirm("이 기록을 영구 삭제하시겠습니까?")) {
+                    await umbDb.from('umbrella_rentals').delete().eq('id', r.id);
+                    closeModal('modal_umb_detail'); u_loadList();
+                }
+            };
+            openModal('modal_umb_detail');
+        }
+
+        async function u_executeReturn(isDamaged) {
+            closeModal('modal_umb_damage');
+            if(!u_pendingReturn) return;
+            const r = u_pendingReturn;
+            
+            await umbDb.from('umbrella_rentals').update({ status: '반납완료', return_date: new Date().toISOString() }).eq('id', r.id);
+            
+            if(isDamaged) {
+                await umbDb.from('umbrella_rentals').insert([{
+                    student_id: r.student_id, student_name: r.student_name, phone_number: r.phone_number,
+                    umbrella_number: r.umbrella_number, status: '파손', rent_date: new Date().toISOString()
+                }]);
+                alert("파손 처리 완료. 수리 전까지 대여 불가.");
+            } else { alert("정상 반납 완료."); }
+            
+            u_pendingReturn = null; u_loadList();
+        }
+
+        async function u_openBrokenModal() {
+            const { data } = await umbDb.from('umbrella_rentals').select('*').eq('status', '파손').order('rent_date', { ascending: false });
+            const list = document.getElementById('u_broken_list');
+            list.innerHTML = '';
+            
+            if(!data || data.length===0) list.innerHTML = '<div class="text-center py-5 text-sm text-slate-500">파손 내역 없음</div>';
+            else {
+                data.forEach(r => {
+                    list.innerHTML += `
+                        <div class="flex justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                            <div><strong class="text-red-500">${r.umbrella_number}번</strong> <span class="text-xs text-slate-500">(${r.student_name} 파손신고)</span></div>
+                            <button class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold" onclick="u_repair('${r.id}')">수리완료</button>
+                        </div>
+                    `;
+                });
+            }
+            openModal('modal_umb_broken');
+        }
+
+        async function u_repair(id) {
+            if(confirm("수리 완료 처리 시 다시 대여할 수 있습니다. 진행하시겠습니까?")) {
+                await umbDb.from('umbrella_rentals').delete().eq('id', id);
+                u_openBrokenModal();
+            }
+        }
+
+        async function u_resetAll() {
+            if(prompt("초기화하려면 '초기화'를 입력하세요.") === '초기화') {
+                await umbDb.from('umbrella_rentals').delete().neq('id', 0);
+                alert("초기화됨"); u_loadList();
+            }
+        }
+
+        async function u_openPdfModal() {
+            if(confirm("미반납자 명단 PDF를 출력하시겠습니까?")) {
+                const { data } = await umbDb.from('umbrella_rentals').select('*').eq('status', '대여중').order('rent_date', { ascending: true });
+                if(!data || data.length === 0) return alert("미반납자가 없습니다.");
+                
+                const container = document.createElement('div');
+                container.style.padding = '30px'; container.style.fontFamily = "'Pretendard', sans-serif";
+                let html = `<h2 style="text-align:center; margin-bottom:20px;">양심우산 미반납자 명단</h2>
+                            <table style="width:100%; border-collapse:collapse; font-size:14px; text-align:center;">
+                            <tr style="background:#f1f5f9;"><th style="border:1px solid #cbd5e1; padding:10px;">학번</th><th style="border:1px solid #cbd5e1; padding:10px;">이름</th><th style="border:1px solid #cbd5e1; padding:10px;">우산번호</th></tr>`;
+                data.forEach(r => {
+                    html += `<tr><td style="border:1px solid #cbd5e1; padding:10px;">${r.student_id}</td><td style="border:1px solid #cbd5e1; padding:10px;">${r.student_name}</td><td style="border:1px solid #cbd5e1; padding:10px;">${r.umbrella_number}</td></tr>`;
+                });
+                html += `</table>`;
+                container.innerHTML = html;
+
+                html2pdf().set({ margin: 15, filename: `미반납자명단.pdf`, html2canvas: {scale: 2} }).from(container).save();
+            }
+        }
+
+
+        // ==========================================
+        // 4. 게시판/요청 관리 (Board) 로직 (NEW!)
+        // ==========================================
+        async function initBoard() {
+            b_fetchLostFound();
+            b_fetchFeedbacks();
+        }
+
+        // 분실물
+        async function b_addLostFound() {
+            const name = document.getElementById('b_lf_name').value;
+            const found = document.getElementById('b_lf_found').value;
+            const pickup = document.getElementById('b_lf_pickup').value;
+
+            if(!name || !found || !pickup) return alert("분실물 정보를 모두 입력해주세요.");
+
+            const { error } = await mainDb.from('lost_and_found').insert([{
+                item_name: name, found_location: found, pickup_location: pickup, status: '보관중'
+            }]);
+            
+            if(error) alert("오류: 테이블 구조를 확인하세요.");
+            else { 
+                document.getElementById('b_lf_name').value = ''; document.getElementById('b_lf_found').value = ''; document.getElementById('b_lf_pickup').value = '';
+                b_fetchLostFound(); 
+            }
+        }
+
+        async function b_fetchLostFound() {
+            const { data } = await mainDb.from('lost_and_found').select('*').order('created_at', { ascending: false });
+            const list = document.getElementById('b_lf_list');
+            list.innerHTML = '';
+            if(!data || data.length === 0) { list.innerHTML = '<div class="text-sm text-slate-400 text-center py-5">등록된 분실물이 없습니다.</div>'; return; }
+
+            data.forEach(item => {
+                const isDone = item.status === '수령완료';
+                list.innerHTML += `
+                    <div class="bg-white border ${isDone ? 'border-slate-100 opacity-60' : 'border-blue-200 shadow-sm'} p-4 rounded-2xl flex justify-between items-center">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[10px] font-bold px-2 py-1 rounded-lg ${isDone ? 'bg-slate-100 text-slate-500' : 'bg-blue-100 text-blue-700'}">${item.status}</span>
+                                <span class="font-extrabold text-slate-800">${item.item_name}</span>
+                            </div>
+                            <div class="text-xs text-slate-500 font-medium">발견: ${item.found_location} | 보관: ${item.pickup_location}</div>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            ${!isDone ? `<button onclick="b_updateLostFound(${item.id}, '수령완료')" class="bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1 rounded-lg text-xs font-bold">수령 확인</button>` : ''}
+                            <button onclick="b_deleteLostFound(${item.id})" class="bg-slate-50 text-slate-500 border border-slate-200 px-3 py-1 rounded-lg text-xs font-bold hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors">삭제</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function b_updateLostFound(id, status) {
+            await mainDb.from('lost_and_found').update({ status: status }).eq('id', id);
+            b_fetchLostFound();
+        }
+        async function b_deleteLostFound(id) {
+            if(confirm("이 분실물을 삭제하시겠습니까?")) {
+                await mainDb.from('lost_and_found').delete().eq('id', id);
+                b_fetchLostFound();
+            }
+        }
+
+        // 학생 건의/요청 사항 (Feedback)
+        async function b_fetchFeedbacks() {
+            const { data } = await mainDb.from('feedback').select('*').order('created_at', { ascending: false });
+            const list = document.getElementById('b_fb_list');
+            list.innerHTML = '';
+            if(!data || data.length === 0) { list.innerHTML = '<div class="text-sm text-slate-400 text-center py-5">새로운 요청사항이 없습니다.</div>'; return; }
+
+            data.forEach(item => {
+                const date = new Date(item.created_at);
+                const dateStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+                
+                // 분류 태그 처리 시각화
+                let typeBadge = '<span class="bg-slate-100 text-slate-600 px-2 py-1 rounded-md text-[10px] font-bold">일반 건의</span>';
+                if(item.content.includes('[반일정요청]')) typeBadge = '<span class="bg-amber-100 text-amber-600 px-2 py-1 rounded-md text-[10px] font-bold">일정 요청</span>';
+                else if(item.content.includes('[학습자료]')) typeBadge = '<span class="bg-purple-100 text-purple-600 px-2 py-1 rounded-md text-[10px] font-bold">자료 기여</span>';
+
+                list.innerHTML += `
+                    <div class="bg-slate-50 border border-slate-200 p-4 rounded-2xl flex flex-col gap-2">
+                        <div class="flex justify-between items-start">
+                            ${typeBadge}
+                            <span class="text-[10px] text-slate-400 font-bold">${dateStr}</span>
+                        </div>
+                        <p class="text-sm font-medium text-slate-800 break-words">${item.content}</p>
+                        <div class="flex justify-end mt-1">
+                            <button onclick="b_deleteFeedback(${item.id})" class="text-xs bg-white border border-slate-200 text-slate-600 font-bold px-3 py-1.5 rounded-lg shadow-sm hover:bg-slate-100">✔️ 확인 및 처리완료(삭제)</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function b_deleteFeedback(id) {
+            await mainDb.from('feedback').delete().eq('id', id);
+            b_fetchFeedbacks();
+        }
+
+        // 공지/자료 등록 (posts)
+        async function b_addPost() {
+            const cat = document.getElementById('b_post_category').value;
+            const author = document.getElementById('b_post_author').value;
+            const title = document.getElementById('b_post_title').value;
+            const link = document.getElementById('b_post_link').value;
+
+            if(!author || !title) return alert("작성자와 제목은 필수입니다.");
+
+            const { error } = await mainDb.from('posts').insert([{
+                category: cat, title: title, author: author, content: link
+            }]);
+
+            if(error) alert("오류 발생. posts 테이블 생성을 확인하세요.");
+            else {
+                alert("게시물이 등록되었습니다!");
+                document.getElementById('b_post_title').value = ''; document.getElementById('b_post_link').value = '';
+            }
+        }
+
+
+        // ==========================================
+        // 시스템 초기 로드 묶기
+        // ==========================================
+        window.onload = () => {
+            initLunch();
+            initFac();
+            initUmb();
+            initBoard();
+
+            // 백그라운드 동기화 (급식/요청)
+            setInterval(() => {
+                initLunch();
+                b_fetchFeedbacks();
+            }, 5000);
+        };
     </script>
 </body>
 </html>
