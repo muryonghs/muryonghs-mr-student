@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>무룡고 통합 포털</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --bg: #f5f5f7; --text-main: #1d1d1f; --text-sub: #86868b; --card: #ffffff; --primary: #0071e3; --danger: #ff3b30; --success: #34c759; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Pretendard', sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 0; padding-bottom: 80px; }
+        
+        /* 공통 UI */
+        .page { display: none; padding: 20px; max-width: 600px; margin: 0 auto; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .top-nav { display: flex; align-items: center; margin-bottom: 25px; padding-top: 10px; }
+        .back-btn { background: none; border: none; font-size: 1.5rem; color: var(--primary); cursor: pointer; padding: 0 15px 0 0; font-weight: bold; }
+        .page-title { font-size: 1.5rem; font-weight: 800; margin: 0; }
+        
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 15px; }
+        .input-box { width: 100%; padding: 15px; border: 1px solid #e5e5ea; border-radius: 12px; font-size: 1rem; margin-bottom: 10px; background: #fbfbfd; font-family: inherit; }
+        .btn-main { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 14px; font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn-main:active { transform: scale(0.98); }
+
+        /* 홈 화면 특화 */
+        .weather-badge { background: rgba(0, 113, 227, 0.1); color: var(--primary); padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 700; display: inline-block; margin-bottom: 15px; }
+        .greeting { font-size: 1.8rem; font-weight: 800; line-height: 1.4; margin: 0 0 25px 0; letter-spacing: -0.5px; }
+        .greeting span { color: var(--primary); }
+        
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .menu-item { background: var(--card); border-radius: 20px; padding: 20px; text-decoration: none; color: var(--text-main); box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer; transition: 0.2s; }
+        .menu-item:active { transform: scale(0.96); }
+        .menu-item.wide { grid-column: span 2; display: flex; align-items: center; background: linear-gradient(135deg, #e3f2fd, #bbdefb); }
+        .menu-icon { font-size: 2rem; margin-bottom: 10px; }
+        .menu-item.wide .menu-icon { margin-bottom: 0; margin-right: 15px; font-size: 2.5rem; }
+        .menu-item h3 { margin: 0 0 5px 0; font-size: 1.05rem; font-weight: 800; }
+        .menu-item p { margin: 0; font-size: 0.8rem; color: var(--text-sub); font-weight: 600; line-height: 1.4; }
+
+        /* 게시판 리스트 */
+        .post-item { border-bottom: 1px solid #f5f5f7; padding: 15px 0; }
+        .post-item:last-child { border-bottom: none; }
+        .post-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 5px; }
+        .post-meta { font-size: 0.8rem; color: var(--text-sub); }
+        
+        /* 로고 및 하단 */
+        .bottom-logo { text-align: center; font-size: 0.8rem; color: var(--text-sub); margin-top: 40px; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <div id="page-home" class="page active">
+        <div class="weather-badge" id="weather">🌤 날씨 로딩중...</div>
+        <h1 class="greeting" id="greeting">무룡고 학생 여러분,<br><span>오늘도 즐거운 하루 보내세요!</span></h1>
+        
+        <div class="menu-grid">
+            <div class="menu-item wide" onclick="goPage('lunch')">
+                <div class="menu-icon">🍱</div><div><h3>실시간 급식 & 식단</h3><p>현재 배식 현황과 오늘의 메뉴</p></div>
+            </div>
+            <div class="menu-item" onclick="goPage('umbrella')">
+                <div class="menu-icon">☔️</div><h3>양심우산</h3><p>QR코드로 간편 대여</p>
+            </div>
+            <div class="menu-item" onclick="goPage('facility')">
+                <div class="menu-icon">🏟️</div><h3>시설예약</h3><p>풋살장, 더하우스 등</p>
+            </div>
+            <div class="menu-item" onclick="goBoard('notice', '학교/학생회 공지')">
+                <div class="menu-icon">📢</div><h3>학교 공지</h3><p>중요 알림 모아보기</p>
+            </div>
+            <div class="menu-item" onclick="goPage('calendar')">
+                <div class="menu-icon">📅</div><h3>학사/수행 달력</h3><p>우리 반 일정 확인</p>
+            </div>
+            <div class="menu-item" onclick="goBoard('study', '학습자료실')">
+                <div class="menu-icon">📚</div><h3>학습자료실</h3><p>자료 공유 및 요청</p>
+            </div>
+            <div class="menu-item" onclick="goBoard('lost', '분실물 센터')">
+                <div class="menu-icon">🔍</div><h3>분실물</h3><p>주인 잃은 물건 찾기</p>
+            </div>
+        </div>
+        <div class="bottom-logo">© 2026 무룡고등학교 통합 플랫폼</div>
+    </div>
+
+    <div id="page-board" class="page">
+        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮</button><h1 class="page-title" id="board-title">게시판</h1></div>
+        <div class="card">
+            <div id="board-list">게시글을 불러오는 중...</div>
+        </div>
+        <div class="card" id="board-write-section">
+            <h3 style="margin-top:0; font-size:1.1rem; font-weight:800;">새 글 작성 (등록 요청)</h3>
+            <input type="text" id="board-author" class="input-box" placeholder="작성자 (예: 2학년 3반 홍길동)">
+            <input type="text" id="board-subject" class="input-box" placeholder="제목을 입력하세요">
+            <textarea id="board-content" class="input-box" placeholder="내용을 자세히 적어주세요" rows="4"></textarea>
+            <button class="btn-main" onclick="submitBoard()">등록 요청하기</button>
+        </div>
+    </div>
+
+    <div id="page-calendar" class="page">
+        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮</button><h1 class="page-title">우리 반 일정</h1></div>
+        <div class="card text-center">
+            <select id="cal-grade" class="input-box" style="width:48%; display:inline-block;"><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option></select>
+            <select id="cal-class" class="input-box" style="width:48%; display:inline-block;"><option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option><option value="5">5반</option><option value="6">6반</option></select>
+            <button class="btn-main mt-2" onclick="loadCalendar()">일정 조회</button>
+        </div>
+        <div class="card"><div id="calendar-list">조회할 학년과 반을 선택해주세요.</div></div>
+        
+        <div class="card">
+            <h3 style="margin-top:0; font-size:1.1rem; font-weight:800;">일정 등록 (반장/부반장/학습도우미)</h3>
+            <input type="date" id="cal-date" class="input-box">
+            <input type="text" id="cal-title" class="input-box" placeholder="일정 내용 (예: 수학 수행평가)">
+            <input type="text" id="cal-author" class="input-box" placeholder="등록자 이름 및 직책">
+            <button class="btn-main" onclick="submitCalendar()">등록 요청하기</button>
+        </div>
+    </div>
+
+    <script>
+    // Supabase 연동 설정
+    const DB_URL = 'https://vfftkdnzjemeipuhlzfv.supabase.co';
+    const DB_KEY = 'sb_publishable_9Q7vn7So6HvUSMPu5BhyDA_9qz928H-';
+    const db = supabase.createClient(DB_URL, DB_KEY);
+
+    let currentBoardType = '';
+
+    // 화면 전환 함수
+    function goPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + pageId).classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    // 게시판 데이터 로드 및 전환
+    function goBoard(type, title) {
+        currentBoardType = type;
+        document.getElementById('board-title').innerText = title;
+        goPage('board');
+        loadBoardData(type);
+    }
+
+    async function loadBoardData(type) {
+        const listDiv = document.getElementById('board-list');
+        listDiv.innerHTML = '<p>불러오는 중...</p>';
+        const { data, error } = await db.from('board_posts').select('*').eq('board_type', type).order('created_at', { ascending: false });
+        
+        if (error || !data.length) {
+            listDiv.innerHTML = '<p style="color:#86868b; text-align:center;">등록된 내용이 없습니다.</p>';
+            return;
+        }
+
+        listDiv.innerHTML = data.map(post => {
+            const d = new Date(post.created_at);
+            const dateStr = `${d.getMonth()+1}.${d.getDate()} ${d.getHours()}:${d.getMinutes()}`;
+            return `<div class="post-item">
+                        <div class="post-title">${post.title}</div>
+                        <div style="font-size:0.9rem; margin-bottom:5px;">${post.content}</div>
+                        <div class="post-meta">작성자: ${post.author} | ${dateStr}</div>
+                    </div>`;
+        }).join('');
+    }
+
+    async function submitBoard() {
+        const author = document.getElementById('board-author').value;
+        const title = document.getElementById('board-subject').value;
+        const content = document.getElementById('board-content').value;
+        
+        if(!author || !title || !content) return alert("모든 항목을 입력해주세요.");
+        
+        const { error } = await db.from('board_posts').insert([{ board_type: currentBoardType, title: title, content: content, author: author }]);
+        if(!error) {
+            alert("등록이 요청되었습니다. (관리자 승인 후 표시될 수 있습니다.)");
+            document.getElementById('board-subject').value = '';
+            document.getElementById('board-content').value = '';
+            loadBoardData(currentBoardType);
+        }
+    }
+
+    // 달력 데이터 로드
+    async function loadCalendar() {
+        const g = document.getElementById('cal-grade').value;
+        const c = document.getElementById('cal-class').value;
+        const listDiv = document.getElementById('calendar-list');
+        listDiv.innerHTML = '불러오는 중...';
+
+        const { data } = await db.from('calendar_events').select('*').eq('target_grade', g).eq('target_class', c).order('event_date', { ascending: true });
+        
+        if (!data || !data.length) {
+            listDiv.innerHTML = '<p style="color:#86868b; text-align:center;">등록된 일정이 없습니다.</p>';
+            return;
+        }
+
+        listDiv.innerHTML = data.map(ev => {
+            return `<div class="post-item">
+                        <span style="color:#0071e3; font-weight:800; font-size:1.1rem; margin-right:10px;">${ev.event_date.substring(5,10).replace('-','/')}</span>
+                        <span style="font-weight:700;">${ev.title}</span>
+                    </div>`;
+        }).join('');
+    }
+
+    async function submitCalendar() {
+        const g = document.getElementById('cal-grade').value;
+        const c = document.getElementById('cal-class').value;
+        const date = document.getElementById('cal-date').value;
+        const title = document.getElementById('cal-title').value;
+        const author = document.getElementById('cal-author').value;
+
+        if(!date || !title || !author) return alert("날짜, 내용, 등록자를 모두 입력해주세요.");
+        
+        const { error } = await db.from('calendar_events').insert([{ target_grade: g, target_class: c, event_date: date, title: title, author: author }]);
+        if(!error) {
+            alert("일정이 등록되었습니다.");
+            loadCalendar();
+        }
+    }
+
+    // 날씨 및 인사말 초기화
+    async function initHome() {
+        const greets = ["오늘도 힘차게 파이팅!", "급식이 기대되는 하루네요 🍱", "반짝이는 여러분의 하루를 응원합니다 ✨"];
+        document.getElementById('greeting').innerHTML = `무룡고 학생 여러분,<br><span>${greets[Math.floor(Math.random()*greets.length)]}</span>`;
+        
+        try {
+            const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=35.5384&longitude=129.3114&current_weather=true');
+            const data = await res.json();
+            const temp = Math.round(data.current_weather.temperature);
+            document.getElementById('weather').innerText = `🌤 현재 울산 기온 : ${temp}℃`;
+        } catch (e) { document.getElementById('weather').innerText = `🌤 날씨 로딩 실패`; }
+    }
+    
+    initHome();
+</script>
+</body>
+</html>
