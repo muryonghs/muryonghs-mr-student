@@ -76,6 +76,10 @@
         #page-facility .reservation-card { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
         #page-facility .btn-primary { background-color: #004a99; border: none; padding: 12px; font-weight: bold; border-radius: 10px; }
         #page-facility .notice-box { background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px; }
+        
+        /* [수정 2] 시설예약 버튼 디자인 추가 */
+        #page-facility .btn-main { width: 100%; background: #0071e3; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        #page-facility .btn-main:active { transform: scale(0.98); }
 
         /* === 4. 추가 기능 공통 (달력, 게시판, 분실물, 학생회) === */
         .new-card { background: #ffffff; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; }
@@ -338,7 +342,26 @@
         function updateWaitTimeUI(waitMin, setAtStr) { const waitBox = document.getElementById('waitTimeBox'); if (waitInterval) clearInterval(waitInterval); if (!waitMin || waitMin <= 0 || !setAtStr) { waitBox.style.display = 'none'; return; } const setAt = new Date(setAtStr); waitInterval = setInterval(() => { const diffSec = Math.floor((new Date() - setAt) / 1000); const remainingSec = (waitMin * 60) - diffSec; if (remainingSec <= 0) { waitBox.style.display = 'none'; clearInterval(waitInterval); } else { waitBox.style.display = 'block'; const m = Math.floor(remainingSec / 60); const s = remainingSec % 60; document.getElementById('displayTime').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; } }, 1000); }
         function updateUI(index) { const statusBox = document.getElementById('studentQueue'); const subStatus = document.getElementById('subStatus'); const banner = document.getElementById('noticeBanner'); const targetGrade = document.getElementById('targetGrade'); if (currentIdx !== -1 && currentIdx !== index && index > 0 && index < 4) { showAlert(grades[index]); } currentIdx = index; if (index === 5) { statusBox.innerText = grades[index]; statusBox.style.color = "#ef4444"; subStatus.style.display = "block"; banner.style.display = "none"; } else { subStatus.style.display = "none"; if (index === 0 || index === 4) { statusBox.innerText = grades[index]; statusBox.style.color = "#94a3b8"; banner.style.display = "none"; } else { statusBox.innerText = grades[index]; statusBox.style.color = "#3b82f6"; banner.style.display = "block"; targetGrade.innerText = grades[index]; } } }
         async function loadLunchData() { const { data } = await db.from('lunch_status').select('*').eq('id', 1).single(); if (data) { currentIdx = data.current_index; updateUI(data.current_index); updateWaitTimeUI(data.wait_minutes, data.wait_set_at); } const { data: nList } = await db.from('announcements').select('*'); if (nList) { nList.forEach(n => { if(n.id === 1) document.getElementById('realNotice').innerText = n.content; if(n.id === 2) handlePopup(n.content); }); } }
-        async function fetchMenu() { const d = new Date().toISOString().slice(0,10).replace(/-/g, ''); try { const res = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480070&MLSV_YMD=${d}`); const data = await res.json(); if (data.mealServiceDietInfo) { document.getElementById('menuContent').innerHTML = data.mealServiceDietInfo[1].row[0].DDISH_NM.replace(/[0-9.]/g, '').replace(/\(\)/g, '<br>').replace(/<br\/>/g, '<br>'); } else { document.getElementById('menuContent').innerText = "오늘은 급식 정보가 없습니다."; } } catch(e) { document.getElementById('menuContent').innerText = "메뉴 로드 실패"; } }
+        
+        async function fetchMenu() { 
+            const d = new Date().toISOString().slice(0,10).replace(/-/g, ''); 
+            try { 
+                const res = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480070&MLSV_YMD=${d}`); 
+                const data = await res.json(); 
+                if (data.mealServiceDietInfo) { 
+                    // [수정 3] 알레르기 숫자와 빈 괄호를 확실하게 제거하여 빈 줄이 안 생기도록 수정
+                    let rawMenu = data.mealServiceDietInfo[1].row[0].DDISH_NM;
+                    let menuList = rawMenu.split(/<br\/>/);
+                    let cleanMenu = menuList.map(item => item.replace(/[0-9.\(\)]/g, '').trim()).filter(item => item !== '');
+                    document.getElementById('menuContent').innerHTML = cleanMenu.join('<br>');
+                } else { 
+                    document.getElementById('menuContent').innerText = "오늘은 급식 정보가 없습니다."; 
+                } 
+            } catch(e) { 
+                document.getElementById('menuContent').innerText = "메뉴 로드 실패"; 
+            } 
+        }
+
         async function sendFeedback() { const text = document.getElementById('feedbackText').value; if (!text.trim()) return; const { error } = await db.from('feedback').insert([{ content: text }]); if (!error) { alert("소중한 의견이 전송되었습니다!"); document.getElementById('feedbackText').value = ""; } }
         db.channel('custom-all-channel').on('postgres_changes', { event: 'UPDATE', schema: 'public' }, p => { if (p.table === 'lunch_status') { updateUI(p.new.current_index); updateWaitTimeUI(p.new.wait_minutes, p.new.wait_set_at); } if (p.table === 'announcements') { if(p.new.id === 1) document.getElementById('realNotice').innerText = p.new.content; if(p.new.id === 2) handlePopup(p.new.content); } }).subscribe();
 
@@ -426,7 +449,7 @@
             if (!error) { alert("성공적으로 예약이 취소되었습니다."); cancelModal.hide(); loadStatus(); } else { alert("오류 발생: " + error.message); }
         }
 
-        // === 4. 학사/수행 달력 (🚨 픽스: 날짜 에러 방지) ===
+        // === 4. 학사/수행 달력
         async function fetchNeisCalendar() { 
             const listDiv = document.getElementById('neis-calendar-list'); 
             try { 
@@ -435,9 +458,7 @@
                 const mm = String(d.getMonth() + 1).padStart(2, '0');
                 const dd = String(d.getDate()).padStart(2, '0');
                 
-                // 조회 시작일: 오늘
                 const fromDate = `${yyyy}${mm}${dd}`; 
-                // 조회 종료일: 올해 마지막 날
                 const toDate = `${yyyy}1231`; 
                 
                 const todayYMD = parseInt(fromDate);
@@ -453,7 +474,6 @@
                         return; 
                     } 
                     
-                    // 최대 5개까지만 깔끔하게 자르기
                     const displayEvents = events.slice(0, 5);
 
                     listDiv.innerHTML = displayEvents.map(e => `<div class="list-item"><strong style="color:#0071e3; margin-right:10px;">${e.AA_YMD.substring(4,6)}/${e.AA_YMD.substring(6,8)}</strong> ${e.EVENT_NM}</div>`).join(''); 
@@ -470,13 +490,52 @@
 
         // === 5. 게시판 ===
         function goBoard(type, title) { 
-            currentBoardType = type; document.getElementById('board-title').innerText = title; document.getElementById('file-upload-area').style.display = (type === 'study') ? 'block' : 'none'; 
+            currentBoardType = type; 
+            document.getElementById('board-title').innerText = title; 
+            document.getElementById('file-upload-area').style.display = (type === 'study') ? 'block' : 'none'; 
             if (type === 'study') { document.getElementById('board-write-title').innerText = '📚 자료 기여하기'; document.getElementById('board-submit-btn').innerText = '자료 기여하기'; } 
             else { document.getElementById('board-write-title').innerText = '새 글 등록/요청'; document.getElementById('board-submit-btn').innerText = '등록하기'; }
+            
+            // [수정 1] 게시판을 이동할 때마다 입력칸을 깨끗하게 비워줍니다.
+            document.getElementById('board-author').value = '';
+            document.getElementById('board-title').value = '';
+            document.getElementById('board-content').value = '';
+            if(document.getElementById('board-file')) document.getElementById('board-file').value = '';
+
             goPage('board'); loadBoardData(type); 
         }
+        
         async function loadBoardData(type) { const listDiv = document.getElementById('board-list'); listDiv.innerHTML = '<p>불러오는 중...</p>'; const { data, error } = await db.from('board_posts').select('*').eq('board_type', type).order('created_at', { ascending: false }); if (error || !data.length) { listDiv.innerHTML = '<p style="text-align:center; color:#86868b;">등록된 글이 없습니다.</p>'; return; } listDiv.innerHTML = data.map(post => { const d = new Date(post.created_at); const dateStr = `${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; const fileBtn = post.file_url ? `<a href="${post.file_url}" target="_blank" style="color:#0071e3; font-weight:bold; text-decoration:none; background:#e3f2fd; padding:4px 8px; border-radius:8px; font-size:0.8rem;">📁 첨부파일 열기</a>` : ''; return `<div class="list-item"><div style="font-weight:700; font-size:1.05rem; margin-bottom:5px;">${post.title}</div><div style="font-size:0.9rem; margin-bottom:8px;">${post.content}</div><div style="font-size:0.8rem; color:#86868b; display:flex; justify-content:space-between;"><span>${post.author} | ${dateStr}</span>${fileBtn}</div></div>`; }).join(''); }
-        async function submitBoard() { const author = document.getElementById('board-author').value; const title = document.getElementById('board-title').value; const content = document.getElementById('board-content').value; const fileInput = document.getElementById('board-file'); if(!author || !title || !content) return alert("모든 항목을 입력해주세요."); let uploadedFileUrl = null; if(currentBoardType === 'study' && fileInput.files.length > 0) { const file = fileInput.files[0]; const fileName = `${Date.now()}_${file.name}`; alert("파일 업로드 중입니다..."); const { error: uploadError } = await db.storage.from('study_files').upload(fileName, file); if(uploadError) return alert("업로드 실패: " + uploadError.message); const { data } = db.storage.from('study_files').getPublicUrl(fileName); uploadedFileUrl = data.publicUrl; } const { error } = await db.from('board_posts').insert([{ board_type: currentBoardType, title: title, content: content, author: author, file_url: uploadedFileUrl }]); if(!error) { alert("등록이 완료되었습니다."); document.getElementById('board-title').value = ''; document.getElementById('board-content').value = ''; if(fileInput) fileInput.value = ''; loadBoardData(currentBoardType); } }
+        
+        async function submitBoard() { 
+            const author = document.getElementById('board-author').value; 
+            const title = document.getElementById('board-title').value; 
+            const content = document.getElementById('board-content').value; 
+            const fileInput = document.getElementById('board-file'); 
+            if(!author || !title || !content) return alert("모든 항목을 입력해주세요."); 
+            
+            let uploadedFileUrl = null; 
+            if(currentBoardType === 'study' && fileInput.files.length > 0) { 
+                const file = fileInput.files[0]; 
+                const fileName = `${Date.now()}_${file.name}`; 
+                alert("파일 업로드 중입니다..."); 
+                const { error: uploadError } = await db.storage.from('study_files').upload(fileName, file); 
+                if(uploadError) return alert("업로드 실패: " + uploadError.message); 
+                const { data } = db.storage.from('study_files').getPublicUrl(fileName); 
+                uploadedFileUrl = data.publicUrl; 
+            } 
+            
+            const { error } = await db.from('board_posts').insert([{ board_type: currentBoardType, title: title, content: content, author: author, file_url: uploadedFileUrl }]); 
+            if(!error) { 
+                alert("등록이 완료되었습니다."); 
+                // [수정 1] 글 등록이 완료되면 작성자 칸도 확실하게 비워줍니다.
+                document.getElementById('board-author').value = '';
+                document.getElementById('board-title').value = ''; 
+                document.getElementById('board-content').value = ''; 
+                if(fileInput) fileInput.value = ''; 
+                loadBoardData(currentBoardType); 
+            } 
+        }
 
         // === 6. 분실물 센터 ===
         async function fetchLostItems() { const listDiv = document.getElementById('lost-list'); listDiv.innerHTML = '<p>불러오는 중...</p>'; const { data, error } = await db.from('lost_and_found').select('*').order('created_at', { ascending: false }); if (error || !data.length) { listDiv.innerHTML = '<p style="text-align:center; color:#86868b;">현재 등록된 분실물이 없습니다.</p>'; return; } listDiv.innerHTML = data.map(item => { const imgHtml = item.photo_url ? `<img src="${item.photo_url}" class="lost-img">` : `<div class="lost-img" style="display:flex; align-items:center; justify-content:center; font-size:2rem; color:#fff; background:#c7c7cc;">📸</div>`; return `<div class="lost-card">${imgHtml}<div class="lost-info"><h4>${item.item_name}</h4><p>📍 발견장소: ${item.found_location}</p><span class="lost-badge">🏃‍♂️ 찾아가는 곳: ${item.pickup_location}</span></div></div>`; }).join(''); }
