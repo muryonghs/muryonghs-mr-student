@@ -83,7 +83,6 @@
         /* === 4. 추가 기능 공통 === */
         .new-card { background: #ffffff; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; width: 100%; }
         
-        /* [수정 1] 날짜 선택 칸 삐져나감 방지 및 두께 유지 */
         .new-input { 
             width: 100%; 
             max-width: 100%; 
@@ -91,12 +90,20 @@
             border: 1.5px solid #e5e5ea; 
             border-radius: 12px; 
             font-size: 1rem; 
-            margin: 0 0 12px 0; /* 좌우 여백을 0으로 명시하여 삐져나감 방지 */
+            margin: 0 0 12px 0; 
             background: #fbfbfd; 
             font-family: inherit; 
             box-sizing: border-box; 
             display: block; 
             min-height: 52px; 
+        }
+
+        /* [핵심 수정] 날짜 선택(date) 칸 전용 삐져나감 방지 및 스타일 고정 */
+        input[type="date"].new-input {
+            -webkit-appearance: none; /* 브라우저 억지 디자인 삭제 */
+            appearance: none;
+            overflow: hidden; /* 혹시라도 넘치면 가리기 */
+            background-color: #fbfbfd;
         }
         
         .new-btn { width: 100%; padding: 16px; background: #0071e3; color: white; border: none; border-radius: 14px; font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: background 0.2s ease; box-sizing: border-box;}
@@ -174,7 +181,6 @@
 
     <!-- === 급식실 === -->
     <div id="page-lunch" class="page">
-        <!-- 제목 제거 후 뒤로가기 버튼만 남김 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
         </div>
@@ -238,8 +244,6 @@
                 <div style="background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px;">🔔 안내: [다음 주 월~금] 일정 예약 진행 중</div>
                 
                 <div class="mb-3"><label class="form-label" style="font-weight: bold;">이름</label><input type="text" id="name" class="form-control"></div>
-                
-                <!-- [수정 2] 학번 4자리 숫자 입력 제한 추가 -->
                 <div class="mb-3">
                     <label class="form-label" style="font-weight: bold;">학번 (4자리)</label>
                     <input type="text" inputmode="numeric" id="sid" class="form-control" maxlength="4" placeholder="예: 3705" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
@@ -294,7 +298,6 @@
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
         </div>
         <div class="new-card" style="margin-bottom: 20px; padding: 15px;">
-            <!-- [수정 3] 학생회 소식 제목 변경 -->
             <h1 style="text-align:center; font-size: 1.3rem; font-weight: 800; margin: 0;">🎉 무룡고등학교 학생회 소식</h1>
         </div>
         <div id="council-list">행사 정보를 불러오는 중...</div>
@@ -615,7 +618,6 @@
                 document.getElementById('board-write-title').innerText = '💡 새 건의사항 작성'; 
                 document.getElementById('board-submit-btn').innerText = '건의하기'; 
                 
-                // [수정 4] 건의함 안내 멘트 수정
                 document.getElementById('board-desc').innerHTML = '학교 발전을 위한 여러분의 소중한 의견을 들려주세요.<br>작성된 건의사항은 학생회만 확인할 수 있습니다.';
                 document.getElementById('board-desc').style.display = 'block';
                 document.getElementById('board-content').placeholder = "건의할 내용을 상세히 적어주세요.";
