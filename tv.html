@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>무룡고등학교 실시간 급식실</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        * { box-sizing: border-box; }
+        
+        html { font-size: 100%; transition: font-size 0.5s ease; }
+
+        body { font-family: 'Pretendard', sans-serif; background: #f1f5f9; margin: 0; padding: 40px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; position: relative; cursor: default; transition: cursor 0.3s; }
+        .hide-all { cursor: none !important; }
+        .hide-all .controls { opacity: 0 !important; pointer-events: none; }
+
+        header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 20px 50px; border-radius: 25px; margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .school-name { font-size: 3rem; font-weight: 900; color: #0f172a; }
+        .clock { font-size: 2.5rem; font-weight: 700; color: #3b82f6; }
+
+        .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; flex-grow: 1; }
+        .status-card { background: white; border-radius: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 8px solid #3b82f6; padding: 40px; }
+        .status-label { font-size: 4rem; color: #64748b; font-weight: 700; margin-bottom: 20px; }
+        .current-grade { font-size: 15rem; font-weight: 900; color: #1d4ed8; line-height: 1; text-align: center; word-break: keep-all; margin-bottom: 20px; }
+
+        .wait-box { display: none; margin-top: 30px; background: #f8fafc; border-radius: 30px; padding: 25px 40px; text-align: center; border: 2px solid #e2e8f0; width: 100%; }
+        .wait-time-text { font-size: 4.5rem; font-weight: 900; color: #2563eb; letter-spacing: -2px; margin-bottom: 5px; }
+        .wait-time-text span { font-variant-numeric: tabular-nums; }
+        .wait-notice { font-size: 1.5rem; color: #64748b; font-weight: 700; }
+
+        .side-content { display: flex; flex-direction: column; gap: 30px; }
+        .info-box { background: white; border-radius: 40px; padding: 40px; flex: 1; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .info-title { font-size: 2.5rem; font-weight: 900; color: #0f172a; margin-bottom: 20px; border-bottom: 5px solid #3b82f6; display: inline-block; }
+        .info-text { font-size: 2.4rem; line-height: 1.4; color: #334155; font-weight: 700; word-break: break-all;}
+
+        #alertOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(239, 68, 68, 0.98); color: white; z-index: 9000; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .alert-title { font-size: 6rem; font-weight: 900; margin-bottom: 20px; }
+        .alert-msg { font-size: 11rem; font-weight: 900; animation: bounce 0.6s infinite alternate; }
+        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+        /* ✨ 5초마다 나타났다 사라질 TV 팝업 */
+        #importantPopup { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(15, 23, 42, 0.95); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; 
+            padding: 50px; box-sizing: border-box; backdrop-filter: blur(10px); 
+            opacity: 0; transition: opacity 0.5s ease-in-out;
+        }
+        .important-content { background: white; padding: 80px; border-radius: 40px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.5); border: 10px solid #e11d48; max-width: 90%; }
+        .important-content h2 { margin: 0 0 40px 0; color: #e11d48; font-size: 6rem; font-weight: 900; }
+        #importantPopupText { font-size: 4rem; line-height: 1.6; color: #1e293b; font-weight: 800; white-space: pre-wrap; word-break: keep-all; }
+
+        #qrPopup { display: none; position: fixed; bottom: 50px; left: 50px; background: white; padding: 30px; border-radius: 30px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); border: 5px solid #3b82f6; z-index: 500; animation: slideUp 0.5s ease-out; flex-direction: column; align-items: center; text-align: center; }
+        @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .qr-img { width: 250px; height: 250px; margin-bottom: 15px; }
+        .qr-text { font-size: 1.8rem; font-weight: 800; color: #1e293b; line-height: 1.3; }
+
+        .controls { position: absolute; bottom: 30px; right: 30px; display: flex; gap: 15px; transition: opacity 0.5s; z-index: 100; opacity: 1; }
+        .btn { padding: 15px 25px; border-radius: 15px; border: none; cursor: pointer; font-size: 1.2rem; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .btn-fs { background: #1e293b; color: white; }
+        .btn-test { background: #10b981; color: white; }
+    </style>
+</head>
+<body onmousemove="resetTimer()">
+
+<div id="alertOverlay"><div class="alert-title">지금 즉시 급식실 입장하세요!</div><div id="alertGrade" class="alert-msg">O학년</div></div>
+
+<div id="importantPopup">
+    <div class="important-content">
+        <h2>🚨 중요 공지 🚨</h2>
+        <div id="importantPopupText"></div>
+    </div>
+</div>
+
+<div id="qrPopup">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://muryonghs.github.io/muryong-lunch/" class="qr-img" alt="QR Code">
+    <div class="qr-text">QR 코드를 스캔해<br>스마트폰으로 간단하게 이용해 보세요</div>
+</div>
+
+<header>
+    <div class="school-name">무룡고등학교 실시간 급식실</div>
+    <div class="clock" id="clock">00:00:00</div>
+</header>
+
+<div class="main-content">
+    <div class="status-card" id="tvStatusCard">
+        <div class="status-label">현재 배식 상태</div>
+        <div class="current-grade" id="tvGrade">연결 중</div>
+        <div id="subStatus" style="font-size: 3rem; color: #ef4444; font-weight: 800; text-align: center; margin-top: -10px; margin-bottom: 20px; display: none;">오늘은 급식 호출을 진행하지 않습니다</div>
+
+        <div id="waitTimeBox" class="wait-box">
+            <div class="wait-time-text">⏳ 예상 남은 시간 <span id="displayTime">00:00</span></div>
+            <div class="wait-notice">※ 위 시간은 실제 호출 시간과 다를 수 있습니다.</div>
+        </div>
+    </div>
+    <div class="side-content">
+        <div class="info-box"><div class="info-title">📢 알림판</div><div id="tvNotice" class="info-text">데이터 로딩 중...</div></div>
+        <div class="info-box"><div class="info-title">🍚 오늘의 식단</div><div id="tvMenu" class="info-text" style="color: #475569;">로딩 중...</div></div>
+    </div>
+</div>
+
+<div class="controls" id="controls">
+    <button class="btn btn-test" onclick="testSound()">🔊 소리 테스트</button>
+    <button class="btn btn-fs" id="fsBtn" onclick="toggleFullScreen()">🖥️ 전체화면 시작</button>
+</div>
+
+<script>
+    // 💡 [수정됨] 관리자/학생 페이지와 동일한 Supabase 프로젝트로 주소 통일
+    const SUPABASE_URL = 'https://vfftkdnzjemeipuhlzfv.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_9Q7vn7So6HvUSMPu5BhyDA_9qz928H-';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    const grades = ["배식 전", "3학년", "2학년", "1학년", "배식 종료", "미운영"];
+    
+    const dingDong = new Audio('https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3');
+    let hideTimer;
+    let currentIdx = -1;
+    let waitInterval = null;
+    let popupInterval = null;
+    let isPopupVisible = false;
+
+    function resetTimer() {
+        document.body.classList.remove('hide-all');
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(() => { document.body.classList.add('hide-all'); }, 3000);
+    }
+
+    function showQrPopup() {
+        if (document.getElementById('alertOverlay').style.display === 'flex' || isPopupVisible) return;
+        const qr = document.getElementById('qrPopup');
+        qr.style.display = 'flex';
+        setTimeout(() => { qr.style.display = 'none'; }, 5000);
+    }
+    setInterval(showQrPopup, 15000);
+
+    function testSound() { dingDong.play().catch(e => console.log("잠금 해제 필요")); alert("소리 정상 작동 중"); }
+
+    function toggleFullScreen() {
+        dingDong.play().then(() => { dingDong.pause(); dingDong.currentTime = 0; });
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+            document.getElementById('fsBtn').innerText = "❌ 해제";
+        } else {
+            document.exitFullscreen();
+            document.getElementById('fsBtn').innerText = "🖥️ 전체화면 시작";
+        }
+    }
+
+    function showAlert(grade) {
+        if (grade === "배식 종료" || grade === "배식 전" || grade === "미운영") return;
+        document.getElementById('qrPopup').style.display = 'none';
+        document.getElementById('alertGrade').innerText = grade;
+        document.getElementById('alertOverlay').style.display = 'flex';
+        dingDong.play().catch(e => {});
+        setTimeout(() => { document.getElementById('alertOverlay').style.display = 'none'; }, 60000);
+    }
+
+    function togglePopupDisplay() {
+        const popup = document.getElementById('importantPopup');
+        if (document.getElementById('alertOverlay').style.display === 'flex') {
+            popup.style.opacity = '0';
+            setTimeout(() => { popup.style.display = 'none'; }, 500);
+            isPopupVisible = false;
+            return;
+        }
+
+        if (isPopupVisible) {
+            popup.style.opacity = '0';
+            setTimeout(() => { popup.style.display = 'none'; }, 500);
+            isPopupVisible = false;
+        } else {
+            document.getElementById('qrPopup').style.display = 'none'; 
+            popup.style.display = 'flex';
+            setTimeout(() => { popup.style.opacity = '1'; }, 10);
+            isPopupVisible = true;
+        }
+    }
+
+    function handlePopup(text) {
+        const textDiv = document.getElementById('importantPopupText');
+        if (popupInterval) clearInterval(popupInterval);
+        
+        if (text && text.trim() !== '') {
+            textDiv.innerText = text;
+            isPopupVisible = false;
+            togglePopupDisplay(); 
+            popupInterval = setInterval(togglePopupDisplay, 5000); 
+        } else {
+            const popup = document.getElementById('importantPopup');
+            popup.style.opacity = '0';
+            setTimeout(() => { popup.style.display = 'none'; }, 500);
+            isPopupVisible = false;
+        }
+    }
+
+    function updateWaitTimeUI(waitMin, setAtStr) {
+        const waitBox = document.getElementById('waitTimeBox');
+        if (waitInterval) clearInterval(waitInterval);
+
+        if (!waitMin || waitMin <= 0 || !setAtStr) {
+            waitBox.style.display = 'none';
+            return;
+        }
+
+        const setAt = new Date(setAtStr);
+        waitInterval = setInterval(() => {
+            const now = new Date();
+            const diffSec = Math.floor((now - setAt) / 1000);
+            const remainingSec = (waitMin * 60) - diffSec;
+
+            if (remainingSec <= 0) {
+                waitBox.style.display = 'none';
+                clearInterval(waitInterval);
+            } else {
+                waitBox.style.display = 'block';
+                const m = Math.floor(remainingSec / 60);
+                const s = remainingSec % 60;
+                document.getElementById('displayTime').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            }
+        }, 1000);
+    }
+
+    function updateTVUI(idx) {
+        const gradeBox = document.getElementById('tvGrade');
+        const statusCard = document.getElementById('tvStatusCard');
+        const subStatus = document.getElementById('subStatus');
+        
+        if (currentIdx !== -1 && currentIdx !== idx && idx > 0 && idx < 4) { showAlert(grades[idx]); }
+        currentIdx = idx;
+        gradeBox.innerText = grades[idx];
+        
+        if (idx === 5) {
+            gradeBox.style.color = "#ef4444"; 
+            statusCard.style.borderColor = "#fecdd3";
+            subStatus.style.display = "block";
+        } else {
+            subStatus.style.display = "none";
+            if (idx === 0 || idx === 4) {
+                gradeBox.style.color = "#94a3b8"; 
+                statusCard.style.borderColor = "#cbd5e1";
+            } else {
+                gradeBox.style.color = "#1d4ed8"; 
+                statusCard.style.borderColor = "#3b82f6";
+            }
+        }
+    }
+
+    async function init() {
+        const { data: s } = await supabaseClient.from('lunch_status').select('current_index, wait_minutes, wait_set_at').eq('id', 1).single();
+        if(s) { 
+            currentIdx = s.current_index; 
+            updateTVUI(s.current_index); 
+            updateWaitTimeUI(s.wait_minutes, s.wait_set_at);
+        }
+        
+        const { data: nList } = await supabaseClient.from('announcements').select('*');
+        if(nList) {
+            nList.forEach(n => {
+                if(n.id === 1) document.getElementById('tvNotice').innerText = n.content;
+                if(n.id === 2) handlePopup(n.content);
+                if(n.id === 3) document.documentElement.style.fontSize = n.content + '%'; 
+            });
+        }
+        
+        const d = new Date().toISOString().slice(0,10).replace(/-/g, '');
+        try {
+            const res = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480070&MLSV_YMD=${d}`);
+            const data = await res.json();
+            if (data.mealServiceDietInfo) {
+                let m = data.mealServiceDietInfo[1].row[0].DDISH_NM.replace(/[0-9.]/g, '').replace(/\(\)/g, '').replace(/<br\/>/g, ', ');
+                document.getElementById('tvMenu').innerText = m;
+            } else { document.getElementById('tvMenu').innerText = "오늘은 급식 정보가 없습니다."; }
+        } catch (e) { document.getElementById('tvMenu').innerText = "식단 정보를 불러오지 못했습니다."; }
+    }
+
+    // 💡 [수정됨] 명확하게 테이블별로 감지하도록 강화된 실시간 연동 코드
+    supabaseClient.channel('tv-channel')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'lunch_status' }, p => {
+            updateTVUI(p.new.current_index);
+            updateWaitTimeUI(p.new.wait_minutes, p.new.wait_set_at);
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'announcements' }, p => {
+            if (p.new.id === 1) document.getElementById('tvNotice').innerText = p.new.content;
+            if (p.new.id === 2) handlePopup(p.new.content);
+            if (p.new.id === 3) document.documentElement.style.fontSize = p.new.content + '%'; 
+        })
+        .subscribe();
+
+    setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('ko-KR'); }, 1000);
+    init();
+    resetTimer();
+</script>
+</body>
+</html>
