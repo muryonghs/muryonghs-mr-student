@@ -20,14 +20,17 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         /* === 제목 없는 깔끔한 상단 바 디자인 === */
-        .top-nav { display: flex; align-items: center; margin-bottom: 25px; padding-top: 15px; width: 100%; min-height: 45px; }
+        .top-nav { display: flex; align-items: center; margin-bottom: 20px; padding-top: 10px; width: 100%; min-height: 45px; }
         .back-btn { background: #e8f0fe; border: none; font-size: 0.95rem; color: #0071e3; cursor: pointer; padding: 10px 16px; border-radius: 12px; font-weight: 800; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 4px; }
         .back-btn:active { transform: scale(0.95); background: #d2e3fc; }
 
         /* === 홈 화면 특화 스타일 === */
         #page-home .weather-badge { background: rgba(0, 113, 227, 0.1); color: #0071e3; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 700; display: inline-block; margin-bottom: 15px; }
         #page-home .greeting { font-size: 1.7rem; font-weight: 800; line-height: 1.4; margin: 0 0 25px 0; letter-spacing: -0.5px; color: #1d1d1f;}
-        #page-home .greeting span { color: #0071e3; }
+        
+        /* [수정] 인사말이 무조건 한 줄로 나오도록 고정 */
+        #page-home .greeting span { color: #0071e3; display: inline-block; white-space: nowrap; font-size: 1.4rem; letter-spacing: -0.5px; }
+        
         #page-home .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         #page-home .menu-item { background: #ffffff; border-radius: 20px; padding: 20px; text-decoration: none; color: #1d1d1f; box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer; transition: 0.2s; display:block; text-align: left;}
         #page-home .menu-item:active { transform: scale(0.96); }
@@ -37,10 +40,8 @@
         #page-home .menu-item h3 { margin: 0 0 5px 0; font-size: 1.05rem; font-weight: 800; }
         #page-home .menu-item p { margin: 0; font-size: 0.8rem; color: #86868b; font-weight: 600; line-height: 1.4; }
 
-        /* === 1. 급식실 기존 원본 CSS === */
+        /* === 1. 급식실 === */
         #page-lunch { background: #f1f5f9; color: #1e293b; max-width: 500px;}
-        #page-lunch .header-wrap { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        #page-lunch h1.lunch-h1 { font-size: 1.5rem; color: #1e293b; font-weight: 900; letter-spacing: -0.5px; margin: 0; text-align: center; width: 100%;}
         #alertOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(239, 68, 68, 0.95); color: white; z-index: 9999; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; }
         #importantPopup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 10000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; opacity: 0; transition: opacity 0.5s ease-in-out; }
         #page-lunch .important-content { background: white; width: 100%; max-width: 350px; padding: 30px 20px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
@@ -57,7 +58,7 @@
 
         /* === 2. 양심우산 === */
         #page-umbrella { background-color: #F8F9FA; color: #343A40; flex-direction:column; align-items:center; }
-        #page-umbrella .umb-card { background: white; width: 100%; max-width: 400px; padding: 30px 20px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; }
+        #page-umbrella .umb-card { background: white; width: 100%; max-width: 400px; padding: 30px 20px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; margin-top: 10px; }
         #page-umbrella .tab-container { display: flex; background: #f1f5f9; border-radius: 12px; padding: 4px; margin-bottom: 25px; }
         #page-umbrella .tab { flex: 1; padding: 12px; cursor: pointer; border-radius: 10px; font-weight: bold; color: #64748b; transition: all 0.3s ease; text-align:center;}
         #page-umbrella .tab.active { background: white; color: #00B4D8; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
@@ -85,8 +86,8 @@
         /* === 4. 추가 기능 공통 === */
         .new-card { background: #ffffff; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; width: 100%; }
         
-        /* 날짜 입력칸 삐져나감 완벽 방지 */
-        .new-input { width: 100%; max-width: 100%; padding: 15px; border: 1.5px solid #e5e5ea; border-radius: 12px; font-size: 1rem; margin-bottom: 12px; background: #fbfbfd; font-family: inherit; box-sizing: border-box; display: block; -webkit-appearance: none;}
+        /* [수정] 얇아진 날짜 선택 칸 복구 및 삐져나감 방지 */
+        .new-input { width: 100%; max-width: 100%; padding: 15px; border: 1.5px solid #e5e5ea; border-radius: 12px; font-size: 1rem; margin-bottom: 12px; background: #fbfbfd; font-family: inherit; box-sizing: border-box; display: block; min-height: 52px; }
         
         .new-btn { width: 100%; padding: 16px; background: #0071e3; color: white; border: none; border-radius: 14px; font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: background 0.2s ease; box-sizing: border-box;}
         .new-btn:disabled { background: #86868b; cursor: not-allowed; }
@@ -125,7 +126,6 @@
     <!-- === 홈 화면 === -->
     <div id="page-home" class="page active">
         <div class="weather-badge" id="weather">🌤 날씨 로딩중...</div>
-        <!-- 시간에 따라 변하는 안내 문구 -->
         <h1 class="greeting" id="greeting">무룡고 학생 여러분,<br><span>오늘도 즐거운 하루 보내세요!</span></h1>
         
         <div class="menu-grid">
@@ -164,14 +164,14 @@
 
     <!-- === 급식실 === -->
     <div id="page-lunch" class="page">
-        <!-- 상단 바 제목 제거 -->
+        <!-- 상단 바에서 제목 완전 제거 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
         </div>
         <div id="alertOverlay" onclick="closeAlert()"><div class="alert-title">지금 즉시 급식실로 내려오세요!</div><div id="alertGrade" class="alert-msg">O학년</div><div class="alert-hint">터치하면 닫힙니다</div></div>
         <div id="importantPopup"><div class="important-content"><h2 style="margin: 0 0 15px 0; color: #e11d48; font-size: 1.3rem; font-weight: 900;">🚨 중요 공지사항</h2><div id="importantPopupText"></div></div></div>
         
-        <div class="header-wrap"><h1 class="lunch-h1">무룡고 실시간 급식실</h1></div>
+        <div class="header-wrap"><h1 class="lunch-h1">실시간 급식실</h1></div>
         
         <div id="noticeBanner" class="notice-banner"><span id="targetGrade">O학년</span> 학생들은<br>지금 즉시 급식실로 내려오세요!</div>
         <div class="lunch-card notice-card"><div class="notice-title">📢 알림판</div><div id="realNotice" class="notice-content">불러오는 중...</div></div>
@@ -187,7 +187,7 @@
 
     <!-- === 양심우산 === -->
     <div id="page-umbrella" class="page">
-        <!-- 상단 바 제목 제거 -->
+        <!-- 상단 바에서 제목 완전 제거 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
         </div>
@@ -220,13 +220,14 @@
 
     <!-- === 시설예약 === -->
     <div id="page-facility" class="page">
-        <!-- 상단 바 제목 제거 -->
+        <!-- 상단 바에서 제목 완전 제거 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
         </div>
         <div id="facility-content">
             <div class="reservation-card" style="max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
-                <!-- 내부 제목 완전 삭제 -->
+                <!-- [수정] 무룡고등학교 시설 예약 제목 복구 -->
+                <h2 style="color: #2c3e50; font-weight: 900; text-align: center; margin-bottom: 25px;">무룡고등학교 시설 예약</h2>
                 <div style="background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px;">🔔 안내: [다음 주 월~금] 일정 예약 진행 중</div>
                 <div class="mb-3"><label class="form-label" style="font-weight: bold;">이름</label><input type="text" id="name" class="form-control"></div>
                 <div class="mb-3"><label class="form-label" style="font-weight: bold;">학번 (4자리)</label><input type="number" id="sid" class="form-control" maxlength="4"></div>
@@ -251,6 +252,7 @@
 
     <!-- === 시설 예약 현황 === -->
     <div id="page-status" class="page">
+        <!-- 상단 바에서 제목 완전 제거 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('facility')">❮ 뒤로</button>
         </div>
@@ -275,24 +277,25 @@
 
     <!-- === 학생회 소식 === -->
     <div id="page-council" class="page">
-        <!-- 상단 바 제목 제거 -->
+        <!-- 상단 바에서 제목 완전 제거 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
         </div>
-        <h1 style="text-align:center; font-size: 1.5rem; font-weight: 800; margin-bottom:20px;">🎉 학생회 소식</h1>
+        <div class="new-card" style="margin-bottom: 20px; padding: 15px;">
+            <h1 style="text-align:center; font-size: 1.3rem; font-weight: 800; margin: 0;">🎉 학생회 소식</h1>
+        </div>
         <div id="council-list">행사 정보를 불러오는 중...</div>
     </div>
 
     <!-- === 학사/우리반 일정 === -->
     <div id="page-calendar" class="page">
-        <!-- 상단 바 제목 제거 -->
+        <!-- 상단 바에서 제목 완전 제거 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
         </div>
         
         <div class="new-card"><h3 style="margin-top:0; font-size:1.1rem;">🏫 다가오는 공식 일정</h3><div id="neis-calendar-list">데이터를 불러오는 중...</div></div>
         <div class="new-card">
-            <!-- [수정 3] 제목 아래 여백 넉넉하게 주기 -->
             <h3 style="margin-top:0; font-size:1.1rem; margin-bottom: 15px;">📝 다가오는 반별 일정</h3>
             
             <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center;">
@@ -302,8 +305,7 @@
                     <option value="4">4반</option><option value="5">5반</option><option value="6">6반</option>
                     <option value="7">7반</option><option value="8">8반</option><option value="9">9반</option>
                 </select>
-                <!-- [수정 3] 조회 버튼 약간 더 두껍게 (padding: 10px 20px) -->
-                <button class="new-btn" style="width:auto; padding:10px 20px; white-space:nowrap; flex-shrink:0; display:flex; align-items:center; justify-content:center; margin:0;" onclick="loadClassCalendar()">조회</button>
+                <button class="new-btn" style="width:auto; padding:12px 20px; white-space:nowrap; flex-shrink:0; display:flex; align-items:center; justify-content:center; margin:0;" onclick="loadClassCalendar()">조회</button>
             </div>
             
             <div id="class-calendar-list" style="margin-bottom:20px;">반을 선택하고 조회를 눌러주세요.</div>
@@ -332,6 +334,7 @@
 
     <!-- === 게시판 === -->
     <div id="page-board" class="page">
+        <!-- 상단 바에서 제목 완전 제거 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
         </div>
@@ -372,10 +375,13 @@
 
     <!-- === 분실물 센터 === -->
     <div id="page-lost" class="page">
+        <!-- 상단 바에서 제목 완전 제거 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
         </div>
-        <h1 style="text-align:center; font-size: 1.5rem; font-weight: 800; margin-bottom:20px;">분실물 센터</h1>
+        <div class="new-card" style="margin-bottom: 20px; padding: 15px;">
+            <h1 style="text-align:center; font-size: 1.3rem; font-weight: 800; margin: 0;">🔍 분실물 센터</h1>
+        </div>
         <div class="new-card" id="lost-list">데이터를 불러오는 중...</div>
     </div>
 
@@ -420,16 +426,16 @@
                 document.getElementById('weather').innerText = `🌤 현재 울산 기온 : ${Math.round(data.current_weather.temperature)}℃`;
             } catch (e) { document.getElementById('weather').innerText = `🌤 날씨 로딩 실패`; }
             
-            // [수정 5] 시간에 따른 다채로운 인사말 로직
+            // [수정] 시간에 따른 다채로운 인사말 로직
             const currentHour = new Date().getHours();
             let dynamicGreeting = "오늘도 즐거운 하루 보내세요!";
             
             if (currentHour >= 6 && currentHour < 11) {
-                dynamicGreeting = "상쾌한 아침이에요! 오늘도 파이팅! ☀️";
+                dynamicGreeting = "상쾌한 아침! 오늘도 파이팅! ☀️";
             } else if (currentHour >= 11 && currentHour < 14) {
                 dynamicGreeting = "급식이 기대되는 시간이네요! 🍱";
             } else if (currentHour >= 14 && currentHour < 18) {
-                dynamicGreeting = "나른한 오후, 조금만 더 힘내봐요! 💪";
+                dynamicGreeting = "나른한 오후, 조금만 더 힘내요! 💪";
             } else {
                 dynamicGreeting = "오늘 하루도 정말 수고 많았어요 🌙";
             }
