@@ -27,10 +27,7 @@
         /* === 홈 화면 특화 스타일 === */
         #page-home .weather-badge { background: rgba(0, 113, 227, 0.1); color: #0071e3; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 700; display: inline-block; margin-bottom: 15px; }
         #page-home .greeting { font-size: 1.7rem; font-weight: 800; line-height: 1.4; margin: 0 0 25px 0; letter-spacing: -0.5px; color: #1d1d1f;}
-        
-        /* [수정] 인사말이 무조건 한 줄로 나오도록 고정 */
         #page-home .greeting span { color: #0071e3; display: inline-block; white-space: nowrap; font-size: 1.4rem; letter-spacing: -0.5px; }
-        
         #page-home .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         #page-home .menu-item { background: #ffffff; border-radius: 20px; padding: 20px; text-decoration: none; color: #1d1d1f; box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer; transition: 0.2s; display:block; text-align: left;}
         #page-home .menu-item:active { transform: scale(0.96); }
@@ -86,8 +83,21 @@
         /* === 4. 추가 기능 공통 === */
         .new-card { background: #ffffff; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; width: 100%; }
         
-        /* [수정] 얇아진 날짜 선택 칸 복구 및 삐져나감 방지 */
-        .new-input { width: 100%; max-width: 100%; padding: 15px; border: 1.5px solid #e5e5ea; border-radius: 12px; font-size: 1rem; margin-bottom: 12px; background: #fbfbfd; font-family: inherit; box-sizing: border-box; display: block; min-height: 52px; }
+        /* [수정 1] 날짜 선택 칸 삐져나감 방지 및 두께 유지 */
+        .new-input { 
+            width: 100%; 
+            max-width: 100%; 
+            padding: 15px; 
+            border: 1.5px solid #e5e5ea; 
+            border-radius: 12px; 
+            font-size: 1rem; 
+            margin: 0 0 12px 0; /* 좌우 여백을 0으로 명시하여 삐져나감 방지 */
+            background: #fbfbfd; 
+            font-family: inherit; 
+            box-sizing: border-box; 
+            display: block; 
+            min-height: 52px; 
+        }
         
         .new-btn { width: 100%; padding: 16px; background: #0071e3; color: white; border: none; border-radius: 14px; font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: background 0.2s ease; box-sizing: border-box;}
         .new-btn:disabled { background: #86868b; cursor: not-allowed; }
@@ -164,7 +174,7 @@
 
     <!-- === 급식실 === -->
     <div id="page-lunch" class="page">
-        <!-- 상단 바에서 제목 완전 제거 -->
+        <!-- 제목 제거 후 뒤로가기 버튼만 남김 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
         </div>
@@ -187,7 +197,6 @@
 
     <!-- === 양심우산 === -->
     <div id="page-umbrella" class="page">
-        <!-- 상단 바에서 제목 완전 제거 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
         </div>
@@ -220,17 +229,22 @@
 
     <!-- === 시설예약 === -->
     <div id="page-facility" class="page">
-        <!-- 상단 바에서 제목 완전 제거 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
         </div>
         <div id="facility-content">
             <div class="reservation-card" style="max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
-                <!-- [수정] 무룡고등학교 시설 예약 제목 복구 -->
                 <h2 style="color: #2c3e50; font-weight: 900; text-align: center; margin-bottom: 25px;">무룡고등학교 시설 예약</h2>
                 <div style="background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px;">🔔 안내: [다음 주 월~금] 일정 예약 진행 중</div>
+                
                 <div class="mb-3"><label class="form-label" style="font-weight: bold;">이름</label><input type="text" id="name" class="form-control"></div>
-                <div class="mb-3"><label class="form-label" style="font-weight: bold;">학번 (4자리)</label><input type="number" id="sid" class="form-control" maxlength="4"></div>
+                
+                <!-- [수정 2] 학번 4자리 숫자 입력 제한 추가 -->
+                <div class="mb-3">
+                    <label class="form-label" style="font-weight: bold;">학번 (4자리)</label>
+                    <input type="text" inputmode="numeric" id="sid" class="form-control" maxlength="4" placeholder="예: 3705" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                </div>
+                
                 <div class="mb-3"><label class="form-label" style="font-weight: bold;">전화번호</label><input type="tel" id="phone" class="form-control" maxlength="11"></div>
                 <div class="mb-3"><label class="form-label" style="font-weight: bold;">이용 목적</label><input type="text" id="purpose" class="form-control"></div>
                 <div class="mb-3"><label class="form-label" style="font-weight: bold;">시설 선택</label><select id="room" class="form-select"><option value="더하우스">더하우스</option><option value="풋살장">풋살장</option><option value="소회의실">소회의실</option></select></div>
@@ -252,7 +266,6 @@
 
     <!-- === 시설 예약 현황 === -->
     <div id="page-status" class="page">
-        <!-- 상단 바에서 제목 완전 제거 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('facility')">❮ 뒤로</button>
         </div>
@@ -277,19 +290,18 @@
 
     <!-- === 학생회 소식 === -->
     <div id="page-council" class="page">
-        <!-- 상단 바에서 제목 완전 제거 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
         </div>
         <div class="new-card" style="margin-bottom: 20px; padding: 15px;">
-            <h1 style="text-align:center; font-size: 1.3rem; font-weight: 800; margin: 0;">🎉 학생회 소식</h1>
+            <!-- [수정 3] 학생회 소식 제목 변경 -->
+            <h1 style="text-align:center; font-size: 1.3rem; font-weight: 800; margin: 0;">🎉 무룡고등학교 학생회 소식</h1>
         </div>
         <div id="council-list">행사 정보를 불러오는 중...</div>
     </div>
 
     <!-- === 학사/우리반 일정 === -->
     <div id="page-calendar" class="page">
-        <!-- 상단 바에서 제목 완전 제거 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
         </div>
@@ -334,7 +346,6 @@
 
     <!-- === 게시판 === -->
     <div id="page-board" class="page">
-        <!-- 상단 바에서 제목 완전 제거 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
         </div>
@@ -375,7 +386,6 @@
 
     <!-- === 분실물 센터 === -->
     <div id="page-lost" class="page">
-        <!-- 상단 바에서 제목 완전 제거 -->
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
         </div>
@@ -426,7 +436,6 @@
                 document.getElementById('weather').innerText = `🌤 현재 울산 기온 : ${Math.round(data.current_weather.temperature)}℃`;
             } catch (e) { document.getElementById('weather').innerText = `🌤 날씨 로딩 실패`; }
             
-            // [수정] 시간에 따른 다채로운 인사말 로직
             const currentHour = new Date().getHours();
             let dynamicGreeting = "오늘도 즐거운 하루 보내세요!";
             
@@ -606,7 +615,8 @@
                 document.getElementById('board-write-title').innerText = '💡 새 건의사항 작성'; 
                 document.getElementById('board-submit-btn').innerText = '건의하기'; 
                 
-                document.getElementById('board-desc').innerHTML = '학교 발전을 위한 여러분의 소중한 의견을 들려주세요.<br>작성된 건의사항은 학생회 및 관리자만 확인할 수 있습니다.';
+                // [수정 4] 건의함 안내 멘트 수정
+                document.getElementById('board-desc').innerHTML = '학교 발전을 위한 여러분의 소중한 의견을 들려주세요.<br>작성된 건의사항은 학생회만 확인할 수 있습니다.';
                 document.getElementById('board-desc').style.display = 'block';
                 document.getElementById('board-content').placeholder = "건의할 내용을 상세히 적어주세요.";
                 
