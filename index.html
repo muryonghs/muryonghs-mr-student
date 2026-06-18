@@ -77,7 +77,6 @@
         #page-facility .btn-primary { background-color: #004a99; border: none; padding: 12px; font-weight: bold; border-radius: 10px; }
         #page-facility .notice-box { background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px; }
         
-        /* [수정 2] 시설예약 버튼 디자인 추가 */
         #page-facility .btn-main { width: 100%; background: #0071e3; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: 0.2s; margin-top: 10px; }
         #page-facility .btn-main:active { transform: scale(0.98); }
 
@@ -263,12 +262,16 @@
     </div>
 
     <div id="page-board" class="page">
+        <!-- 수정됨: h1의 id는 그대로 유지 -->
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button><h1 class="page-title" id="board-title">게시판</h1></div>
         <div class="new-card"><div id="board-list">불러오는 중...</div></div>
         <div class="new-card">
             <h3 id="board-write-title" style="margin-top:0; font-size:1.1rem; font-weight:800;">새 글 등록/요청</h3>
             <input type="text" id="board-author" class="new-input" placeholder="작성자">
-            <input type="text" id="board-title" class="new-input" placeholder="제목">
+            
+            <!-- 수정됨: input의 id를 board-input-title로 변경하여 충돌 해결 -->
+            <input type="text" id="board-input-title" class="new-input" placeholder="제목">
+            
             <textarea id="board-content" class="new-input" placeholder="내용" rows="4"></textarea>
             
             <div id="file-upload-area" style="display:none; margin-bottom:12px;">
@@ -349,7 +352,6 @@
                 const res = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480070&MLSV_YMD=${d}`); 
                 const data = await res.json(); 
                 if (data.mealServiceDietInfo) { 
-                    // [수정 3] 알레르기 숫자와 빈 괄호를 확실하게 제거하여 빈 줄이 안 생기도록 수정
                     let rawMenu = data.mealServiceDietInfo[1].row[0].DDISH_NM;
                     let menuList = rawMenu.split(/<br\/>/);
                     let cleanMenu = menuList.map(item => item.replace(/[0-9.\(\)]/g, '').trim()).filter(item => item !== '');
@@ -496,9 +498,9 @@
             if (type === 'study') { document.getElementById('board-write-title').innerText = '📚 자료 기여하기'; document.getElementById('board-submit-btn').innerText = '자료 기여하기'; } 
             else { document.getElementById('board-write-title').innerText = '새 글 등록/요청'; document.getElementById('board-submit-btn').innerText = '등록하기'; }
             
-            // [수정 1] 게시판을 이동할 때마다 입력칸을 깨끗하게 비워줍니다.
+            // 제목, 작성자, 내용 등 입력칸을 깨끗하게 비워줍니다.
             document.getElementById('board-author').value = '';
-            document.getElementById('board-title').value = '';
+            document.getElementById('board-input-title').value = ''; // 수정된 부분!
             document.getElementById('board-content').value = '';
             if(document.getElementById('board-file')) document.getElementById('board-file').value = '';
 
@@ -508,10 +510,12 @@
         async function loadBoardData(type) { const listDiv = document.getElementById('board-list'); listDiv.innerHTML = '<p>불러오는 중...</p>'; const { data, error } = await db.from('board_posts').select('*').eq('board_type', type).order('created_at', { ascending: false }); if (error || !data.length) { listDiv.innerHTML = '<p style="text-align:center; color:#86868b;">등록된 글이 없습니다.</p>'; return; } listDiv.innerHTML = data.map(post => { const d = new Date(post.created_at); const dateStr = `${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; const fileBtn = post.file_url ? `<a href="${post.file_url}" target="_blank" style="color:#0071e3; font-weight:bold; text-decoration:none; background:#e3f2fd; padding:4px 8px; border-radius:8px; font-size:0.8rem;">📁 첨부파일 열기</a>` : ''; return `<div class="list-item"><div style="font-weight:700; font-size:1.05rem; margin-bottom:5px;">${post.title}</div><div style="font-size:0.9rem; margin-bottom:8px;">${post.content}</div><div style="font-size:0.8rem; color:#86868b; display:flex; justify-content:space-between;"><span>${post.author} | ${dateStr}</span>${fileBtn}</div></div>`; }).join(''); }
         
         async function submitBoard() { 
-            const author = document.getElementById('board-author').value; 
-            const title = document.getElementById('board-title').value; 
-            const content = document.getElementById('board-content').value; 
+            // .trim()을 사용해 공백만 입력된 것도 잡아냅니다!
+            const author = document.getElementById('board-author').value.trim(); 
+            const title = document.getElementById('board-input-title').value.trim(); // 수정된 부분!
+            const content = document.getElementById('board-content').value.trim(); 
             const fileInput = document.getElementById('board-file'); 
+            
             if(!author || !title || !content) return alert("모든 항목을 입력해주세요."); 
             
             let uploadedFileUrl = null; 
@@ -528,9 +532,9 @@
             const { error } = await db.from('board_posts').insert([{ board_type: currentBoardType, title: title, content: content, author: author, file_url: uploadedFileUrl }]); 
             if(!error) { 
                 alert("등록이 완료되었습니다."); 
-                // [수정 1] 글 등록이 완료되면 작성자 칸도 확실하게 비워줍니다.
+                // 글 등록이 완료되면 작성 칸을 다시 깨끗하게 비워줍니다.
                 document.getElementById('board-author').value = '';
-                document.getElementById('board-title').value = ''; 
+                document.getElementById('board-input-title').value = ''; // 수정된 부분!
                 document.getElementById('board-content').value = ''; 
                 if(fileInput) fileInput.value = ''; 
                 loadBoardData(currentBoardType); 
