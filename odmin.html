@@ -6,25 +6,32 @@
     <title>무룡고 통합 관리자</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
+        /* === 공통 및 모바일 최적화 === */
         * { box-sizing: border-box; }
         :root { --bg: #f5f5f7; --text-main: #1d1d1f; --card: #ffffff; --primary: #0071e3; --danger: #ff3b30; --success: #34c759; --purple: #8b5cf6; --dark: #334155; }
+        
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 0; padding-bottom: 30px; overflow-x: hidden; }
         
+        /* === SPA (화면 전환) 스타일 === */
         .page { display: none !important; padding: 20px; max-width: 600px; margin: 0 auto; min-height: 100vh; animation: fadeIn 0.3s ease; }
         .page.active { display: block !important; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* === 상단 네비게이션 및 헤더 === */
         .app-header { background: transparent; padding: 20px 0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .app-header h1 { margin: 0; font-size: 1.5rem; font-weight: 900; letter-spacing: -0.5px; }
+        
         .top-nav { display: flex; align-items: center; margin-bottom: 25px; padding-top: 10px; width: 100%; min-height: 45px; }
         .back-btn { background: #e8f0fe; border: none; font-size: 0.95rem; color: var(--primary); cursor: pointer; padding: 10px 16px; border-radius: 12px; font-weight: 800; transition: 0.2s; display: inline-flex; align-items: center; gap: 4px; }
         .back-btn:active { transform: scale(0.95); background: #d2e3fc; }
         
+        /* === 공통 UI 요소 === */
         .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #e5e5ea; width: 100%;}
         .input-box { width: 100%; max-width: 100%; padding: 15px; border: 1px solid #e5e5ea; border-radius: 12px; font-size: 1rem; margin-bottom: 12px; font-family: inherit; background: #fbfbfd; display: block; resize: none; min-height: 52px; }
         
@@ -40,6 +47,7 @@
         .list-header h3 { margin: 0; font-size: 1.2rem; font-weight: 800; color: #1d1d1f; }
         .list-header-btns { display: flex; gap: 8px; }
         
+        /* 게시판, 행사 등 일반 리스트 */
         .list-item { display: flex; flex-direction: column; gap: 10px; padding: 15px; border-radius: 12px; margin-bottom: 12px; background: #fff; border: 1px solid #e5e5ea; box-shadow: 0 2px 8px rgba(0,0,0,0.02);}
         .list-info h4 { margin: 0 0 5px 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
         .list-info p { margin: 0; font-size: 0.9rem; color: #64748b; line-height: 1.5; word-break: break-all;}
@@ -48,6 +56,7 @@
         .btn-danger-soft { background: #fee2e2; color: var(--danger); }
         .btn-success-soft { background: #dcfce7; color: var(--success); }
         
+        /* === 홈 메뉴 그리드 === */
         .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .menu-item { background: #ffffff; border-radius: 20px; padding: 20px; text-decoration: none; color: #1d1d1f; box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer; transition: 0.2s; display:block; text-align: left; border: 1px solid #f1f5f9;}
         .menu-item:active { transform: scale(0.96); }
@@ -55,6 +64,7 @@
         .menu-item h3 { margin: 0 0 5px 0; font-size: 1.1rem; font-weight: 800; }
         .menu-item p { margin: 0; font-size: 0.8rem; color: #86868b; font-weight: 600; line-height: 1.4; }
 
+        /* === 시설예약 뱃지 === */
         .badge { border-radius: 20px; padding: 4px 10px; font-weight: 800; font-size: 0.75rem; }
         .badge-pending { background: #fdf0cd; color: #9c6500; }
         .badge-approved { background: #e3f5eb; color: #196a3e; }
@@ -65,16 +75,12 @@
         .badge-used { background: var(--primary); color: #ffffff; }
         .badge-priority { background: #ffefed; color: #ff3b30; border: 1px solid #ffcecb; }
 
-        /* === 긴급 팝업 (급식실) === */
-        #alertOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(239, 68, 68, 0.95); color: white; z-index: 9999; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; }
-        .alert-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 10px; }
-        .alert-msg { font-size: 4rem; font-weight: 900; margin-bottom: 20px; }
-        .alert-hint { font-size: 1rem; opacity: 0.8; }
-        
+        /* === 1. 급식실 폰트 원복 === */
         .status-val { font-size: 2.2rem; font-weight: 900; color: #3b82f6; margin-bottom: 15px; text-align: center; }
         .wait-display-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 15px; }
         .active-timer { font-size: 3.5rem; font-weight: 900; color: #2563eb; line-height: 1; }
 
+        /* === 2. 양심우산 전용 스타일 === */
         .btn-sm-main { background: var(--purple); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; }
         .btn-sm-manage { background: var(--dark); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; }
         
@@ -90,6 +96,7 @@
         .umb-badge.return { background: #dcfce7; color: var(--success); }
         .umb-badge.broken { background: var(--dark); color: white; } 
         .time-text { font-size: 12px; color: #94a3b8; font-weight: bold;}
+
         .card-body { display: flex; justify-content: space-between; align-items: center; }
         .student-info { display: flex; flex-direction: column; }
         .s-name { font-size: 18px; font-weight: 800; color: #0f172a; }
@@ -102,15 +109,19 @@
         .btn-manual-return { background: var(--success); color: white; border: none; width: 100%; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 15px; }
         .btn-delete-record { background: #f1f5f9; color: var(--danger); border: 1px solid #e2e8f0; width: 100%; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
 
+        /* === 모달 스타일 공통 === */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;}
         .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 24px; padding: 25px; max-height: 90vh; overflow-y: auto; position: relative;}
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #f1f5f9; }
         .modal-header h3 { margin: 0; font-size: 1.2rem; font-weight: 800; }
         .close-btn { background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 16px; font-weight: bold; color: #64748b; cursor: pointer; }
 
+        /* 우산 상세 모달 슬라이드업 */
         .modal-slide-up { align-items: flex-end; padding: 0; }
         .modal-slide-up .modal-content { border-radius: 24px 24px 0 0; animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1); }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        /* 날짜 입력 칸 삐져나감 방지 */
         input[type="date"].new-input { -webkit-appearance: none; appearance: none; overflow: hidden; background-color: #fbfbfd; }
     </style>
 </head>
@@ -120,6 +131,7 @@
         <header class="app-header">
             <h1>무룡고 통합 관리자</h1>
         </header>
+
         <div class="menu-grid">
             <div class="menu-item" onclick="goPage('lunch')">
                 <div class="menu-icon">🍱</div><h3>급식실 제어</h3><p>배식 순서 및 알림</p>
@@ -149,12 +161,6 @@
     <div id="page-lunch" class="page">
         <div class="top-nav">
             <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
-        </div>
-        
-        <div id="alertOverlay" onclick="closeAlert()">
-            <div class="alert-title">지금 즉시 급식실로 내려오세요!</div>
-            <div id="alertGrade" class="alert-msg">O학년</div>
-            <div class="alert-hint">터치하면 닫힙니다</div>
         </div>
         
         <div class="card">
@@ -301,7 +307,6 @@
         <p class="text-muted" style="font-size:0.85rem; margin-top:-10px;">건의사항은 관리자와 학생회만 볼 수 있는 익명 데이터입니다.</p>
         <div id="admin-suggestion-list">불러오는 중...</div>
     </div>
-
 
     <div class="modal fade" id="scannerModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -486,25 +491,12 @@
            1. 급식실 제어 엔진
            ============================================================== */
         const grades = ["배식 전", "3학년", "2학년", "1학년", "배식 종료", "미운영"];
-        let currentIdx = -1; let lunchIdx = 0; let tempWaitTime = 0; let adminWaitInterval = null; let liveWaitMin = 0; let liveSetAt = null; let alertTimeout;
-
-        function showAlert(grade) { 
-            if (grade === "배식 종료" || grade === "배식 전" || grade === "미운영") return; 
-            document.getElementById('alertGrade').innerText = grade; 
-            document.getElementById('alertOverlay').style.display = 'flex'; 
-            clearTimeout(alertTimeout); 
-            alertTimeout = setTimeout(closeAlert, 15000); 
-        }
-        
-        function closeAlert() { document.getElementById('alertOverlay').style.display = 'none'; }
+        let currentIdx = -1; let lunchIdx = 0; let tempWaitTime = 0; let adminWaitInterval = null; let liveWaitMin = 0; let liveSetAt = null;
 
         function updateUI(index) {
             const gradeBox = document.getElementById('curGrade'); 
             const subStatus = document.getElementById('subStatus'); 
 
-            if (currentIdx !== -1 && currentIdx !== index && index > 0 && index < 4) { 
-                showAlert(grades[index]); 
-            } 
             currentIdx = index; 
             lunchIdx = index;
 
@@ -565,7 +557,7 @@
             else if (type === 'close') { if(!confirm("오늘 급식을 '미운영'으로 설정하시겠습니까?")) return; nextIdx = 5; }
             
             const { error } = await db.from('lunch_status').update({ current_index: nextIdx, wait_minutes: 0 }).eq('id', 1);
-            if(!error) { resetWait(); } // updateUI is triggered by realtime listener
+            if(!error) { resetWait(); } // 실시간 리스너가 화면 업데이트 처리
         }
 
         function addWait(min) { tempWaitTime += min; document.getElementById('tempWaitDisplay').innerText = tempWaitTime; }
@@ -604,12 +596,8 @@
             updateAdminWaitTimeUI(p.new.wait_minutes, p.new.wait_set_at); 
         }).subscribe();
 
-        db.channel('admin-announcements-channel').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'announcements' }, p => { 
-            if(p.new.id === 2) handlePopup(p.new.content); 
-        }).subscribe();
-
         /* ==============================================================
-           2. QR 통합 스캐너 엔진 (양심우산 & 시설예약 공통)
+           2. QR 통합 스캐너 엔진
            ============================================================== */
         let html5QrCode; let isProcessing = false;
         
@@ -663,7 +651,7 @@
                     const umbrellaNum = prompt(`[대여 승인]\n${data.student_name} 학생에게 빌려줄 우산 번호 입력:`);
                     if (umbrellaNum) {
                         const { data: existing } = await db.from('umbrella_rentals').select('id').eq('umbrella_number', umbrellaNum).eq('status', '대여중');
-                        if (existing && existing.length > 0) { alert(`대여 불가: ${umbrellaNum}번 우산은 이미 다른 학생이 대여 중입니다.`); return; }
+                        if (existing && existing.length > 0) { alert(`대여 불가: ${umbrellaNum}번 우산은 이미 대여 중입니다.`); return; }
                         await db.from('umbrella_rentals').insert([{ student_id: data.student_id, student_name: data.student_name, phone_number: data.phone_number, umbrella_number: umbrellaNum, status: '대여중', rent_date: new Date().toISOString() }]);
                         alert('대여가 승인되었습니다.'); 
                         if(document.getElementById('page-umbrella').classList.contains('active')) fetchRentals();
