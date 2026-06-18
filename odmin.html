@@ -80,7 +80,7 @@
         .wait-display-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 15px; }
         .active-timer { font-size: 3.5rem; font-weight: 900; color: #2563eb; line-height: 1; }
 
-        /* === 2. 양심우산 전용 스타일 (복구됨) === */
+        /* === 2. 양심우산 전용 스타일 === */
         .btn-sm-main { background: var(--purple); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; }
         .btn-sm-manage { background: var(--dark); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; }
         
@@ -159,7 +159,9 @@
     </div>
 
     <div id="page-lunch" class="page">
-        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
+        <div class="top-nav">
+            <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
+        </div>
         
         <div class="card">
             <h3 class="mb-3" style="font-size:1.2rem; font-weight:800;">배식 순서 제어</h3>
@@ -232,11 +234,14 @@
     <div id="page-facility" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
 
-        <div class="card" style="background:#fff3cd; border-color:#ffeeba;">
-            <h4 style="font-size:1.1rem; font-weight:800; color:#856404; margin:0 0 10px 0;">전체 시스템 제어 (관리자용)</h4>
-            <div style="display:flex; gap:10px;">
-                <button id="block-btn" class="btn-main btn-red" style="padding:12px; font-size:0.95rem;" onclick="toggleBookingBlock()">전체 예약 막기</button>
-                <button class="btn-main btn-dark" style="padding:12px; font-size:0.95rem;" onclick="openSuperAdmin()">명단 전체 초기화</button>
+        <div class="card" style="padding: 15px; display: flex; flex-direction: row; justify-content: space-between; align-items: center; border-radius: 16px;">
+            <div>
+                <h4 style="font-size:0.95rem; font-weight:800; color:var(--danger); margin:0 0 3px 0;">시스템 제어</h4>
+                <p style="font-size:0.75rem; color:#86868b; margin:0;">전체 예약 마감 및 명단 삭제</p>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button id="block-btn" class="btn-action btn-danger-soft" style="padding: 8px 12px; font-size: 0.8rem;" onclick="toggleBookingBlock()">전체 차단</button>
+                <button class="btn-action" style="background:#f2f2f7; color:#1d1d1f; padding: 8px 12px; font-size: 0.8rem;" onclick="openSuperAdmin()">명단 초기화</button>
             </div>
         </div>
 
@@ -303,7 +308,6 @@
         <div id="admin-suggestion-list">불러오는 중...</div>
     </div>
 
-
     <div class="modal fade" id="scannerModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden; padding:0;">
@@ -367,8 +371,8 @@
                 <span style="color: #1e293b; font-weight: 600;" id="u-return-date"></span>
             </div>
             
-            <button id="manual-return-btn" class="btn-manual-return" style="display: none;">수동 반납처리</button>
-            <button id="delete-umbrella-btn" class="btn-delete-record">이 기록 삭제</button>
+            <button id="manual-return-btn" class="btn-manual-return" style="display: none; background:var(--success); color:white; width:100%; padding:14px; border:none; border-radius:12px; font-size:15px; font-weight:bold; margin-top:15px; cursor:pointer;">수동 반납처리</button>
+            <button id="delete-umbrella-btn" class="btn-delete-record" style="background:#f1f5f9; color:var(--danger); width:100%; padding:14px; border:1px solid #e2e8f0; border-radius:12px; font-size:15px; font-weight:bold; margin-top:10px; cursor:pointer;">이 기록 삭제</button>
         </div>
     </div>
 
@@ -463,6 +467,7 @@
             document.getElementById('page-' + pageId).classList.add('active');
             window.scrollTo(0, 0);
 
+            // 데이터 로드
             if(pageId === 'lunch') initLunchAdmin();
             if(pageId === 'umbrella') fetchRentals();
             if(pageId === 'facility') loadReservations();
@@ -577,7 +582,7 @@
         }
 
         /* ==============================================================
-           2. 통합 QR 스캐너 엔진
+           2. QR 통합 스캐너 엔진
            ============================================================== */
         let html5QrCode; let isProcessing = false;
         
@@ -610,6 +615,7 @@
         async function onScanSuccess(decodedText) {
             if (isProcessing) return; isProcessing = true; stopScanner(); 
             try {
+                // 시설예약 스캔
                 if (!decodedText.includes('{')) {
                     const { data } = await db.from('reservations').select('*').eq('id', decodedText).single();
                     if (data) {
@@ -618,18 +624,19 @@
                             alert(`[예약 승인 확인 됨]\n이름: ${data.student_name}\n장소: ${data.room_name}\n'사용 완료' 처리되었습니다.`);
                             if(document.getElementById('page-facility').classList.contains('active')) loadReservations();
                         } else if(data.status === 'used') { alert(`이미 승인 확인이 완료된 예약입니다.`); 
-                        } else { alert(`⚠️ 승인되지 않았거나 취소된 예약입니다.`); }
+                        } else { alert(`⚠️ 아직 승인되지 않았거나 취소된 예약입니다.`); }
                     } else { alert("유효하지 않은 QR 코드입니다."); }
                     setTimeout(() => { isProcessing = false; }, 2000);
                     return;
                 }
 
+                // 양심우산 스캔
                 const data = JSON.parse(decodedText);
                 if (data.action === 'rent') {
                     const umbrellaNum = prompt(`[대여 승인]\n${data.student_name} 학생에게 빌려줄 우산 번호 입력:`);
                     if (umbrellaNum) {
                         const { data: existing } = await db.from('umbrella_rentals').select('id').eq('umbrella_number', umbrellaNum).eq('status', '대여중');
-                        if (existing && existing.length > 0) { alert(`대여 불가: ${umbrellaNum}번 우산은 이미 대여 중입니다.`); return; }
+                        if (existing && existing.length > 0) { alert(`대여 불가: ${umbrellaNum}번 우산은 이미 다른 학생이 대여 중입니다.`); return; }
                         await db.from('umbrella_rentals').insert([{ student_id: data.student_id, student_name: data.student_name, phone_number: data.phone_number, umbrella_number: umbrellaNum, status: '대여중', rent_date: new Date().toISOString() }]);
                         alert('대여가 승인되었습니다.'); 
                         if(document.getElementById('page-umbrella').classList.contains('active')) fetchRentals();
@@ -883,8 +890,8 @@
         function updateBlockButtonUI() {
             const btn = document.getElementById('block-btn');
             if (!btn) return;
-            if (isBookingBlocked) { btn.innerText = "시설예약 전체 열기"; btn.classList.replace('btn-red', 'btn-success'); btn.style.background = 'var(--success)';} 
-            else { btn.innerText = "시설예약 전체 막기"; btn.classList.replace('btn-success', 'btn-red'); btn.style.background = 'var(--danger)';}
+            if (isBookingBlocked) { btn.innerText = "예약 활성화"; btn.classList.replace('btn-danger-soft', 'btn-success-soft');} 
+            else { btn.innerText = "전체 예약 막기"; btn.classList.replace('btn-success-soft', 'btn-danger-soft');}
         }
 
         async function toggleBookingBlock() {
@@ -1231,7 +1238,7 @@
                 return `
                 <div class="list-item">
                     <div class="list-info">
-                        <div style="margin-bottom: 6px; display:flex; align-items:center;">
+                        <div style="margin-bottom: 8px; display:flex; align-items:center;">
                             <span style="font-size:0.75rem; color:white; font-weight:800; background:${boardColor}; padding:3px 8px; border-radius:8px; margin-right:8px;">
                                 ${boardName}
                             </span>
