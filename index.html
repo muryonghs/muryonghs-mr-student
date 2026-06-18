@@ -34,6 +34,10 @@
 
         #page-lunch { background: #f1f5f9; color: #1e293b; max-width: 500px;}
         #alertOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(239, 68, 68, 0.95); color: white; z-index: 9999; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; }
+        .alert-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 10px; }
+        .alert-msg { font-size: 4rem; font-weight: 900; margin-bottom: 20px; }
+        .alert-hint { font-size: 1rem; opacity: 0.8; }
+        
         #importantPopup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 10000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; opacity: 0; transition: opacity 0.5s ease-in-out; }
         #page-lunch .important-content { background: white; width: 100%; max-width: 350px; padding: 30px 20px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         #page-lunch .notice-banner { display: none; background: #ef4444; color: white; padding: 18px; border-radius: 15px; text-align: center; font-size: 1.4rem; font-weight: 800; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3); }
@@ -143,10 +147,13 @@
         </div>
     </div>
 
-    <!-- 급식실 (제목 삭제됨) -->
     <div id="page-lunch" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
-        <div id="alertOverlay" onclick="closeAlert()"><div class="alert-title">지금 즉시 급식실로 내려오세요!</div><div id="alertGrade" class="alert-msg">O학년</div><div class="alert-hint">터치하면 닫힙니다</div></div>
+        <div id="alertOverlay" onclick="closeAlert()">
+            <div class="alert-title">지금 즉시 급식실로 내려오세요!</div>
+            <div id="alertGrade" class="alert-msg">O학년</div>
+            <div class="alert-hint">터치하면 닫힙니다</div>
+        </div>
         <div id="importantPopup"><div class="important-content"><h2 style="margin: 0 0 15px 0; color: #e11d48; font-size: 1.3rem; font-weight: 900;">🚨 중요 공지사항</h2><div id="importantPopupText"></div></div></div>
         
         <div id="noticeBanner" class="notice-banner"><span id="targetGrade">O학년</span> 학생들은<br>지금 즉시 급식실로 내려오세요!</div>
@@ -161,7 +168,6 @@
         <div class="lunch-card feedback-box"><div class="section-title" style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; color: #334155;">✍️ 급식실 건의사항</div><textarea id="feedbackText" placeholder="의견을 남겨주세요!"></textarea><button class="lunch-btn" onclick="sendFeedback()">의견 보내기</button></div>
     </div>
 
-    <!-- 양심우산 -->
     <div id="page-umbrella" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
         <div class="umb-card">
@@ -191,7 +197,6 @@
         </div>
     </div>
 
-    <!-- 시설예약 -->
     <div id="page-facility" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
         <div id="facility-content">
@@ -222,7 +227,6 @@
         <div class="modal fade" id="instaModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-light"><h5 class="modal-title fw-bold text-dark">📢 신청 완료</h5></div><div class="modal-body text-center py-4"><h4 class="fw-bold text-success mb-3">✅ 접수 완료</h4><p class="text-muted"><strong>학생회 인스타그램 DM</strong>을 보내주셔야 <strong>최종 승인</strong>됩니다.</p><a href="https://www.instagram.com/muryonghs_official" target="_blank" class="btn text-white fw-bold w-100 py-2 mt-2" style="background: linear-gradient(45deg, #f09433, #bc1888); border-radius: 10px;">인스타 바로가기</a></div><div class="modal-footer"><button type="button" class="btn btn-secondary w-100 fw-bold" data-bs-dismiss="modal" onclick="goPage('status')">확인 후 예약 현황으로 이동</button></div></div></div></div>
     </div>
 
-    <!-- 시설 예약 현황 -->
     <div id="page-status" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('facility')">❮ 뒤로</button></div>
         <div class="new-card">
@@ -244,7 +248,6 @@
         <div class="modal fade" id="cancelModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content" style="border-radius: 20px; border: none;"><div class="modal-header border-0"><h5 class="modal-title fw-bold" style="color: #ff3b30;">내 예약 취소하기</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body pt-1"><input type="text" id="c_name" class="form-control mb-2 bg-light border-0 py-2" placeholder="이름" style="border-radius: 10px;"><input type="number" id="c_sid" class="form-control mb-2 bg-light border-0 py-2" placeholder="학번 4자리" style="border-radius: 10px;"><input type="password" id="c_pw" class="form-control mb-3 bg-light border-0 py-2" placeholder="비밀번호 (숫자 4자리)" maxlength="4" style="border-radius: 10px;"></div><div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background-color: #f2f2f7; color: #1d1d1f; border: none;">닫기</button><button type="button" class="btn btn-danger px-4" onclick="processCancel()">예약 취소</button></div></div></div></div>
     </div>
 
-    <!-- 학생회 소식 -->
     <div id="page-council" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
         <div class="new-card" style="margin-bottom: 20px; padding: 15px;">
@@ -253,7 +256,6 @@
         <div id="council-list">행사 정보를 불러오는 중...</div>
     </div>
 
-    <!-- 학사/우리반 일정 -->
     <div id="page-calendar" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
         
@@ -295,7 +297,6 @@
         </div>
     </div>
 
-    <!-- 게시판 -->
     <div id="page-board" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
         
@@ -333,7 +334,6 @@
         </div>
     </div>
 
-    <!-- 분실물 센터 -->
     <div id="page-lost" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
         <div class="new-card" style="margin-bottom: 20px; padding: 15px;">
@@ -412,7 +412,7 @@
             }).join('');
         }
 
-        /* 급식실 코드 */
+        /* ================== 급식실 ================== */
         const grades = ["배식 전", "3학년", "2학년", "1학년", "배식 종료", "미운영"];
         let currentIdx = -1; let alertTimeout; let waitInterval = null; let popupInterval = null; let isPopupVisible = false;
 
@@ -421,24 +421,64 @@
         function togglePopupDisplay() { const popup = document.getElementById('importantPopup'); if (document.getElementById('alertOverlay').style.display === 'flex') { popup.style.opacity = '0'; setTimeout(() => { popup.style.display = 'none'; }, 500); isPopupVisible = false; return; } if (isPopupVisible) { popup.style.opacity = '0'; setTimeout(() => { popup.style.display = 'none'; }, 500); isPopupVisible = false; } else { popup.style.display = 'flex'; setTimeout(() => { popup.style.opacity = '1'; }, 10); isPopupVisible = true; } }
         function handlePopup(text) { const textDiv = document.getElementById('importantPopupText'); if (popupInterval) clearInterval(popupInterval); if (text && text.trim() !== '') { textDiv.innerText = text; isPopupVisible = false; togglePopupDisplay(); popupInterval = setInterval(togglePopupDisplay, 5000); } else { const popup = document.getElementById('importantPopup'); popup.style.opacity = '0'; setTimeout(() => { popup.style.display = 'none'; }, 500); isPopupVisible = false; } }
         function updateWaitTimeUI(waitMin, setAtStr) { const waitBox = document.getElementById('waitTimeBox'); if (waitInterval) clearInterval(waitInterval); if (!waitMin || waitMin <= 0 || !setAtStr) { waitBox.style.display = 'none'; return; } const setAt = new Date(setAtStr); waitInterval = setInterval(() => { const diffSec = Math.floor((new Date() - setAt) / 1000); const remainingSec = (waitMin * 60) - diffSec; if (remainingSec <= 0) { waitBox.style.display = 'none'; clearInterval(waitInterval); } else { waitBox.style.display = 'block'; const m = Math.floor(remainingSec / 60); const s = remainingSec % 60; document.getElementById('displayTime').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; } }, 1000); }
-        function updateUI(index) { const statusBox = document.getElementById('studentQueue'); const subStatus = document.getElementById('subStatus'); const banner = document.getElementById('noticeBanner'); const targetGrade = document.getElementById('targetGrade'); if (currentIdx !== -1 && currentIdx !== index && index > 0 && index < 4) { showAlert(grades[index]); } currentIdx = index; if (index === 5) { statusBox.innerText = grades[index]; statusBox.style.color = "#ef4444"; subStatus.style.display = "block"; banner.style.display = "none"; } else { subStatus.style.display = "none"; if (index === 0 || index === 4) { statusBox.innerText = grades[index]; statusBox.style.color = "#94a3b8"; banner.style.display = "none"; } else { statusBox.innerText = grades[index]; statusBox.style.color = "#3b82f6"; banner.style.display = "block"; targetGrade.innerText = grades[index]; } } }
         
-        async function loadLunchData() { const { data } = await db.from('lunch_status').select('*').eq('id', 1).single(); if (data) { currentIdx = data.current_index; updateUI(data.current_index); updateWaitTimeUI(data.wait_minutes, data.wait_set_at); } const { data: nList } = await db.from('announcements').select('*'); if (nList) { nList.forEach(n => { if(n.id === 1) document.getElementById('realNotice').innerText = n.content; if(n.id === 2) handlePopup(n.content); }); } }
+        function updateUI(index) { 
+            const statusBox = document.getElementById('studentQueue'); 
+            const subStatus = document.getElementById('subStatus'); 
+            const banner = document.getElementById('noticeBanner'); 
+            const targetGrade = document.getElementById('targetGrade'); 
+            
+            if (currentIdx !== -1 && currentIdx !== index && index > 0 && index < 4) { 
+                showAlert(grades[index]); 
+            } 
+            currentIdx = index; 
+            
+            if(statusBox) {
+                if (index === 5) { 
+                    statusBox.innerText = grades[index]; statusBox.style.color = "#ef4444"; 
+                    if(subStatus) subStatus.style.display = "block"; if(banner) banner.style.display = "none"; 
+                } else { 
+                    if(subStatus) subStatus.style.display = "none"; 
+                    if (index === 0 || index === 4) { 
+                        statusBox.innerText = grades[index]; statusBox.style.color = "#94a3b8"; if(banner) banner.style.display = "none"; 
+                    } else { 
+                        statusBox.innerText = grades[index]; statusBox.style.color = "#3b82f6"; if(banner) banner.style.display = "block"; if(targetGrade) targetGrade.innerText = grades[index]; 
+                    } 
+                } 
+            }
+        }
+        
+        async function loadLunchData() { 
+            const { data } = await db.from('lunch_status').select('*').eq('id', 1).single(); 
+            if (data) { 
+                currentIdx = data.current_index; 
+                updateUI(data.current_index); 
+                updateWaitTimeUI(data.wait_minutes, data.wait_set_at); 
+            } 
+            const { data: nList } = await db.from('announcements').select('*'); 
+            if (nList) { 
+                nList.forEach(n => { 
+                    if(n.id === 1) { const rN = document.getElementById('realNotice'); if(rN) rN.innerText = n.content; }
+                    if(n.id === 2) handlePopup(n.content); 
+                }); 
+            } 
+        }
+
         async function fetchMenu() { const d = new Date().toISOString().slice(0,10).replace(/-/g, ''); try { const res = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480070&MLSV_YMD=${d}`); const data = await res.json(); if (data.mealServiceDietInfo) { let rawMenu = data.mealServiceDietInfo[1].row[0].DDISH_NM; let menuList = rawMenu.split(/<br\/>/); let cleanMenu = menuList.map(item => item.replace(/[0-9.\(\)]/g, '').trim()).filter(item => item !== ''); document.getElementById('menuContent').innerHTML = cleanMenu.join('<br>'); } else { document.getElementById('menuContent').innerText = "오늘은 급식 정보가 없습니다."; } } catch(e) { document.getElementById('menuContent').innerText = "메뉴 로드 실패"; } }
         async function sendFeedback() { const text = document.getElementById('feedbackText').value; if (!text.trim()) return; const { error } = await db.from('feedback').insert([{ content: text }]); if (!error) { alert("소중한 의견이 전송되었습니다!"); document.getElementById('feedbackText').value = ""; } }
         
-        // 💡 [실시간 감지 로직 적용] 💡
+        // 💡 실시간 감지 (새로고침 없이 반영)
         db.channel('student-lunch-channel').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'lunch_status' }, p => { 
             updateUI(p.new.current_index); 
             updateWaitTimeUI(p.new.wait_minutes, p.new.wait_set_at); 
         }).subscribe();
 
         db.channel('student-announcements-channel').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'announcements' }, p => { 
-            if(p.new.id === 1) document.getElementById('realNotice').innerText = p.new.content; 
+            if(p.new.id === 1) { const rN = document.getElementById('realNotice'); if(rN) rN.innerText = p.new.content; }
             if(p.new.id === 2) handlePopup(p.new.content); 
         }).subscribe();
 
-        /* 양심우산 코드 */
+        /* ================== 양심우산 ================== */
         let currentMode = 'rent'; let calculatedReturnStr = "";
         function setMode(mode) { currentMode = mode; document.getElementById('tab-rent').className = mode === 'rent' ? 'tab active' : 'tab'; document.getElementById('tab-return').className = mode === 'return' ? 'tab active-return' : 'tab'; document.getElementById('phone-group').style.display = mode === 'rent' ? 'block' : 'none'; const btn = document.getElementById('generate-btn'); btn.innerText = mode === 'rent' ? '대여 패스 발급받기' : '반납 패스 발급받기'; btn.className = mode === 'return' ? 'umb-btn btn-return' : 'umb-btn'; document.getElementById('welcome-text').innerHTML = `정보를 입력하고<br><strong style="color:${mode==='rent'?'#00B4D8':'#2B9348'};">${mode==='rent'?'대여':'반납'} 패스 발급받기</strong>를 눌러주세요!`; document.getElementById('welcome-box').style.display = 'flex'; document.getElementById('qr-image').style.display = 'none'; document.getElementById('success-msg').style.display = 'none'; if (checkInterval) clearInterval(checkInterval); }
         async function checkAndShowConsent() { const sid = document.getElementById('student_id').value; const sname = document.getElementById('student_name').value; const phone = document.getElementById('phone_number').value; if(!sid || !sname || (currentMode === 'rent' && !phone)) { alert("정보를 모두 입력해주세요."); return; } if(sid.length !== 4) { alert("학번은 정확히 4자리 숫자로 입력해주세요."); return; } if (currentMode === 'rent') { const { data, error } = await db.from('umbrella_rentals').select('id').eq('student_id', sid).eq('status', '대여중'); if (data && data.length > 0) { alert("이미 대여 중인 우산이 있습니다!\n기존 우산을 먼저 반납한 후 이용해 주세요."); return; } const tmr = new Date(); tmr.setDate(tmr.getDate() + 1); calculatedReturnStr = `내일 ${tmr.getMonth() + 1}월 ${tmr.getDate()}일 점심시간`; document.getElementById('modal-return-time').innerText = calculatedReturnStr; document.getElementById('consent-modal').style.display = 'flex'; } else { executeQRGeneration(sid, sname, phone); } }
@@ -446,7 +486,7 @@
         function agreeAndGenerate() { closeConsentModal(); executeQRGeneration(document.getElementById('student_id').value, document.getElementById('student_name').value, document.getElementById('phone_number').value); }
         function executeQRGeneration(sid, sname, phone) { document.getElementById('welcome-box').style.display = 'none'; const qrData = { action: currentMode, student_id: sid, student_name: sname, phone_number: phone }; const qrImg = document.getElementById('qr-image'); qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(JSON.stringify(qrData))}&color=1f2937`; qrImg.style.display = 'block'; const qrGenTime = new Date().toISOString(); checkInterval = setInterval(async () => { const checkStatus = currentMode === 'rent' ? '대여중' : '반납완료'; const { data } = await db.from('umbrella_rentals').select('*').eq('student_id', sid).eq('status', checkStatus).gte(currentMode === 'rent' ? 'rent_date' : 'return_date', qrGenTime); if (data && data.length > 0) { clearInterval(checkInterval); document.getElementById('qr-image').style.display = 'none'; document.getElementById('success-title').innerText = currentMode === 'rent' ? '대여 완료!' : '반납 완료!'; document.getElementById('success-title').style.color = currentMode === 'rent' ? '#00B4D8' : '#2B9348'; document.getElementById('success-desc').innerHTML = currentMode === 'rent' ? `잊지 말고 꼭 반납해 주세요! ☂️<br><br><span style="color:#ef4444;">반납 기한: ${calculatedReturnStr}</span>` : "양심을 지켜주셔서 감사합니다 💖"; document.getElementById('success-msg').style.display = 'block'; } }, 2000); }
 
-        /* 시설예약 코드 */
+        /* ================== 시설예약 ================== */
         let termsModal; let instaModal;
         function handlePriorityCheck(cb) { if(cb.checked) alert("우선권은 특별 승인된 대상만 선택 가능합니다.\n허위로 체크할 경우 예약 취소 및 향후 시설 이용이 제한됩니다."); }
         function checkTermsScroll(el) { if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) { document.getElementById('agreeText').disabled = false; document.getElementById('scrollMsg').style.display = 'none'; } }
@@ -463,7 +503,7 @@
         function openCancelModal() { cancelModal = new bootstrap.Modal(document.getElementById('cancelModal')); cancelModal.show(); }
         async function processCancel() { const name = document.getElementById('c_name').value; const sid = document.getElementById('c_sid').value; const pw = document.getElementById('c_pw').value; if(!name || !sid || !pw) return alert("모든 정보를 입력해 주세요."); const { data } = await db.from('reservations').select('*').eq('student_name', name).eq('student_id', sid).eq('password', pw).in('status', ['pending', 'approved', 'standby']); if (!data || data.length === 0) return alert("일치하는 예약 정보가 없거나, 이미 취소/거절된 예약입니다."); const targetId = data[0].id; const { error } = await db.from('reservations').update({ status: 'cancelled' }).eq('id', targetId); if (!error) { alert("성공적으로 예약이 취소되었습니다."); cancelModal.hide(); loadStatus(); } else { alert("오류 발생: " + error.message); } }
 
-        /* 우리반 일정 코드 */
+        /* ================== 우리반 일정 ================== */
         async function fetchNeisCalendar() { 
             const listDiv = document.getElementById('neis-calendar-list'); 
             try { 
@@ -542,7 +582,7 @@
             else { alert("수정 중 오류가 발생했습니다."); }
         }
 
-        /* 게시판 코드 */
+        /* ================== 게시판 (자료실/건의함) ================== */
         function goBoard(type, title) { 
             currentBoardType = type; 
             
@@ -692,7 +732,7 @@
             }
         }
 
-        /* 분실물 센터 코드 */
+        /* ================== 분실물 센터 ================== */
         function openImageModal(url) {
             document.getElementById('enlarged-img').src = url;
             new bootstrap.Modal(document.getElementById('imageModal')).show();
