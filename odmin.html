@@ -14,7 +14,7 @@
     <style>
         /* === 공통 및 모바일 최적화 === */
         * { box-sizing: border-box; }
-        :root { --bg: #f5f5f7; --text-main: #1d1d1f; --card: #ffffff; --primary: #0071e3; --danger: #ff3b30; --success: #34c759; }
+        :root { --bg: #f5f5f7; --text-main: #1d1d1f; --card: #ffffff; --primary: #0071e3; --danger: #ff3b30; --success: #34c759; --purple: #8b5cf6; --dark: #334155; }
         
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 0; padding-bottom: 30px; overflow-x: hidden; }
         
@@ -45,6 +45,9 @@
 
         .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .list-header h3 { margin: 0; font-size: 1.2rem; font-weight: 800; color: #1d1d1f; }
+        .list-header-btns { display: flex; gap: 8px; }
+        
+        /* 게시판, 행사 등 일반 리스트 */
         .list-item { display: flex; flex-direction: column; gap: 10px; padding: 15px; border-radius: 12px; margin-bottom: 12px; background: #fff; border: 1px solid #e5e5ea; box-shadow: 0 2px 8px rgba(0,0,0,0.02);}
         .list-info h4 { margin: 0 0 5px 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
         .list-info p { margin: 0; font-size: 0.9rem; color: #64748b; line-height: 1.5; word-break: break-all;}
@@ -61,8 +64,8 @@
         .menu-item h3 { margin: 0 0 5px 0; font-size: 1.1rem; font-weight: 800; }
         .menu-item p { margin: 0; font-size: 0.8rem; color: #86868b; font-weight: 600; line-height: 1.4; }
 
-        /* === 뱃지 === */
-        .badge { border-radius: 20px; padding: 5px 10px; font-weight: 800; font-size: 0.75rem; }
+        /* === 시설예약 뱃지 === */
+        .badge { border-radius: 20px; padding: 4px 10px; font-weight: 800; font-size: 0.75rem; }
         .badge-pending { background: #fdf0cd; color: #9c6500; }
         .badge-approved { background: #e3f5eb; color: #196a3e; }
         .badge-standby { background: #e5f0ff; color: #004a99; }
@@ -72,54 +75,72 @@
         .badge-used { background: var(--primary); color: #ffffff; }
         .badge-priority { background: #ffefed; color: #ff3b30; border: 1px solid #ffcecb; }
 
-        /* === 특정 모듈 전용 CSS === */
-        .status-val { font-size: 2rem; font-weight: 900; color: #3b82f6; margin-bottom: 15px; text-align: center; }
+        /* === 1. 급식실 폰트 원복 === */
+        .status-val { font-size: 2.2rem; font-weight: 900; color: #3b82f6; margin-bottom: 15px; text-align: center; }
         .wait-display-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 15px; }
+        .active-timer { font-size: 3.5rem; font-weight: 900; color: #2563eb; line-height: 1; }
+
+        /* === 2. 양심우산 전용 스타일 (복구됨) === */
+        .btn-sm-main { background: var(--purple); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .btn-sm-manage { background: var(--dark); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; }
         
-        /* 모달 스타일 공통 */
+        .rental-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 10px; border-left: 4px solid #cbd5e1; cursor: pointer; transition: transform 0.1s; border-top: 1px solid #e5e5ea; border-right: 1px solid #e5e5ea; border-bottom: 1px solid #e5e5ea;}
+        .rental-card:active { transform: scale(0.98); background-color: #f8fafc; }
+        .rental-card.status-rent { border-left-color: var(--danger); }
+        .rental-card.status-return { border-left-color: var(--success); }
+        .rental-card.status-broken { border-left-color: var(--dark); background-color: #f8fafc; } 
+
+        .card-top { display: flex; justify-content: space-between; align-items: center; }
+        .umb-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; }
+        .umb-badge.rent { background: #fee2e2; color: var(--danger); }
+        .umb-badge.return { background: #dcfce7; color: var(--success); }
+        .umb-badge.broken { background: var(--dark); color: white; } 
+        .time-text { font-size: 12px; color: #94a3b8; font-weight: bold;}
+
+        .card-body { display: flex; justify-content: space-between; align-items: center; }
+        .student-info { display: flex; flex-direction: column; }
+        .s-name { font-size: 18px; font-weight: 800; color: #0f172a; }
+        .s-id { font-size: 13px; color: #64748b; margin-top: 2px; }
+        
+        .umbrella-num { background: white; padding: 8px 14px; border-radius: 10px; font-size: 14px; font-weight: bold; color: var(--primary); text-align: right; border: 1px solid #e2e8f0;}
+        .rental-card.status-broken .umbrella-num { color: var(--dark); } 
+        .umbrella-num span { display: block; font-size: 11px; color: #94a3b8; font-weight: normal; margin-bottom: 2px; }
+
+        .btn-manual-return { background: var(--success); color: white; border: none; width: 100%; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .btn-delete-record { background: #f1f5f9; color: var(--danger); border: 1px solid #e2e8f0; width: 100%; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+        /* === 모달 스타일 공통 === */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;}
         .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 24px; padding: 25px; max-height: 90vh; overflow-y: auto; position: relative;}
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #f1f5f9; }
         .modal-header h3 { margin: 0; font-size: 1.2rem; font-weight: 800; }
         .close-btn { background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 16px; font-weight: bold; color: #64748b; cursor: pointer; }
 
-        /* 날짜 입력 칸 강제 스타일 초기화 (삐져나감 방지) */
-        input[type="date"].new-input {
-            -webkit-appearance: none;
-            appearance: none;
-            overflow: hidden;
-            background-color: #fbfbfd;
-        }
+        /* 우산 상세 모달 슬라이드업 */
+        .modal-slide-up { align-items: flex-end; padding: 0; }
+        .modal-slide-up .modal-content { border-radius: 24px 24px 0 0; animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1); }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        /* 날짜 입력 칸 삐져나감 방지 */
+        input[type="date"].new-input { -webkit-appearance: none; appearance: none; overflow: hidden; background-color: #fbfbfd; }
     </style>
 </head>
 <body>
 
-    <!-- === 홈 화면 (메뉴 그리드) - 로그인 없이 바로 보임 === -->
     <div id="page-home" class="page active">
         <header class="app-header">
             <h1>무룡고 통합 관리자</h1>
         </header>
-
-        <!-- 예약 제어 버튼 (상시 노출) -->
-        <div id="super-admin-area" style="margin-bottom:20px;">
-            <div class="card" style="background:#fff3cd; border-color:#ffeeba;">
-                <h4 style="font-size:1rem; font-weight:800; color:#856404; margin:0 0 10px 0;">전체 시스템 관리</h4>
-                <div style="display:flex; gap:10px;">
-                    <button id="block-btn" class="btn-main btn-red" style="padding:10px; font-size:0.9rem;" onclick="toggleBookingBlock()">시설예약 전체 막기</button>
-                    <button class="btn-main btn-dark" style="padding:10px; font-size:0.9rem;" onclick="openSuperAdmin()">예약 명단 초기화</button>
-                </div>
-            </div>
-        </div>
 
         <div class="menu-grid">
             <div class="menu-item" onclick="goPage('lunch')">
                 <div class="menu-icon">🍱</div><h3>급식실 제어</h3><p>배식 순서 및 알림</p>
             </div>
             <div class="menu-item" onclick="goPage('umbrella')">
-                <div class="menu-icon">☔️</div><h3>양심우산</h3><p>목록 확인 및 스캔</p>
+                <div class="menu-icon">☔️</div><h3>양심우산</h3><p>목록 관리 및 출력</p>
             </div>
             <div class="menu-item" onclick="goPage('facility')">
-                <div class="menu-icon">🏟️</div><h3>시설예약</h3><p>승인 및 관리 스캔</p>
+                <div class="menu-icon">🏟️</div><h3>시설예약</h3><p>승인 및 전체 제어</p>
             </div>
             <div class="menu-item" onclick="goPage('council')">
                 <div class="menu-icon">🎉</div><h3>학생회 행사</h3><p>행사 등록 및 관리</p>
@@ -137,7 +158,6 @@
         </div>
     </div>
 
-    <!-- === 1. 급식실 제어 === -->
     <div id="page-lunch" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
         
@@ -157,7 +177,7 @@
             <h3 class="mb-3" style="font-size:1.1rem; font-weight:800;">다음 호출 타이머</h3>
             <div class="wait-display-box">
                 <span style="font-size: 0.85rem; color: #64748b; font-weight: 700; display: block;">진행 중인 타이머</span>
-                <div id="activeTimerDisplay" class="active-timer" style="color:#94a3b8; font-size: 2.5rem; margin: 10px 0;">타이머 꺼짐</div>
+                <div id="activeTimerDisplay" class="active-timer">타이머 꺼짐</div>
                 <hr style="border:0; border-top:1px solid #e2e8f0; margin: 15px 0;">
                 <span style="font-size: 0.85rem; color: #64748b; font-weight: 700; display: block;">추가/설정할 시간</span>
                 <div><span id="tempWaitDisplay" style="font-size: 1.8rem; font-weight: 900; color: #475569;">0</span> 분</div>
@@ -190,7 +210,6 @@
         </div>
     </div>
 
-    <!-- === 2. 양심우산 관리 === -->
     <div id="page-umbrella" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
         
@@ -201,15 +220,25 @@
         </div>
         
         <div class="list-header">
-            <h3>양심우산 미반납자</h3>
-            <button class="btn-action btn-success-soft" onclick="executeUmbrellaPDF()">PDF 명단 추출</button>
+            <h3>전체 이용 내역</h3>
+            <div class="list-header-btns">
+                <button class="btn-sm-manage" onclick="openBrokenModal()">고장 우산</button>
+                <button class="btn-sm-main" onclick="openPdfModal()">PDF 출력</button>
+            </div>
         </div>
         <div id="rental-list">데이터를 불러오는 중...</div>
     </div>
 
-    <!-- === 3. 시설예약 관리 === -->
     <div id="page-facility" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
+
+        <div class="card" style="background:#fff3cd; border-color:#ffeeba;">
+            <h4 style="font-size:1.1rem; font-weight:800; color:#856404; margin:0 0 10px 0;">전체 시스템 제어 (관리자용)</h4>
+            <div style="display:flex; gap:10px;">
+                <button id="block-btn" class="btn-main btn-red" style="padding:12px; font-size:0.95rem;" onclick="toggleBookingBlock()">전체 예약 막기</button>
+                <button class="btn-main btn-dark" style="padding:12px; font-size:0.95rem;" onclick="openSuperAdmin()">명단 전체 초기화</button>
+            </div>
+        </div>
 
         <div class="card" style="background: #fdf5e6; border: 1px solid #ffeeba; text-align:center;">
             <h3 style="margin-top:0; font-size:1.2rem; font-weight:800;">예약 승인 확인 스캐너</h3>
@@ -221,11 +250,10 @@
             <h3>예약 승인 및 관리</h3>
             <button class="btn-action btn-danger-soft" onclick="openBlockModal()">시간 부분차단</button>
         </div>
-        <p class="text-muted" style="font-size:0.8rem; margin-top:-10px;">카드를 누르면 상세 승인/거절 메뉴가 나타납니다.</p>
+        <p class="text-muted" style="font-size:0.85rem; margin-top:-10px; margin-bottom: 15px;">카드를 누르면 상세 승인/거절 메뉴가 나타납니다.</p>
         <div id="reserve-list">데이터를 불러오는 중...</div>
     </div>
 
-    <!-- === 4. 학생회 소식 등록/관리 === -->
     <div id="page-council" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
         
@@ -245,14 +273,12 @@
         <div id="admin-council-list">불러오는 중...</div>
     </div>
 
-    <!-- === 5. 학습자료실 관리 === -->
     <div id="page-study" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
         <div class="list-header"><h3>📚 학습자료실 관리</h3></div>
         <div id="admin-study-list">불러오는 중...</div>
     </div>
 
-    <!-- === 6. 분실물 센터 관리 === -->
     <div id="page-lost" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
 
@@ -270,7 +296,6 @@
         <div id="admin-lost-list">불러오는 중...</div>
     </div>
 
-    <!-- === 7. 건의함 관리 === -->
     <div id="page-suggestion" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
         <div class="list-header"><h3>💡 학생 건의사항 열람</h3></div>
@@ -278,11 +303,7 @@
         <div id="admin-suggestion-list">불러오는 중...</div>
     </div>
 
-    <!-- ==========================================
-         모달 영역 모음
-         ========================================== -->
 
-    <!-- 통합 QR 스캐너 모달 -->
     <div class="modal fade" id="scannerModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden; padding:0;">
@@ -299,7 +320,86 @@
         </div>
     </div>
 
-    <!-- 시설 예약 상세 관리 모달 -->
+    <div id="pdfModal" class="modal-overlay" onclick="closeCustomModal(event)">
+        <div class="modal-content" style="max-width: 360px;">
+            <div class="modal-header">
+                <h3>PDF 출력 옵션</h3>
+                <button class="close-btn" onclick="closeCustomModal(event)">✕</button>
+            </div>
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 20px; line-height: 1.4;">추출할 명단의 용도를 선택해 주세요.</p>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button id="btn-pdf-public" class="btn-main" style="background: var(--purple);" onclick="executePDF('public')">
+                    공개용 명단 (게시판/공지용)<br>
+                    <span style="font-size: 13px; font-weight: normal; color: #ede9fe;">이름 가운데 가림, 학년만 표시</span>
+                </button>
+                <button id="btn-pdf-admin" class="btn-main" style="background: #475569;" onclick="executePDF('admin')">
+                    관리자용 명단 (내부 보관용)<br>
+                    <span style="font-size: 13px; font-weight: normal; color: #f1f5f9;">학번, 이름 전체 표시</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="umbrellaDetailModal" class="modal-overlay modal-slide-up" onclick="closeCustomModal(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="u-name-title">상세 정보</h3>
+                <button class="close-btn" onclick="closeCustomModal(event)">✕</button>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px;">
+                <span style="color: #64748b; font-weight: bold; width: 80px;">학번</span>
+                <span style="color: #1e293b; font-weight: 600;" id="u-id"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px;">
+                <span style="color: #64748b; font-weight: bold; width: 80px;">우산번호</span>
+                <span style="color: var(--primary); font-weight: 600;" id="u-umbrella"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px;">
+                <span style="color: #64748b; font-weight: bold; width: 80px;">전화번호</span>
+                <span style="color: #1e293b; font-weight: 600;" id="u-phone"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px;">
+                <span style="color: #64748b; font-weight: bold; width: 80px;" id="u-label-rent">대여일시</span>
+                <span style="color: #1e293b; font-weight: 600;" id="u-rent-date"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px;">
+                <span style="color: #64748b; font-weight: bold; width: 80px;" id="u-label-return">반납일시</span>
+                <span style="color: #1e293b; font-weight: 600;" id="u-return-date"></span>
+            </div>
+            
+            <button id="manual-return-btn" class="btn-manual-return" style="display: none;">수동 반납처리</button>
+            <button id="delete-umbrella-btn" class="btn-delete-record">이 기록 삭제</button>
+        </div>
+    </div>
+
+    <div id="damageModal" class="modal-overlay" onclick="closeCustomModal(event)">
+        <div class="modal-content" style="max-width: 360px; text-align: center; border-radius: 24px;">
+            <div class="modal-header" style="justify-content: center; border: none; padding-bottom: 0;">
+                <h3 style="color: #0f172a; font-size: 22px;">우산 상태 확인</h3>
+            </div>
+            <p style="color: #64748b; font-size: 15px; margin-bottom: 25px; line-height: 1.5;">
+                <strong id="d-student-name" style="color: var(--primary);"></strong> 학생이 반납하는<br>
+                <strong id="d-umbrella-num" style="color: var(--danger);"></strong>번 우산이 파손되었습니까?
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn-main" style="background: var(--success);" onclick="executeReturn(false)">정상 반납</button>
+                <button class="btn-main btn-dark" onclick="executeReturn(true)">파손됨</button>
+                <button class="btn-main btn-gray" onclick="document.getElementById('damageModal').style.display='none'">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="brokenModal" class="modal-overlay" onclick="closeCustomModal(event)">
+        <div class="modal-content" style="border-radius: 24px; padding: 20px;">
+            <div class="modal-header">
+                <h3>파손 우산 관리</h3>
+                <button class="close-btn" onclick="closeCustomModal(event)">✕</button>
+            </div>
+            <p style="color: #64748b; font-size: 13px; margin-bottom: 15px;">파손된 우산을 선택하여 수리 완료 처리를 할 수 있습니다.</p>
+            <div id="broken-list"></div>
+        </div>
+    </div>
+
     <div class="modal fade" id="detailModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
@@ -323,7 +423,6 @@
         </div>
     </div>
 
-    <!-- 시설 예약 부분 차단 모달 -->
     <div class="modal fade" id="blockModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -364,7 +463,6 @@
             document.getElementById('page-' + pageId).classList.add('active');
             window.scrollTo(0, 0);
 
-            // 해당 페이지 접속 시 데이터 로드
             if(pageId === 'lunch') initLunchAdmin();
             if(pageId === 'umbrella') fetchRentals();
             if(pageId === 'facility') loadReservations();
@@ -424,15 +522,15 @@
             const display = document.getElementById('activeTimerDisplay');
             if (adminWaitInterval) clearInterval(adminWaitInterval);
             if (!liveWaitMin || liveWaitMin <= 0 || !liveSetAt) { 
-                display.innerText = "타이머 꺼짐"; display.style.color = "#94a3b8"; display.style.fontSize = "2rem"; return; 
+                display.innerText = "타이머 꺼짐"; display.style.color = "#94a3b8"; return; 
             }
-            display.style.color = "#2563eb"; display.style.fontSize = "3rem";
+            display.style.color = "#2563eb"; 
             const setAt = new Date(liveSetAt);
             adminWaitInterval = setInterval(() => {
                 const diffSec = Math.floor((new Date() - setAt) / 1000); 
                 const remainingSec = (liveWaitMin * 60) - diffSec;
                 if (remainingSec <= 0) { 
-                    display.innerText = "타이머 꺼짐"; display.style.color = "#94a3b8"; display.style.fontSize = "2rem"; clearInterval(adminWaitInterval); 
+                    display.innerText = "타이머 꺼짐"; display.style.color = "#94a3b8"; clearInterval(adminWaitInterval); 
                 } else { 
                     const m = Math.floor(remainingSec / 60); const s = remainingSec % 60; 
                     display.innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; 
@@ -479,7 +577,7 @@
         }
 
         /* ==============================================================
-           2. QR 통합 스캐너 엔진 (양심우산 & 시설예약 공통)
+           2. 통합 QR 스캐너 엔진
            ============================================================== */
         let html5QrCode; let isProcessing = false;
         
@@ -512,7 +610,6 @@
         async function onScanSuccess(decodedText) {
             if (isProcessing) return; isProcessing = true; stopScanner(); 
             try {
-                // [시설 예약 스캔 판별]
                 if (!decodedText.includes('{')) {
                     const { data } = await db.from('reservations').select('*').eq('id', decodedText).single();
                     if (data) {
@@ -520,23 +617,19 @@
                             await db.from('reservations').update({ status: 'used' }).eq('id', decodedText);
                             alert(`[예약 승인 확인 됨]\n이름: ${data.student_name}\n장소: ${data.room_name}\n'사용 완료' 처리되었습니다.`);
                             if(document.getElementById('page-facility').classList.contains('active')) loadReservations();
-                        } else if(data.status === 'used') { 
-                            alert(`이미 승인 확인이 완료된 예약입니다.`); 
-                        } else { 
-                            alert(`⚠️ 아직 승인되지 않았거나 취소된 예약입니다.`); 
-                        }
+                        } else if(data.status === 'used') { alert(`이미 승인 확인이 완료된 예약입니다.`); 
+                        } else { alert(`⚠️ 승인되지 않았거나 취소된 예약입니다.`); }
                     } else { alert("유효하지 않은 QR 코드입니다."); }
                     setTimeout(() => { isProcessing = false; }, 2000);
                     return;
                 }
 
-                // [양심우산 스캔 판별]
                 const data = JSON.parse(decodedText);
                 if (data.action === 'rent') {
                     const umbrellaNum = prompt(`[대여 승인]\n${data.student_name} 학생에게 빌려줄 우산 번호 입력:`);
                     if (umbrellaNum) {
                         const { data: existing } = await db.from('umbrella_rentals').select('id').eq('umbrella_number', umbrellaNum).eq('status', '대여중');
-                        if (existing && existing.length > 0) { alert(`대여 불가: ${umbrellaNum}번 우산은 이미 다른 학생이 대여 중입니다.`); return; }
+                        if (existing && existing.length > 0) { alert(`대여 불가: ${umbrellaNum}번 우산은 이미 대여 중입니다.`); return; }
                         await db.from('umbrella_rentals').insert([{ student_id: data.student_id, student_name: data.student_name, phone_number: data.phone_number, umbrella_number: umbrellaNum, status: '대여중', rent_date: new Date().toISOString() }]);
                         alert('대여가 승인되었습니다.'); 
                         if(document.getElementById('page-umbrella').classList.contains('active')) fetchRentals();
@@ -556,58 +649,233 @@
             finally { setTimeout(() => { isProcessing = false; }, 2000); }
         }
 
+        /* ==============================================================
+           3. 양심우산 관리 
+           ============================================================== */
+        let pendingReturnData = null;
+
+        function formatFullDate(dateString) {
+            if (!dateString) return '-';
+            const d = new Date(dateString);
+            return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        }
+
         async function fetchRentals() {
             const listDiv = document.getElementById('rental-list'); listDiv.innerHTML = '데이터 로딩 중...';
-            const { data } = await db.from('umbrella_rentals').select('*').order('rent_date', { ascending: false }).limit(30);
+            const { data } = await db.from('umbrella_rentals').select('*').neq('status', '파손').order('rent_date', { ascending: false }).limit(30);
             if (!data || !data.length) { listDiv.innerHTML = '<p style="text-align:center; color:#86868b; margin-top:20px;">이용 내역이 없습니다.</p>'; return; }
             
             listDiv.innerHTML = data.map(row => {
                 const isRent = row.status === '대여중';
-                const color = isRent ? 'var(--danger)' : (row.status==='파손' ? '#555' : 'var(--success)');
-                const d = new Date(isRent ? row.rent_date : row.return_date || row.rent_date);
-                const dateStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                const statusClass = isRent ? 'status-rent' : 'status-return';
+                const badgeClass = isRent ? 'rent' : 'return';
+                const timeLabel = isRent ? '대여일시' : '반납일시';
+                const dateObj = new Date(isRent ? row.rent_date : (row.return_date || row.rent_date)); 
+                const timeStr = `${dateObj.getMonth()+1}/${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
                 
                 return `
-                <div class="list-item" style="border-left: 5px solid ${color};">
-                    <div class="list-info">
-                        <h4 style="margin: 3px 0; color:${color}; font-size:1rem;">[${row.status}] <span style="color:#1d1d1f; font-size:1.1rem;">${row.student_name}</span> <span style="font-size:0.8rem; color:#86868b;">(${row.student_id})</span></h4>
-                        <p>${isRent ? '대여' : '반납/수정'}일시: ${dateStr}</p>
+                <div class="rental-card ${statusClass}" onclick='openUmbrellaModal(${JSON.stringify(row).replace(/'/g, "&#39;")})'>
+                    <div class="card-top">
+                        <span class="umb-badge ${badgeClass}">${row.status}</span>
+                        <span class="time-text">${timeLabel}: ${timeStr}</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px; border-top:1px solid #f5f5f7; padding-top:10px;">
-                        <div style="font-weight:900; color:var(--primary); font-size:1.1rem;">${row.umbrella_number || '-'}번</div>
-                        <button class="btn-action btn-danger-soft mt-1" onclick="deleteRental(${row.id})">기록삭제</button>
+                    <div class="card-body">
+                        <div class="student-info">
+                            <span class="s-name">${row.student_name}</span>
+                            <span class="s-id">${row.student_id}</span>
+                        </div>
+                        <div class="umbrella-num">
+                            <span>우산 번호</span>
+                            ${row.umbrella_number || '-'}번
+                        </div>
                     </div>
                 </div>`;
             }).join('');
         }
 
-        async function deleteRental(id) {
-            if(confirm("해당 우산 대여/반납 기록을 영구 삭제하시겠습니까?")) {
-                await db.from('umbrella_rentals').delete().eq('id', id);
-                fetchRentals();
+        async function fetchBroken() {
+            const { data, error } = await db.from('umbrella_rentals').select('*').eq('status', '파손').order('rent_date', { ascending: false });
+            const listContainer = document.getElementById('broken-list');
+            listContainer.innerHTML = '';
+
+            if (error || data.length === 0) {
+                listContainer.innerHTML = '<p style="text-align:center; color:#64748b; font-size:14px; padding:20px;">파손 등록된 우산이 없습니다.</p>';
+                return;
+            }
+
+            data.forEach(row => {
+                const dateObj = new Date(row.rent_date);
+                const timeStr = `${dateObj.getMonth()+1}/${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+                
+                const card = document.createElement('div');
+                card.className = 'rental-card status-broken';
+                card.onclick = () => openBrokenDetailModal(row);
+                card.innerHTML = `
+                    <div class="card-top">
+                        <span class="umb-badge broken">${row.status}</span>
+                        <span class="time-text">등록일시: ${timeStr}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="student-info">
+                            <span class="s-name">${row.umbrella_number}번 우산</span>
+                            <span class="s-id" style="color: #ef4444;">파손 신고: ${row.student_name}</span>
+                        </div>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        function openPdfModal() { document.getElementById('pdfModal').style.display = 'flex'; }
+        function openBrokenModal() { document.getElementById('brokenModal').style.display = 'flex'; fetchBroken(); }
+
+        function openUmbrellaModal(row) {
+            document.getElementById('u-name-title').innerText = `${row.student_name} 상세 정보`;
+            document.getElementById('u-id').innerText = row.student_id;
+            document.getElementById('u-umbrella').innerText = `${row.umbrella_number || '-'}번`;
+            document.getElementById('u-phone').innerText = row.phone_number || '미입력';
+            
+            document.getElementById('u-label-rent').innerText = '대여일시';
+            document.getElementById('u-rent-date').innerText = formatFullDate(row.rent_date);
+            document.getElementById('u-label-return').innerText = '반납일시';
+            document.getElementById('u-return-date').innerText = formatFullDate(row.return_date);
+
+            document.getElementById('delete-umbrella-btn').onclick = () => deleteUmbrellaRecord(row.id);
+
+            const manualBtn = document.getElementById('manual-return-btn');
+            if (row.status === '대여중') {
+                manualBtn.style.display = 'block';
+                manualBtn.onclick = () => {
+                    pendingReturnData = row;
+                    document.getElementById('umbrellaDetailModal').style.display = 'none';
+                    document.getElementById('d-student-name').innerText = row.student_name;
+                    document.getElementById('d-umbrella-num').innerText = row.umbrella_number;
+                    document.getElementById('damageModal').style.display = 'flex';
+                };
+            } else {
+                manualBtn.style.display = 'none'; 
+            }
+            document.getElementById('umbrellaDetailModal').style.display = 'flex';
+        }
+
+        function openBrokenDetailModal(row) {
+            document.getElementById('u-name-title').innerText = `파손 신고 상세 정보`;
+            document.getElementById('u-id').innerText = row.student_id;
+            document.getElementById('u-umbrella').innerText = `${row.umbrella_number || '-'}번`;
+            document.getElementById('u-phone').innerText = row.phone_number || '미입력';
+            document.getElementById('u-label-rent').innerText = '파손등록일';
+            document.getElementById('u-rent-date').innerText = formatFullDate(row.rent_date);
+            document.getElementById('u-label-return').innerText = '상태';
+            document.getElementById('u-return-date').innerText = '수리 대기 중';
+
+            document.getElementById('delete-umbrella-btn').onclick = () => deleteUmbrellaRecord(row.id);
+
+            const manualBtn = document.getElementById('manual-return-btn');
+            manualBtn.style.display = 'block';
+            manualBtn.style.background = 'var(--dark)';
+            manualBtn.innerHTML = '수리 완료 (파손 해제)';
+            manualBtn.onclick = () => {
+                if(confirm(`${row.umbrella_number}번 우산 수리가 완료되었습니까?\n파손 상태가 해제되어 다시 대여할 수 있습니다.`)) {
+                    db.from('umbrella_rentals').delete().eq('id', row.id).then(() => {
+                        alert('파손 해제가 완료되었습니다.');
+                        document.getElementById('umbrellaDetailModal').style.display = 'none';
+                        fetchBroken();
+                    });
+                }
+            };
+            document.getElementById('umbrellaDetailModal').style.display = 'flex';
+        }
+
+        async function deleteUmbrellaRecord(recordId) {
+            if(confirm("이 이용 기록을 삭제하시겠습니까? 삭제 후 복구할 수 없습니다.")) {
+                const { error } = await db.from('umbrella_rentals').delete().eq('id', recordId);
+                if(!error) {
+                    document.getElementById('umbrellaDetailModal').style.display = 'none';
+                    fetchRentals();
+                    if (document.getElementById('brokenModal').style.display === 'flex') fetchBroken();
+                }
             }
         }
 
-        async function executeUmbrellaPDF() {
-            const { data } = await db.from('umbrella_rentals').select('*').eq('status', '대여중').order('rent_date', { ascending: true });
-            if (!data || data.length === 0) return alert('현재 미반납자가 없습니다. (모두 회수됨)');
+        async function executeReturn(isDamaged) {
+            document.getElementById('damageModal').style.display = 'none';
+            if (!pendingReturnData) return;
+            const { id, student_id, student_name, phone_number, umbrella_number } = pendingReturnData;
+
+            try {
+                await db.from('umbrella_rentals').update({ status: '반납완료', return_date: new Date().toISOString() }).eq('id', id);
+                if (isDamaged) {
+                    await db.from('umbrella_rentals').insert([{ student_id, student_name, phone_number, umbrella_number, status: '파손', rent_date: new Date().toISOString() }]);
+                    alert(`${umbrella_number}번 우산 파손 처리 완료.`);
+                } else {
+                    alert('정상 반납이 완료되었습니다.');
+                }
+            } catch (err) {} finally { pendingReturnData = null; fetchRentals(); }
+        }
+
+        async function executePDF(type) {
+            const btn = type === 'public' ? document.getElementById('btn-pdf-public') : document.getElementById('btn-pdf-admin');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'PDF 생성 중...'; btn.style.pointerEvents = 'none';
+
+            const isPublic = (type === 'public');
+            const { data, error } = await db.from('umbrella_rentals').select('*').eq('status', '대여중').order('rent_date', { ascending: true });
+
+            if (!data || data.length === 0) { alert('현재 미반납자가 없습니다.'); btn.innerHTML = originalText; btn.style.pointerEvents = 'auto'; return; }
 
             const container = document.createElement('div');
             container.style.padding = '30px'; container.style.fontFamily = "'Pretendard', sans-serif";
-            let tableHTML = `
-                <h2 style="text-align:center; color:#0f172a; margin-bottom:10px;">양심우산 미반납자 명단 (관리용)</h2>
-                <table style="width:100%; border-collapse: collapse; font-size: 14px; margin-top:20px;">
-                    <thead><tr style="background-color:#f1f5f9;"><th style="border:1px solid #cbd5e1; padding:10px;">학번</th><th style="border:1px solid #cbd5e1; padding:10px;">이름</th><th style="border:1px solid #cbd5e1; padding:10px;">우산번호</th></tr></thead><tbody>
-            `;
-            data.forEach(row => { tableHTML += `<tr style="text-align:center;"><td style="border:1px solid #cbd5e1; padding:10px;">${row.student_id}</td><td style="border:1px solid #cbd5e1; padding:10px;">${row.student_name}</td><td style="border:1px solid #cbd5e1; padding:10px; color:#0071e3; font-weight:bold;">${row.umbrella_number}번</td></tr>`; });
-            tableHTML += `</tbody></table>`;
-            container.innerHTML = tableHTML;
+            const pdfTitle = isPublic ? "양심우산 미반납자 명단 (공개용)" : "양심우산 미반납자 명단 (내부용)";
 
-            html2pdf().set({ margin: 15, filename: `양심우산_미반납자_${new Date().toISOString().slice(0,10)}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container).save();
+            let tableHTML = `
+                <h2 style="text-align:center; color:#0f172a; margin-bottom:10px; font-size:24px;">${pdfTitle}</h2>
+                <p style="text-align:right; font-size:12px; color:#64748b; margin-bottom: 20px;">출력 일시: ${new Date().toLocaleString('ko-KR')}</p>
+                <table style="width:100%; border-collapse: collapse; font-size: 14px;">
+                    <thead>
+                        <tr style="background-color:#f1f5f9; text-align:center; color:#334155;">
+                            <th style="border:1px solid #cbd5e1; padding:12px;">${isPublic ? '학년' : '학번'}</th>
+                            <th style="border:1px solid #cbd5e1; padding:12px;">이름</th>
+                            <th style="border:1px solid #cbd5e1; padding:12px;">우산번호</th>
+                            <th style="border:1px solid #cbd5e1; padding:12px;">대여일시</th>
+                        </tr>
+                    </thead><tbody>`;
+
+            data.forEach(row => {
+                let displayName = (row.student_name || '').trim();
+                let displayId = row.student_id;
+                if (isPublic) {
+                    let len = displayName.length;
+                    if (len === 2) displayName = displayName.charAt(0) + '*';
+                    else if (len === 3) displayName = displayName.charAt(0) + '*' + displayName.charAt(2);
+                    else if (len > 3) displayName = displayName.substring(0, 2) + '*'.repeat(len - 3) + displayName.charAt(len - 1);
+                    
+                    const idStr = String(displayId);
+                    if (idStr.length === 4) displayId = idStr.charAt(0) + '학년'; else displayId = '비공개'; 
+                }
+                tableHTML += `<tr style="text-align:center; color:#1e293b;">
+                        <td style="border:1px solid #cbd5e1; padding:10px;">${displayId}</td>
+                        <td style="border:1px solid #cbd5e1; padding:10px;">${displayName}</td>
+                        <td style="border:1px solid #cbd5e1; padding:10px; font-weight:bold; color:#3b82f6;">${row.umbrella_number || '-'}</td>
+                        <td style="border:1px solid #cbd5e1; padding:10px;">${formatFullDate(row.rent_date)}</td>
+                    </tr>`;
+            });
+            tableHTML += `</tbody></table>`;
+            if(isPublic) tableHTML += `<div style="margin-top:30px; padding: 15px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; text-align:center;"><span style="font-weight:bold; color:#ef4444; font-size: 15px;">위 학생들은 학생회실로 신속히 우산을 반납해 주시기 바랍니다.</span></div>`;
+            
+            container.innerHTML = tableHTML;
+            html2pdf().set({ margin: 15, filename: `무룡고_양심우산_미반납자_${isPublic ? '공개용' : '관리자용'}_${new Date().toISOString().slice(0,10)}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container).save().then(() => {
+                btn.innerHTML = originalText; btn.style.pointerEvents = 'auto'; document.getElementById('pdfModal').style.display = 'none'; 
+            });
+        }
+
+        function closeCustomModal(event) {
+            if (event.target.classList.contains('modal-overlay') || event.target.classList.contains('close-btn')) {
+                event.target.closest('.modal-overlay').style.display = 'none';
+            }
         }
 
         /* ==============================================================
-           3. 시설 예약 관리 엔진
+           4. 시설 예약 관리 엔진
            ============================================================== */
         let globalReservations = []; 
         let currentSelectedRes = null; 
@@ -615,8 +883,8 @@
         function updateBlockButtonUI() {
             const btn = document.getElementById('block-btn');
             if (!btn) return;
-            if (isBookingBlocked) { btn.innerText = "시설예약 전체 열기"; btn.classList.replace('btn-danger-soft', 'btn-success-soft');} 
-            else { btn.innerText = "시설예약 전체 막기"; btn.classList.replace('btn-success-soft', 'btn-danger-soft');}
+            if (isBookingBlocked) { btn.innerText = "시설예약 전체 열기"; btn.classList.replace('btn-red', 'btn-success'); btn.style.background = 'var(--success)';} 
+            else { btn.innerText = "시설예약 전체 막기"; btn.classList.replace('btn-success', 'btn-red'); btn.style.background = 'var(--danger)';}
         }
 
         async function toggleBookingBlock() {
@@ -632,12 +900,6 @@
                     if (!error) { alert("완벽하게 초기화되었습니다."); loadReservations(); } 
                 }
             }
-        }
-
-        function formatTime(dateStr) {
-            const d = new Date(dateStr);
-            const daysKo = ['일', '월', '화', '수', '목', '금', '토'];
-            return `${d.getMonth()+1}.${d.getDate()}(${daysKo[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
         }
 
         function formatCompactTime(startStr, endStr) {
@@ -828,7 +1090,7 @@
         }
 
         /* ==============================================================
-           4. 통합 게시판 관리 (행사, 분실물, 자료실, 건의함)
+           5. 통합 게시판 관리 (행사, 분실물, 자료실, 건의함)
            ============================================================== */
         
         // 학생회 행사
@@ -941,7 +1203,7 @@
             loadAdminLost();
         }
 
-        // 일반 게시판 (학습자료실 / 건의함 분리형 로드)
+        // 일반 게시판 (학습자료실 / 건의함)
         async function loadAdminBoard(boardType) {
             const listDiv = document.getElementById(`admin-${boardType}-list`);
             const { data, error } = await db.from('board_posts').select('*').eq('board_type', boardType).order('created_at', { ascending: false });
@@ -952,6 +1214,7 @@
                 let displayContent = post.content;
                 let tagsHtml = '';
 
+                // JSON 텍스트 예쁘게 분리 (학습자료실 등)
                 if (post.board_type === 'study') {
                     try {
                         const parsed = JSON.parse(post.content);
@@ -968,7 +1231,7 @@
                 return `
                 <div class="list-item">
                     <div class="list-info">
-                        <div style="margin-bottom: 8px; display:flex; align-items:center;">
+                        <div style="margin-bottom: 6px; display:flex; align-items:center;">
                             <span style="font-size:0.75rem; color:white; font-weight:800; background:${boardColor}; padding:3px 8px; border-radius:8px; margin-right:8px;">
                                 ${boardName}
                             </span>
@@ -995,7 +1258,7 @@
             loadAdminBoard(type);
         }
 
-        // 초기 실행 로드 세팅
+        // 초기 실행
         loadSettings();
     </script>
 </body>
