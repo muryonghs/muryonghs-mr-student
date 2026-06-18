@@ -9,6 +9,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
+        /* === [핵심] 모든 요소가 모바일 화면을 벗어나지 않도록 방지 === */
+        * { box-sizing: border-box; }
+
         /* === 공통 SPA (화면 전환) 스타일 === */
         body { font-family: 'Pretendard', sans-serif; background: #f5f5f7; margin: 0; padding: 0; overflow-x: hidden; }
         .page { display: none !important; padding: 20px; max-width: 600px; margin: 0 auto; min-height: 100vh; animation: fadeIn 0.3s ease; }
@@ -16,11 +19,11 @@
         #page-umbrella.active { display: flex !important; } 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* [수정 1] 상단 네비게이션 및 제목 디자인 개선 */
-        .top-nav { display: flex; align-items: center; margin-bottom: 30px; padding-top: 15px; width: 100%; gap: 12px; }
-        .back-btn { background: #e8f0fe; border: none; font-size: 0.95rem; color: #0071e3; cursor: pointer; padding: 10px 16px; border-radius: 14px; font-weight: 800; transition: all 0.2s ease; display: flex; align-items: center; }
+        /* === [디자인 개선] 상단 제목 중앙 배치 및 뒤로가기 버튼 고정 === */
+        .top-nav { position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; padding-top: 15px; width: 100%; min-height: 45px; }
+        .back-btn { position: absolute; left: 0; background: #e8f0fe; border: none; font-size: 0.95rem; color: #0071e3; cursor: pointer; padding: 10px 14px; border-radius: 12px; font-weight: 800; transition: all 0.2s ease; display: flex; align-items: center; white-space: nowrap; z-index: 10;}
         .back-btn:active { transform: scale(0.95); background: #d2e3fc; }
-        .page-title { font-size: 1.5rem; font-weight: 900; margin: 0; color: #1d1d1f; letter-spacing: -0.5px; }
+        .page-title { font-size: 1.25rem; font-weight: 900; margin: 0; color: #1d1d1f; text-align: center; width: 100%; }
 
         /* === 홈 화면 특화 스타일 === */
         #page-home .weather-badge { background: rgba(0, 113, 227, 0.1); color: #0071e3; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 700; display: inline-block; margin-bottom: 15px; }
@@ -38,7 +41,7 @@
         /* === 1. 급식실 기존 원본 CSS === */
         #page-lunch { background: #f1f5f9; color: #1e293b; max-width: 500px;}
         #page-lunch .header-wrap { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        #page-lunch h1.lunch-h1 { font-size: 1.5rem; color: #1e293b; font-weight: 900; letter-spacing: -0.5px; margin: 0; }
+        #page-lunch h1.lunch-h1 { font-size: 1.5rem; color: #1e293b; font-weight: 900; letter-spacing: -0.5px; margin: 0; text-align: center; width: 100%;}
         #alertOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(239, 68, 68, 0.95); color: white; z-index: 9999; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; }
         #importantPopup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 10000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; opacity: 0; transition: opacity 0.5s ease-in-out; }
         #page-lunch .important-content { background: white; width: 100%; max-width: 350px; padding: 30px 20px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
@@ -53,7 +56,7 @@
         #page-lunch textarea { width: 100%; height: 90px; padding: 15px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-family: inherit; resize: none; font-size: 1rem; box-sizing: border-box; }
         #page-lunch button.lunch-btn { width:100%; background: #1e293b; color: white; padding: 16px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
 
-        /* === 2. 양심우산 기존 원본 CSS === */
+        /* === 2. 양심우산 === */
         #page-umbrella { background-color: #F8F9FA; color: #343A40; flex-direction:column; align-items:center; }
         #page-umbrella .umb-card { background: white; width: 100%; max-width: 400px; padding: 30px 20px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; }
         #page-umbrella .tab-container { display: flex; background: #f1f5f9; border-radius: 12px; padding: 4px; margin-bottom: 25px; }
@@ -71,7 +74,7 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         #page-umbrella .modal-content { background: white; width: 100%; max-width: 360px; border-radius: 20px; padding: 25px; box-sizing: border-box; text-align: left; }
 
-        /* === 3. 시설예약 기존 원본 CSS === */
+        /* === 3. 시설예약 === */
         #page-facility { background-color: #f0f2f5; max-width: 100%; padding-bottom: 50px;}
         #page-facility .reservation-card { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
         #page-facility .btn-primary { background-color: #004a99; border: none; padding: 12px; font-weight: bold; border-radius: 10px; }
@@ -80,31 +83,27 @@
         #page-facility .btn-main:active { transform: scale(0.98); }
         #page-facility .btn-main:disabled { background: #86868b; cursor: not-allowed; }
 
-        /* === 4. 추가 기능 공통 (달력, 게시판, 분실물, 학생회) === */
-        .new-card { background: #ffffff; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; }
-        .new-input { width: 100%; padding: 15px; border: 1.5px solid #e5e5ea; border-radius: 12px; font-size: 1rem; margin-bottom: 12px; background: #fbfbfd; font-family: inherit; }
-        .new-btn { width: 100%; padding: 16px; background: #0071e3; color: white; border: none; border-radius: 14px; font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: background 0.2s ease;}
+        /* === 4. 추가 기능 공통 === */
+        .new-card { background: #ffffff; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; width: 100%; }
+        .new-input { width: 100%; padding: 15px; border: 1.5px solid #e5e5ea; border-radius: 12px; font-size: 1rem; margin-bottom: 12px; background: #fbfbfd; font-family: inherit; box-sizing: border-box; }
+        .new-btn { width: 100%; padding: 16px; background: #0071e3; color: white; border: none; border-radius: 14px; font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: background 0.2s ease; box-sizing: border-box;}
         .new-btn:disabled { background: #86868b; cursor: not-allowed; }
         .list-item { border-bottom: 1px solid #f5f5f7; padding: 15px 0; }
         .list-item:last-child { border-bottom: none; }
         
         .lost-card { display: flex; gap: 15px; padding: 15px 0; border-bottom: 1px solid #e5e5ea; align-items: flex-start; }
-        .lost-img { width: 100px; height: 100px; border-radius: 12px; object-fit: cover; background: #e5e5ea; cursor: zoom-in; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .lost-img { width: 100px; height: 100px; border-radius: 12px; object-fit: cover; background: #e5e5ea; cursor: zoom-in; box-shadow: 0 2px 8px rgba(0,0,0,0.1); flex-shrink: 0; }
         .lost-info h4 { font-size: 1.1rem; font-weight: 800; margin: 0 0 8px 0; color: #1d1d1f; }
         .lost-info p { margin: 0 0 4px 0; font-size: 0.9rem; color: #555; display: flex; align-items: center; gap: 5px; }
         
         .event-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e5e5ea;}
-        
-        /* [수정 2] 학생회 소식 포스터 잘림 현상 해결 */
         .event-poster { width: 100%; height: auto; max-height: 400px; object-fit: contain; background: #f5f5f7; display: block; border-bottom: 1px solid #e5e5ea;}
-        
         .event-info { padding: 20px; }
         .event-title { font-size: 1.2rem; font-weight: 800; color: #1d1d1f; margin: 0 0 10px 0; }
         .event-meta { font-size: 0.9rem; color: #555; margin: 0 0 5px 0; display: flex; align-items: center; gap: 8px;}
         .event-dept { display: inline-block; background: #f0f8ff; color: #0071e3; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; margin-bottom: 10px;}
         .apply-btn { display: inline-block; width: 100%; text-align: center; background: #1d1d1f; color: white; padding: 12px; border-radius: 10px; font-weight: bold; text-decoration: none; margin-top: 15px; }
 
-        /* 예약 현황 테이블 스타일 */
         .status-table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
         .status-table th { border-bottom: 2px solid #e5e5ea; color: #86868b; font-weight: 600; font-size: 0.75rem; padding: 12px 4px; text-align: center; white-space: nowrap;}
         .status-table td { border-bottom: 1px solid #f5f5f7; padding: 14px 4px; vertical-align: middle; text-align: center; font-size: 0.9rem; color: #1d1d1f; }
@@ -121,6 +120,7 @@
 </head>
 <body>
 
+    <!-- === 홈 화면 === -->
     <div id="page-home" class="page active">
         <div class="weather-badge" id="weather">🌤 날씨 로딩중...</div>
         <h1 class="greeting" id="greeting">무룡고 학생 여러분,<br><span>오늘도 즐거운 하루 보내세요!</span></h1>
@@ -137,7 +137,6 @@
                 <div class="menu-icon">🏟️</div><h3>시설예약</h3><p>더하우스, 풋살장 등</p>
             </div>
 
-            <!-- [수정 3] 학교 공지사항 링크 수정 -->
             <div class="menu-item" onclick="window.open('https://school.use.go.kr/muryong-h/M010301/', '_blank')">
                 <div class="menu-icon">📢</div><h3>학교 공지</h3><p>공식 홈페이지 이동</p>
             </div>
@@ -145,7 +144,6 @@
                 <div class="menu-icon">🎉</div><h3>학생회 소식</h3><p>행사 및 안내</p>
             </div>
             
-            <!-- [수정 4] 학사/우리반 일정 메뉴 제목 변경 -->
             <div class="menu-item" onclick="goPage('calendar')">
                 <div class="menu-icon">📅</div><h3>학사/우리반 일정</h3><p>학교 및 반 일정 확인</p>
             </div>
@@ -161,9 +159,12 @@
         </div>
     </div>
 
-    <!-- 급식실 -->
+    <!-- === 급식실 === -->
     <div id="page-lunch" class="page">
-        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button><h1 class="page-title">실시간 급식실</h1></div>
+        <div class="top-nav">
+            <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
+            <h1 class="page-title">실시간 급식실</h1>
+        </div>
         <div id="alertOverlay" onclick="closeAlert()"><div class="alert-title">지금 즉시 급식실로 내려오세요!</div><div id="alertGrade" class="alert-msg">O학년</div><div class="alert-hint">터치하면 닫힙니다</div></div>
         <div id="importantPopup"><div class="important-content"><h2 style="margin: 0 0 15px 0; color: #e11d48; font-size: 1.3rem; font-weight: 900;">🚨 중요 공지사항</h2><div id="importantPopupText"></div></div></div>
         
@@ -179,9 +180,12 @@
         <div class="lunch-card feedback-box"><div class="section-title" style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; color: #334155;">✍️ 급식실 건의사항</div><textarea id="feedbackText" placeholder="의견을 남겨주세요!"></textarea><button class="lunch-btn" onclick="sendFeedback()">의견 보내기</button></div>
     </div>
 
-    <!-- 양심우산 -->
+    <!-- === 양심우산 === -->
     <div id="page-umbrella" class="page">
-        <div class="top-nav" style="align-self: flex-start; width: 100%;"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button><h1 class="page-title">양심우산 대여</h1></div>
+        <div class="top-nav">
+            <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
+            <h1 class="page-title">양심우산 대여</h1>
+        </div>
         <div class="umb-card">
             <div class="tab-container"><div class="tab active" id="tab-rent" onclick="setMode('rent')">대여하기</div><div class="tab" id="tab-return" onclick="setMode('return')">반납하기</div></div>
             <div id="form-container">
@@ -208,12 +212,14 @@
         </div>
     </div>
 
-    <!-- 시설예약 -->
+    <!-- === 시설예약 === -->
     <div id="page-facility" class="page">
-        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button><h1 class="page-title">시설 예약</h1></div>
+        <div class="top-nav">
+            <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
+            <h1 class="page-title">시설 예약</h1>
+        </div>
         <div id="facility-content">
             <div class="reservation-card" style="max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);">
-                <!-- [수정 6] 제목 변경 -->
                 <h2 style="color: #2c3e50; font-weight: 900; text-align: center; margin-bottom: 25px;">무룡고등학교 시설 예약</h2>
                 <div style="background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px;">🔔 안내: [다음 주 월~금] 일정 예약 진행 중</div>
                 <div class="mb-3"><label class="form-label" style="font-weight: bold;">이름</label><input type="text" id="name" class="form-control"></div>
@@ -237,9 +243,12 @@
         <div class="modal fade" id="instaModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-light"><h5 class="modal-title fw-bold text-dark">📢 신청 완료</h5></div><div class="modal-body text-center py-4"><h4 class="fw-bold text-success mb-3">✅ 접수 완료</h4><p class="text-muted"><strong>학생회 인스타그램 DM</strong>을 보내주셔야 <strong>최종 승인</strong>됩니다.</p><a href="https://www.instagram.com/muryonghs_official" target="_blank" class="btn text-white fw-bold w-100 py-2 mt-2" style="background: linear-gradient(45deg, #f09433, #bc1888); border-radius: 10px;">인스타 바로가기</a></div><div class="modal-footer"><button type="button" class="btn btn-secondary w-100 fw-bold" data-bs-dismiss="modal" onclick="goPage('status')">확인 후 예약 현황으로 이동</button></div></div></div></div>
     </div>
 
-    <!-- 시설 예약 현황 -->
+    <!-- === 시설 예약 현황 === -->
     <div id="page-status" class="page">
-        <div class="top-nav"><button class="back-btn" onclick="goPage('facility')">❮ 뒤로</button><h1 class="page-title">시설 예약 현황</h1></div>
+        <div class="top-nav">
+            <button class="back-btn" onclick="goPage('facility')">❮ 뒤로</button>
+            <h1 class="page-title">시설 예약 현황</h1>
+        </div>
         <div class="new-card">
             <div style="background-color: #fbfbfd; border: 1px solid #e5e5ea; padding: 15px; border-radius: 14px; text-align: center; font-size: 0.85rem; line-height: 1.5; color: #86868b; margin-bottom: 20px;">💡 <strong style="color:#0071e3;">승인된 예약</strong>만 시설 이용이 가능하며,<br>승인된 예약은 <strong>QR 패스</strong>로 본인 확인이 진행됩니다.</div>
             <div style="overflow-x: auto;">
@@ -258,23 +267,36 @@
         <div class="modal fade" id="cancelModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content" style="border-radius: 20px; border: none;"><div class="modal-header border-0"><h5 class="modal-title fw-bold" style="color: #ff3b30;">내 예약 취소하기</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body pt-1"><input type="text" id="c_name" class="form-control mb-2 bg-light border-0 py-2" placeholder="이름" style="border-radius: 10px;"><input type="number" id="c_sid" class="form-control mb-2 bg-light border-0 py-2" placeholder="학번 4자리" style="border-radius: 10px;"><input type="password" id="c_pw" class="form-control mb-3 bg-light border-0 py-2" placeholder="비밀번호 (숫자 4자리)" maxlength="4" style="border-radius: 10px;"></div><div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background-color: #f2f2f7; color: #1d1d1f; border: none;">닫기</button><button type="button" class="btn btn-danger px-4" onclick="processCancel()">예약 취소</button></div></div></div></div>
     </div>
 
-    <!-- 학생회 소식 -->
+    <!-- === 학생회 소식 === -->
     <div id="page-council" class="page">
-        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button><h1 class="page-title">🎉 학생회 소식</h1></div>
+        <div class="top-nav">
+            <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
+            <h1 class="page-title">학생회 소식</h1>
+        </div>
         <div id="council-list">행사 정보를 불러오는 중...</div>
     </div>
 
-    <!-- 학사/우리반 일정 -->
+    <!-- === 학사/우리반 일정 === -->
     <div id="page-calendar" class="page">
-        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button><h1 class="page-title">학사/우리반 일정</h1></div>
+        <div class="top-nav">
+            <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
+            <h1 class="page-title">학사/우리반 일정</h1>
+        </div>
         <div class="new-card"><h3 style="margin-top:0; font-size:1.1rem;">🏫 다가오는 공식 일정</h3><div id="neis-calendar-list">데이터를 불러오는 중...</div></div>
         <div class="new-card">
             <h3 style="margin-top:0; font-size:1.1rem;">📝 다가오는 반별 일정</h3>
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
+            
+            <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center;">
                 <select id="cal-grade" class="new-input" style="margin:0;"><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option></select>
-                <select id="cal-class" class="new-input" style="margin:0;"><option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option><option value="5">5반</option><option value="6">6반</option></select>
-                <button class="new-btn" style="width:auto; padding:0 20px;" onclick="loadClassCalendar()">조회</button>
+                <!-- 1반부터 9반까지 수정 -->
+                <select id="cal-class" class="new-input" style="margin:0;">
+                    <option value="1">1반</option><option value="2">2반</option><option value="3">3반</option>
+                    <option value="4">4반</option><option value="5">5반</option><option value="6">6반</option>
+                    <option value="7">7반</option><option value="8">8반</option><option value="9">9반</option>
+                </select>
+                <button class="new-btn" style="width:auto; padding:0 20px; white-space:nowrap; flex-shrink:0; display:flex; align-items:center; justify-content:center; margin:0;" onclick="loadClassCalendar()">조회</button>
             </div>
+            
             <div id="class-calendar-list" style="margin-bottom:20px;">반을 선택하고 조회를 눌러주세요.</div>
             
             <hr style="border:0; border-top:1px solid #e5e5ea; margin-bottom:15px;">
@@ -299,14 +321,20 @@
         </div>
     </div>
 
-    <!-- 게시판 -->
+    <!-- === 게시판 === -->
     <div id="page-board" class="page">
-        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button><h1 class="page-title" id="board-title">게시판</h1></div>
+        <div class="top-nav">
+            <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
+            <h1 class="page-title" id="board-title">게시판</h1>
+        </div>
         
         <div class="new-card" id="board-list-container"><div id="board-list">불러오는 중...</div></div>
         
         <div class="new-card" id="board-write-container">
-            <h3 id="board-write-title" style="margin-top:0; font-size:1.1rem; font-weight:800;">새 글 등록/요청</h3>
+            <h3 id="board-write-title" style="margin-top:0; font-size:1.1rem; font-weight:800;">새 글 등록</h3>
+            
+            <!-- 안내 문구 표시 영역 -->
+            <p id="board-desc" style="font-size:0.9rem; color:#6c757d; margin-bottom:15px; display:none; line-height:1.4;"></p>
             
             <input type="text" id="board-author" class="new-input" placeholder="작성자">
             
@@ -324,17 +352,20 @@
             <textarea id="board-content" class="new-input" placeholder="내용" rows="4"></textarea>
             
             <div id="file-upload-area" style="display:none; margin-bottom:12px;">
-                <label style="font-size:0.85rem; font-weight:bold; color:#86868b; display:block; margin-bottom:5px;">첨부파일 (PDF 등)</label>
+                <label style="font-size:0.85rem; font-weight:bold; color:#86868b; display:block; margin-bottom:5px;">첨부파일 (PDF 등 필수)</label>
                 <input type="file" id="board-file" class="new-input" style="padding:10px;">
             </div>
-            <!-- 업로드 버튼 -->
+            
             <button id="board-submit-btn" class="new-btn" onclick="submitBoard()">등록하기</button>
         </div>
     </div>
 
-    <!-- 분실물 센터 -->
+    <!-- === 분실물 센터 === -->
     <div id="page-lost" class="page">
-        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button><h1 class="page-title">분실물 센터</h1></div>
+        <div class="top-nav">
+            <button class="back-btn" onclick="goPage('home')">❮ 홈으로</button>
+            <h1 class="page-title">분실물 센터</h1>
+        </div>
         <div class="new-card" id="lost-list">데이터를 불러오는 중...</div>
     </div>
 
@@ -531,13 +562,24 @@
             if (type === 'study') { 
                 document.getElementById('board-write-title').innerText = '📚 자료 기여하기'; 
                 document.getElementById('board-submit-btn').innerText = '자료 기여하기'; 
+                
+                // 내용은 필수가 아니므로 placeholder 변경
+                document.getElementById('board-content').placeholder = "내용 (선택사항)";
+                document.getElementById('board-desc').style.display = 'none';
+                
                 listContainer.style.display = 'block'; 
                 fileArea.style.display = 'block'; 
                 studyMetaArea.style.display = 'flex'; 
                 
             } else if (type === 'suggestion') { 
-                document.getElementById('board-write-title').innerText = '💡 새 건의사항 작성 (비공개)'; 
+                document.getElementById('board-write-title').innerText = '💡 새 건의사항 작성'; 
                 document.getElementById('board-submit-btn').innerText = '건의하기'; 
+                
+                // 건의함 안내 문구 설정
+                document.getElementById('board-desc').innerHTML = '학교 발전을 위한 여러분의 소중한 의견을 들려주세요.<br>작성된 건의사항은 학생회 및 관리자만 확인할 수 있습니다.';
+                document.getElementById('board-desc').style.display = 'block';
+                document.getElementById('board-content').placeholder = "건의할 내용을 상세히 적어주세요.";
+                
                 fileArea.style.display = 'none'; 
                 studyMetaArea.style.display = 'none'; 
                 listContainer.style.display = 'none';
@@ -549,7 +591,6 @@
         
         async function loadBoardData(type) { 
             const listDiv = document.getElementById('board-list'); 
-            
             if(type === 'suggestion') return; 
 
             listDiv.innerHTML = '<p>불러오는 중...</p>'; 
@@ -562,11 +603,9 @@
                 const fileBtn = post.file_url ? `<a href="${post.file_url}" target="_blank" style="color:#0071e3; font-weight:bold; text-decoration:none; background:#e3f2fd; padding:4px 8px; border-radius:8px; font-size:0.8rem;">📁 첨부파일 열기</a>` : ''; 
                 
                 let displayContent = post.content;
-                let displayAuthor = post.author;
                 let tagsHtml = '';
 
                 if (post.board_type === 'study') {
-                    displayAuthor = '비공개'; 
                     try {
                         const parsed = JSON.parse(post.content); 
                         displayContent = parsed.text;
@@ -576,6 +615,9 @@
                         }
                     } catch(e) { }
                 }
+                
+                // [수정] 학습자료실일 경우 이름과 | 기호를 표시하지 않음
+                const authorText = post.board_type === 'study' ? dateStr : `${post.author} | ${dateStr}`;
 
                 return `<div class="list-item">
                             <div style="display:flex; align-items:center; margin-bottom:5px;">
@@ -584,7 +626,7 @@
                             </div>
                             <div style="font-size:0.9rem; margin-bottom:8px;">${displayContent}</div>
                             <div style="font-size:0.8rem; color:#86868b; display:flex; justify-content:space-between;">
-                                <span>${displayAuthor} | ${dateStr}</span>
+                                <span>${authorText}</span>
                                 ${fileBtn}
                             </div>
                         </div>`; 
@@ -598,14 +640,16 @@
             const fileInput = document.getElementById('board-file'); 
             const submitBtn = document.getElementById('board-submit-btn');
             
-            if(!author || !title || !content) return alert("모든 항목을 입력해주세요."); 
+            // 유효성 검사
+            if(!author || !title) return alert("작성자와 제목을 입력해주세요."); 
+            if(currentBoardType !== 'study' && !content) return alert("내용을 입력해주세요.");
             if(currentBoardType === 'study' && !document.getElementById('board-subject').value.trim()) return alert("과목을 입력해주세요.");
+            if(currentBoardType === 'study' && (!fileInput.files || fileInput.files.length === 0)) return alert("학습 자료 파일(PDF 등)을 첨부해주세요.");
             
-            // [수정 5] 로딩 UI 처리 (alert 제거 및 버튼 비활성화)
+            // [수정 5] 버튼 상태 변경 (업로드 중)
             const originalBtnText = submitBtn.innerText;
             submitBtn.innerText = "⏳ 파일 업로드 중...";
             submitBtn.disabled = true;
-            submitBtn.style.background = "#86868b";
 
             let uploadedFileUrl = null; 
             if(currentBoardType === 'study' && fileInput.files.length > 0) { 
@@ -616,8 +660,7 @@
                 
                 const { error: uploadError } = await db.storage.from('study_files').upload(safeFileName, file); 
                 if(uploadError) {
-                    // 오류 시 원상 복구
-                    submitBtn.innerText = originalBtnText; submitBtn.disabled = false; submitBtn.style.background = "#0071e3";
+                    submitBtn.innerText = originalBtnText; submitBtn.disabled = false;
                     return alert("업로드 실패: " + uploadError.message); 
                 }
                 const { data } = db.storage.from('study_files').getPublicUrl(safeFileName); 
@@ -633,10 +676,9 @@
 
             const { error } = await db.from('board_posts').insert([{ board_type: currentBoardType, title: title, content: finalContent, author: author, file_url: uploadedFileUrl }]); 
             
-            // 버튼 원상 복구
+            // 버튼 상태 원상 복구
             submitBtn.innerText = originalBtnText;
             submitBtn.disabled = false;
-            submitBtn.style.background = "#0071e3";
 
             if(!error) { 
                 if(currentBoardType === 'suggestion') {
