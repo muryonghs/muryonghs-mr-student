@@ -76,7 +76,6 @@
         #page-facility .reservation-card { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
         #page-facility .btn-primary { background-color: #004a99; border: none; padding: 12px; font-weight: bold; border-radius: 10px; }
         #page-facility .notice-box { background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px; }
-        
         #page-facility .btn-main { width: 100%; background: #0071e3; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: 0.2s; margin-top: 10px; }
         #page-facility .btn-main:active { transform: scale(0.98); }
 
@@ -86,8 +85,12 @@
         .new-btn { width: 100%; padding: 16px; background: #0071e3; color: white; border: none; border-radius: 14px; font-size: 1.05rem; font-weight: 800; cursor: pointer; }
         .list-item { border-bottom: 1px solid #f5f5f7; padding: 15px 0; }
         .list-item:last-child { border-bottom: none; }
-        .lost-card { display: flex; gap: 15px; padding: 15px 0; border-bottom: 1px solid #e5e5ea; }
-        .lost-img { width: 90px; height: 90px; border-radius: 12px; object-fit: cover; background: #e5e5ea; }
+        
+        /* 분실물 카드 리스트 디자인 개선 */
+        .lost-card { display: flex; gap: 15px; padding: 15px 0; border-bottom: 1px solid #e5e5ea; align-items: flex-start; }
+        .lost-img { width: 100px; height: 100px; border-radius: 12px; object-fit: cover; background: #e5e5ea; cursor: zoom-in; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .lost-info h4 { font-size: 1.1rem; font-weight: 800; margin: 0 0 8px 0; color: #1d1d1f; }
+        .lost-info p { margin: 0 0 4px 0; font-size: 0.9rem; color: #555; display: flex; align-items: center; gap: 5px; }
         
         .event-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e5e5ea;}
         .event-poster { width: 100%; height: auto; max-height: 300px; object-fit: cover; background: #f5f5f7; display: block; }
@@ -97,7 +100,7 @@
         .event-dept { display: inline-block; background: #f0f8ff; color: #0071e3; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; margin-bottom: 10px;}
         .apply-btn { display: inline-block; width: 100%; text-align: center; background: #1d1d1f; color: white; padding: 12px; border-radius: 10px; font-weight: bold; text-decoration: none; margin-top: 15px; }
 
-        /* 예약 현황 (Status) 테이블 스타일 */
+        /* 예약 현황 테이블 스타일 */
         .status-table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
         .status-table th { border-bottom: 2px solid #e5e5ea; color: #86868b; font-weight: 600; font-size: 0.75rem; padding: 12px 4px; text-align: center; white-space: nowrap;}
         .status-table td { border-bottom: 1px solid #f5f5f7; padding: 14px 4px; vertical-align: middle; text-align: center; font-size: 0.9rem; color: #1d1d1f; }
@@ -138,7 +141,7 @@
             </div>
             
             <div class="menu-item" onclick="goPage('calendar')">
-                <div class="menu-icon">📅</div><h3>수행 달력</h3><p>우리 반 일정 확인</p>
+                <div class="menu-icon">📅</div><h3>우리반 일정</h3><p>우리 반 일정 확인</p>
             </div>
             <div class="menu-item" onclick="goBoard('study', '학습자료실')">
                 <div class="menu-icon">📚</div><h3>학습자료실</h3><p>자료 업로드 및 다운</p>
@@ -152,15 +155,12 @@
         </div>
     </div>
 
+    <!-- 기존 급식, 우산, 시설 예약 코드는 그대로 유지 (생략 없이 원본 유지) -->
     <div id="page-lunch" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
         <div id="alertOverlay" onclick="closeAlert()"><div class="alert-title">지금 즉시 급식실로 내려오세요!</div><div id="alertGrade" class="alert-msg">O학년</div><div class="alert-hint">터치하면 닫힙니다</div></div>
         <div id="importantPopup"><div class="important-content"><h2 style="margin: 0 0 15px 0; color: #e11d48; font-size: 1.3rem; font-weight: 900;">🚨 중요 공지사항</h2><div id="importantPopupText"></div></div></div>
-        
-        <div class="header-wrap">
-            <h1 class="lunch-h1">무룡고 실시간 급식실</h1>
-        </div>
-        
+        <div class="header-wrap"><h1 class="lunch-h1">무룡고 실시간 급식실</h1></div>
         <div id="noticeBanner" class="notice-banner"><span id="targetGrade">O학년</span> 학생들은<br>지금 즉시 급식실로 내려오세요!</div>
         <div class="lunch-card notice-card"><div class="notice-title">📢 알림판</div><div id="realNotice" class="notice-content">불러오는 중...</div></div>
         <div class="lunch-card">
@@ -244,7 +244,6 @@
                 <button class="new-btn" onclick="goPage('facility')">새로 예약하기</button>
             </div>
         </div>
-
         <div class="modal fade" id="qrPwModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content" style="border-radius: 20px; border: none;"><div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">🔒 패스 인증</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center pt-2"><p class="small text-muted mb-3">설정하신 <strong>숫자 4자리</strong>를 입력해주세요.</p><input type="password" id="qr-pw-input" class="form-control text-center mb-3 bg-light border-0 py-2" placeholder="비밀번호" maxlength="4" style="border-radius: 12px; font-weight: bold; letter-spacing: 2px;"><button class="btn btn-dark w-100" style="padding:12px; border-radius:12px; font-weight:bold;" onclick="verifyQrPw()">QR코드 열기</button></div></div></div></div>
         <div class="modal fade" id="qrModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden;"><div class="modal-header bg-dark text-white border-0"><h5 class="modal-title fw-bold">📱 모바일 패스</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body text-center py-5"><h5 id="qr-student-name" class="fw-bold mb-3"></h5><div id="qr-display-area"><p class="text-muted small mb-4">관리자에게 아래 QR코드를 보여주세요.</p><img id="fac-qr-image" src="" style="width: 200px; height: 200px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 15px;"></div><div id="qr-success-msg" style="display: none;"><h1 style="font-size: 4rem;">✅</h1><h4 class="fw-bold mt-3" style="color: #0071e3;">인증이 완료되었습니다</h4></div></div></div></div></div>
         <div class="modal fade" id="cancelModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content" style="border-radius: 20px; border: none;"><div class="modal-header border-0"><h5 class="modal-title fw-bold" style="color: #ff3b30;">내 예약 취소하기</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body pt-1"><input type="text" id="c_name" class="form-control mb-2 bg-light border-0 py-2" placeholder="이름" style="border-radius: 10px;"><input type="number" id="c_sid" class="form-control mb-2 bg-light border-0 py-2" placeholder="학번 4자리" style="border-radius: 10px;"><input type="password" id="c_pw" class="form-control mb-3 bg-light border-0 py-2" placeholder="비밀번호 (숫자 4자리)" maxlength="4" style="border-radius: 10px;"></div><div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background-color: #f2f2f7; color: #1d1d1f; border: none;">닫기</button><button type="button" class="btn btn-danger px-4" onclick="processCancel()">예약 취소</button></div></div></div></div>
@@ -256,17 +255,63 @@
     </div>
 
     <div id="page-calendar" class="page">
-        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button><h1 class="page-title">학사일정 & 수행 달력</h1></div>
+        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button><h1 class="page-title">학사일정 & 우리반 일정</h1></div>
         <div class="new-card"><h3 style="margin-top:0; font-size:1.1rem;">🏫 다가오는 공식 일정</h3><div id="neis-calendar-list">데이터를 불러오는 중...</div></div>
-        <div class="new-card"><h3 style="margin-top:0; font-size:1.1rem;">📝 다가오는 반별 일정</h3><div style="display:flex; gap:10px; margin-bottom:15px;"><select id="cal-grade" class="new-input" style="margin:0;"><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option></select><select id="cal-class" class="new-input" style="margin:0;"><option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option><option value="5">5반</option><option value="6">6반</option></select><button class="new-btn" style="width:auto; padding:0 20px;" onclick="loadClassCalendar()">조회</button></div><div id="class-calendar-list" style="margin-bottom:20px;">반을 선택하고 조회를 눌러주세요.</div><hr style="border:0; border-top:1px solid #e5e5ea; margin-bottom:15px;"><p style="font-weight:bold; font-size:0.9rem; margin-bottom:10px;">일정 등록 (반장/학습도우미)</p><input type="date" id="cal-reg-date" class="new-input"><input type="text" id="cal-reg-title" class="new-input" placeholder="내용 (예: 수학 프린트)"><input type="text" id="cal-reg-author" class="new-input" placeholder="등록자"><button class="new-btn" style="background:#e5e5ea; color:#1d1d1f;" onclick="submitCalendar()">등록하기</button></div>
+        <div class="new-card">
+            <h3 style="margin-top:0; font-size:1.1rem;">📝 다가오는 반별 일정</h3>
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <select id="cal-grade" class="new-input" style="margin:0;"><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option></select>
+                <select id="cal-class" class="new-input" style="margin:0;"><option value="1">1반</option><option value="2">2반</option><option value="3">3반</option><option value="4">4반</option><option value="5">5반</option><option value="6">6반</option></select>
+                <button class="new-btn" style="width:auto; padding:0 20px;" onclick="loadClassCalendar()">조회</button>
+            </div>
+            <div id="class-calendar-list" style="margin-bottom:20px;">반을 선택하고 조회를 눌러주세요.</div>
+            
+            <hr style="border:0; border-top:1px solid #e5e5ea; margin-bottom:15px;">
+            <p style="font-weight:bold; font-size:0.9rem; margin-bottom:10px;">일정 등록 (반장/학습도우미)</p>
+            <input type="date" id="cal-reg-date" class="new-input">
+            
+            <!-- 교시 선택 드롭다운 추가 -->
+            <select id="cal-reg-period" class="new-input">
+                <option value="종일">종일 / 시간미정</option>
+                <option value="1교시">1교시</option>
+                <option value="2교시">2교시</option>
+                <option value="3교시">3교시</option>
+                <option value="4교시">4교시</option>
+                <option value="5교시">5교시</option>
+                <option value="6교시">6교시</option>
+                <option value="7교시">7교시</option>
+                <option value="방과후">방과후</option>
+            </select>
+            
+            <input type="text" id="cal-reg-title" class="new-input" placeholder="내용 (예: 수학 프린트 제출)">
+            <input type="text" id="cal-reg-author" class="new-input" placeholder="등록자">
+            <button class="new-btn" style="background:#e5e5ea; color:#1d1d1f;" onclick="submitCalendar()">등록하기</button>
+        </div>
     </div>
 
     <div id="page-board" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button><h1 class="page-title" id="board-title">게시판</h1></div>
-        <div class="new-card"><div id="board-list">불러오는 중...</div></div>
-        <div class="new-card">
+        
+        <!-- 게시글 목록이 들어가는 곳 -->
+        <div class="new-card" id="board-list-container"><div id="board-list">불러오는 중...</div></div>
+        
+        <!-- 글 작성/등록 영역 -->
+        <div class="new-card" id="board-write-container">
             <h3 id="board-write-title" style="margin-top:0; font-size:1.1rem; font-weight:800;">새 글 등록/요청</h3>
+            
             <input type="text" id="board-author" class="new-input" placeholder="작성자">
+            
+            <!-- 학습자료실 전용: 과목, 학년 선택 -->
+            <div id="study-meta-inputs" style="display:none; gap:10px; margin-bottom:12px;">
+                <select id="board-grade" class="new-input" style="margin-bottom:0; flex:1;">
+                    <option value="공통">공통 학년</option>
+                    <option value="1학년">1학년</option>
+                    <option value="2학년">2학년</option>
+                    <option value="3학년">3학년</option>
+                </select>
+                <input type="text" id="board-subject" class="new-input" placeholder="과목 (예: 수학)" style="margin-bottom:0; flex:1;">
+            </div>
+
             <input type="text" id="board-input-title" class="new-input" placeholder="제목">
             <textarea id="board-content" class="new-input" placeholder="내용" rows="4"></textarea>
             
@@ -283,6 +328,18 @@
         <div class="new-card" id="lost-list">데이터를 불러오는 중...</div>
     </div>
 
+    <!-- 분실물 이미지 확대를 위한 모달창 (숨겨져 있음) -->
+    <div class="modal fade" id="imageModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-transparent border-0">
+                <div class="modal-body text-center">
+                    <img id="enlarged-img" src="" style="max-width:100%; border-radius:15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                    <button type="button" class="btn btn-light mt-3 fw-bold px-4 rounded-pill" data-bs-dismiss="modal">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const DB_URL = 'https://vfftkdnzjemeipuhlzfv.supabase.co';
@@ -293,10 +350,8 @@
         let currentBoardType = '';
         let checkInterval; 
 
-        // === 화면 전환 로직 ===
         function goPage(pageId) {
             document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); });
-            
             document.getElementById('page-' + pageId).classList.add('active');
             window.scrollTo(0, 0);
 
@@ -316,7 +371,6 @@
             } catch (e) { document.getElementById('weather').innerText = `🌤 날씨 로딩 실패`; }
         }
 
-        // === 학생회 소식 ===
         async function fetchCouncilEvents() {
             const listDiv = document.getElementById('council-list');
             listDiv.innerHTML = '<p style="text-align:center; color:#86868b;">진행 중인 행사를 불러오는 중입니다...</p>';
@@ -330,7 +384,7 @@
             }).join('');
         }
 
-        // === 1. 급식실 로직 ===
+        /* 급식실, 양심우산, 시설예약 JS 코드 유지 */
         const grades = ["배식 전", "3학년", "2학년", "1학년", "배식 종료", "미운영"];
         let currentIdx = -1; let alertTimeout; let waitInterval = null; let popupInterval = null; let isPopupVisible = false;
 
@@ -341,50 +395,17 @@
         function updateWaitTimeUI(waitMin, setAtStr) { const waitBox = document.getElementById('waitTimeBox'); if (waitInterval) clearInterval(waitInterval); if (!waitMin || waitMin <= 0 || !setAtStr) { waitBox.style.display = 'none'; return; } const setAt = new Date(setAtStr); waitInterval = setInterval(() => { const diffSec = Math.floor((new Date() - setAt) / 1000); const remainingSec = (waitMin * 60) - diffSec; if (remainingSec <= 0) { waitBox.style.display = 'none'; clearInterval(waitInterval); } else { waitBox.style.display = 'block'; const m = Math.floor(remainingSec / 60); const s = remainingSec % 60; document.getElementById('displayTime').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; } }, 1000); }
         function updateUI(index) { const statusBox = document.getElementById('studentQueue'); const subStatus = document.getElementById('subStatus'); const banner = document.getElementById('noticeBanner'); const targetGrade = document.getElementById('targetGrade'); if (currentIdx !== -1 && currentIdx !== index && index > 0 && index < 4) { showAlert(grades[index]); } currentIdx = index; if (index === 5) { statusBox.innerText = grades[index]; statusBox.style.color = "#ef4444"; subStatus.style.display = "block"; banner.style.display = "none"; } else { subStatus.style.display = "none"; if (index === 0 || index === 4) { statusBox.innerText = grades[index]; statusBox.style.color = "#94a3b8"; banner.style.display = "none"; } else { statusBox.innerText = grades[index]; statusBox.style.color = "#3b82f6"; banner.style.display = "block"; targetGrade.innerText = grades[index]; } } }
         async function loadLunchData() { const { data } = await db.from('lunch_status').select('*').eq('id', 1).single(); if (data) { currentIdx = data.current_index; updateUI(data.current_index); updateWaitTimeUI(data.wait_minutes, data.wait_set_at); } const { data: nList } = await db.from('announcements').select('*'); if (nList) { nList.forEach(n => { if(n.id === 1) document.getElementById('realNotice').innerText = n.content; if(n.id === 2) handlePopup(n.content); }); } }
-        
-        async function fetchMenu() { 
-            const d = new Date().toISOString().slice(0,10).replace(/-/g, ''); 
-            try { 
-                const res = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480070&MLSV_YMD=${d}`); 
-                const data = await res.json(); 
-                if (data.mealServiceDietInfo) { 
-                    let rawMenu = data.mealServiceDietInfo[1].row[0].DDISH_NM;
-                    let menuList = rawMenu.split(/<br\/>/);
-                    let cleanMenu = menuList.map(item => item.replace(/[0-9.\(\)]/g, '').trim()).filter(item => item !== '');
-                    document.getElementById('menuContent').innerHTML = cleanMenu.join('<br>');
-                } else { 
-                    document.getElementById('menuContent').innerText = "오늘은 급식 정보가 없습니다."; 
-                } 
-            } catch(e) { 
-                document.getElementById('menuContent').innerText = "메뉴 로드 실패"; 
-            } 
-        }
-
+        async function fetchMenu() { const d = new Date().toISOString().slice(0,10).replace(/-/g, ''); try { const res = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480070&MLSV_YMD=${d}`); const data = await res.json(); if (data.mealServiceDietInfo) { let rawMenu = data.mealServiceDietInfo[1].row[0].DDISH_NM; let menuList = rawMenu.split(/<br\/>/); let cleanMenu = menuList.map(item => item.replace(/[0-9.\(\)]/g, '').trim()).filter(item => item !== ''); document.getElementById('menuContent').innerHTML = cleanMenu.join('<br>'); } else { document.getElementById('menuContent').innerText = "오늘은 급식 정보가 없습니다."; } } catch(e) { document.getElementById('menuContent').innerText = "메뉴 로드 실패"; } }
         async function sendFeedback() { const text = document.getElementById('feedbackText').value; if (!text.trim()) return; const { error } = await db.from('feedback').insert([{ content: text }]); if (!error) { alert("소중한 의견이 전송되었습니다!"); document.getElementById('feedbackText').value = ""; } }
         db.channel('custom-all-channel').on('postgres_changes', { event: 'UPDATE', schema: 'public' }, p => { if (p.table === 'lunch_status') { updateUI(p.new.current_index); updateWaitTimeUI(p.new.wait_minutes, p.new.wait_set_at); } if (p.table === 'announcements') { if(p.new.id === 1) document.getElementById('realNotice').innerText = p.new.content; if(p.new.id === 2) handlePopup(p.new.content); } }).subscribe();
 
-        // === 2. 양심우산 로직 ===
         let currentMode = 'rent'; let calculatedReturnStr = "";
-        function setMode(mode) { 
-            currentMode = mode; 
-            document.getElementById('tab-rent').className = mode === 'rent' ? 'tab active' : 'tab'; 
-            document.getElementById('tab-return').className = mode === 'return' ? 'tab active-return' : 'tab'; 
-            document.getElementById('phone-group').style.display = mode === 'rent' ? 'block' : 'none'; 
-            const btn = document.getElementById('generate-btn'); 
-            btn.innerText = mode === 'rent' ? '대여 패스 발급받기' : '반납 패스 발급받기'; 
-            btn.className = mode === 'return' ? 'umb-btn btn-return' : 'umb-btn'; 
-            document.getElementById('welcome-text').innerHTML = `정보를 입력하고<br><strong style="color:${mode==='rent'?'#00B4D8':'#2B9348'};">${mode==='rent'?'대여':'반납'} 패스 발급받기</strong>를 눌러주세요!`; 
-            document.getElementById('welcome-box').style.display = 'flex'; 
-            document.getElementById('qr-image').style.display = 'none'; 
-            document.getElementById('success-msg').style.display = 'none'; 
-            if (checkInterval) clearInterval(checkInterval); 
-        }
+        function setMode(mode) { currentMode = mode; document.getElementById('tab-rent').className = mode === 'rent' ? 'tab active' : 'tab'; document.getElementById('tab-return').className = mode === 'return' ? 'tab active-return' : 'tab'; document.getElementById('phone-group').style.display = mode === 'rent' ? 'block' : 'none'; const btn = document.getElementById('generate-btn'); btn.innerText = mode === 'rent' ? '대여 패스 발급받기' : '반납 패스 발급받기'; btn.className = mode === 'return' ? 'umb-btn btn-return' : 'umb-btn'; document.getElementById('welcome-text').innerHTML = `정보를 입력하고<br><strong style="color:${mode==='rent'?'#00B4D8':'#2B9348'};">${mode==='rent'?'대여':'반납'} 패스 발급받기</strong>를 눌러주세요!`; document.getElementById('welcome-box').style.display = 'flex'; document.getElementById('qr-image').style.display = 'none'; document.getElementById('success-msg').style.display = 'none'; if (checkInterval) clearInterval(checkInterval); }
         async function checkAndShowConsent() { const sid = document.getElementById('student_id').value; const sname = document.getElementById('student_name').value; const phone = document.getElementById('phone_number').value; if(!sid || !sname || (currentMode === 'rent' && !phone)) { alert("정보를 모두 입력해주세요."); return; } if(sid.length !== 4) { alert("학번은 정확히 4자리 숫자로 입력해주세요."); return; } if (currentMode === 'rent') { const { data, error } = await db.from('umbrella_rentals').select('id').eq('student_id', sid).eq('status', '대여중'); if (data && data.length > 0) { alert("이미 대여 중인 우산이 있습니다!\n기존 우산을 먼저 반납한 후 이용해 주세요."); return; } const tmr = new Date(); tmr.setDate(tmr.getDate() + 1); calculatedReturnStr = `내일 ${tmr.getMonth() + 1}월 ${tmr.getDate()}일 점심시간`; document.getElementById('modal-return-time').innerText = calculatedReturnStr; document.getElementById('consent-modal').style.display = 'flex'; } else { executeQRGeneration(sid, sname, phone); } }
         function closeConsentModal() { document.getElementById('consent-modal').style.display = 'none'; }
         function agreeAndGenerate() { closeConsentModal(); executeQRGeneration(document.getElementById('student_id').value, document.getElementById('student_name').value, document.getElementById('phone_number').value); }
         function executeQRGeneration(sid, sname, phone) { document.getElementById('welcome-box').style.display = 'none'; const qrData = { action: currentMode, student_id: sid, student_name: sname, phone_number: phone }; const qrImg = document.getElementById('qr-image'); qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(JSON.stringify(qrData))}&color=1f2937`; qrImg.style.display = 'block'; const qrGenTime = new Date().toISOString(); checkInterval = setInterval(async () => { const checkStatus = currentMode === 'rent' ? '대여중' : '반납완료'; const { data } = await db.from('umbrella_rentals').select('*').eq('student_id', sid).eq('status', checkStatus).gte(currentMode === 'rent' ? 'rent_date' : 'return_date', qrGenTime); if (data && data.length > 0) { clearInterval(checkInterval); document.getElementById('qr-image').style.display = 'none'; document.getElementById('success-title').innerText = currentMode === 'rent' ? '대여 완료!' : '반납 완료!'; document.getElementById('success-title').style.color = currentMode === 'rent' ? '#00B4D8' : '#2B9348'; document.getElementById('success-desc').innerHTML = currentMode === 'rent' ? `잊지 말고 꼭 반납해 주세요! ☂️<br><br><span style="color:#ef4444;">반납 기한: ${calculatedReturnStr}</span>` : "양심을 지켜주셔서 감사합니다 💖"; document.getElementById('success-msg').style.display = 'block'; } }, 2000); }
 
-        // === 3. 시설예약 ===
         let termsModal; let instaModal;
         function handlePriorityCheck(cb) { if(cb.checked) alert("우선권은 특별 승인된 대상만 선택 가능합니다.\n허위로 체크할 경우 예약 취소 및 향후 시설 이용이 제한됩니다."); }
         function checkTermsScroll(el) { if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) { document.getElementById('agreeText').disabled = false; document.getElementById('scrollMsg').style.display = 'none'; } }
@@ -394,60 +415,14 @@
         function openTermsModal() { const name = document.getElementById('name').value; const sid = document.getElementById('sid').value; const phone = document.getElementById('phone').value; const purpose = document.getElementById('purpose').value; const password = document.getElementById('password').value; const useDate = document.getElementById('use_date').value; const startTime = document.getElementById('start_time').value; const endTime = document.getElementById('end_time').value; if (!name || sid.length !== 4 || !phone || !purpose || !password || !useDate) { alert("모든 정보를 올바르게 입력해 주세요."); return; } if (password.length !== 4) { alert("비밀번호는 숫자 4자리로 입력해 주세요."); return; } const start = new Date(`${useDate}T${startTime}`); const end = new Date(`${useDate}T${endTime}`); if (start >= end) { alert("종료 시간은 시작 시간보다 늦어야 합니다."); return; } if ((end.getTime() - start.getTime()) / (1000 * 60 * 60) > 2) { alert("1회 최대 이용 가능 시간은 2시간입니다."); return; } document.getElementById('agreeText').value = ''; document.getElementById('agreeText').disabled = true; document.getElementById('scrollMsg').style.display = 'block'; termsModal = new bootstrap.Modal(document.getElementById('termsModal')); termsModal.show(); }
         async function submitReservation() { if (document.getElementById('agreeText').value.trim() !== "동의합니다") { alert("약관을 읽고 '동의합니다'를 정확히 입력하셔야 합니다."); return; } const start = new Date(`${document.getElementById('use_date').value}T${document.getElementById('start_time').value}`); const end = new Date(`${document.getElementById('use_date').value}T${document.getElementById('end_time').value}`); const { data: existing } = await db.from('reservations').select('*').eq('room_name', document.getElementById('room').value).in('status', ['approved', 'pending', 'blocked', 'used']).filter('start_time', 'lt', end.toISOString()).filter('end_time', 'gt', start.toISOString()); let finalStatus = 'pending'; if (existing && existing.length > 0) { if (existing.some(r => r.status === 'blocked')) { alert("해당 시간은 예약이 제한되었습니다."); termsModal.hide(); return; } if (!confirm("이미 예약이 마감되었습니다. 대기 예약하시겠습니까?")) { termsModal.hide(); return; } finalStatus = 'standby'; } const { error } = await db.from('reservations').insert([{ student_name: document.getElementById('name').value, student_id: document.getElementById('sid').value, phone: document.getElementById('phone').value, purpose: document.getElementById('purpose').value, password: document.getElementById('password').value, room_name: document.getElementById('room').value, start_time: start.toISOString(), end_time: end.toISOString(), status: finalStatus, is_priority: document.getElementById('is_priority').checked }]); if (!error) { termsModal.hide(); instaModal = new bootstrap.Modal(document.getElementById('instaModal')); instaModal.show(); } else { alert("에러: " + error.message); } }
 
-        // === 3.5 시설예약 현황 및 취소 (Status) ===
         let cancelModal; let qrPwModal; let qrModal; let currentQrId = ''; let currentQrName = ''; let qrCheckInterval;
-        async function loadStatus() {
-            const { data } = await db.from('reservations').select('*').order('start_time', { ascending: true });
-            const list = document.getElementById('public-list'); list.innerHTML = '';
-            
-            data.forEach(res => {
-                let badgeClass = '', badgeText = '';
-                if(res.status === 'pending') { badgeClass = 'badge-pending'; badgeText = '대기 중'; }
-                else if(res.status === 'approved') { badgeClass = 'badge-approved'; badgeText = '승인 완료'; }
-                else if(res.status === 'standby') { badgeClass = 'badge-standby'; badgeText = '취소 대기'; }
-                else if(res.status === 'rejected') { badgeClass = 'badge-rejected'; badgeText = '이용 불가'; }
-                else if(res.status === 'cancelled') { badgeClass = 'badge-cancelled'; badgeText = '취소됨'; }
-                else if(res.status === 'blocked') { badgeClass = 'badge-blocked'; badgeText = '예약 제한'; }
-                else if(res.status === 'used') { badgeClass = 'badge-used'; badgeText = '사용 완료'; }
-
-                const d1 = new Date(res.start_time); const d2 = new Date(res.end_time);
-                const compactTime = `<strong style="font-size:0.9rem; color:#1d1d1f;">${d1.getMonth()+1}.${d1.getDate()}</strong><br><span style="font-size:0.8rem; color:#86868b;">${String(d1.getHours()).padStart(2,'0')}:${String(d1.getMinutes()).padStart(2,'0')} - ${String(d2.getHours()).padStart(2,'0')}:${String(d2.getMinutes()).padStart(2,'0')}</span>`;
-                const priorityBadge = (res.is_priority && res.status !== 'blocked') ? `<br><span class="badge badge-priority mt-1">⭐ 우선권</span>` : '';
-                const roomName = `<span style="font-weight:600;">${res.room_name}</span>${priorityBadge}`; 
-
-                let displayName = `<span style="font-weight:600;">${res.student_name.charAt(0)}*${res.student_name.charAt(res.student_name.length-1)}</span><br><span style="font-size:0.75rem; color:#86868b;">${res.student_id.toString().substring(0,2)}**</span>`;
-                if (res.status === 'blocked') { displayName = `<span class="fw-bold" style="font-size: 0.85rem; color:#ff3b30;">시스템<br>차단</span>`; }
-
-                let qrButton = '';
-                if(res.status === 'approved') { qrButton = `<br><button class="btn btn-dark mt-2" style="font-size: 0.7rem; padding: 4px 10px;" onclick="openQrPwModal('${res.id}', '${res.student_name}')">QR 패스</button>`; }
-                list.innerHTML += `<tr><td>${displayName}</td><td>${roomName}</td><td>${compactTime}</td><td><span class="badge ${badgeClass}">${badgeText}</span>${qrButton}</td></tr>`;
-            });
-        }
+        async function loadStatus() { const { data } = await db.from('reservations').select('*').order('start_time', { ascending: true }); const list = document.getElementById('public-list'); list.innerHTML = ''; data.forEach(res => { let badgeClass = '', badgeText = ''; if(res.status === 'pending') { badgeClass = 'badge-pending'; badgeText = '대기 중'; } else if(res.status === 'approved') { badgeClass = 'badge-approved'; badgeText = '승인 완료'; } else if(res.status === 'standby') { badgeClass = 'badge-standby'; badgeText = '취소 대기'; } else if(res.status === 'rejected') { badgeClass = 'badge-rejected'; badgeText = '이용 불가'; } else if(res.status === 'cancelled') { badgeClass = 'badge-cancelled'; badgeText = '취소됨'; } else if(res.status === 'blocked') { badgeClass = 'badge-blocked'; badgeText = '예약 제한'; } else if(res.status === 'used') { badgeClass = 'badge-used'; badgeText = '사용 완료'; } const d1 = new Date(res.start_time); const d2 = new Date(res.end_time); const compactTime = `<strong style="font-size:0.9rem; color:#1d1d1f;">${d1.getMonth()+1}.${d1.getDate()}</strong><br><span style="font-size:0.8rem; color:#86868b;">${String(d1.getHours()).padStart(2,'0')}:${String(d1.getMinutes()).padStart(2,'0')} - ${String(d2.getHours()).padStart(2,'0')}:${String(d2.getMinutes()).padStart(2,'0')}</span>`; const priorityBadge = (res.is_priority && res.status !== 'blocked') ? `<br><span class="badge badge-priority mt-1">⭐ 우선권</span>` : ''; const roomName = `<span style="font-weight:600;">${res.room_name}</span>${priorityBadge}`; let displayName = `<span style="font-weight:600;">${res.student_name.charAt(0)}*${res.student_name.charAt(res.student_name.length-1)}</span><br><span style="font-size:0.75rem; color:#86868b;">${res.student_id.toString().substring(0,2)}**</span>`; if (res.status === 'blocked') { displayName = `<span class="fw-bold" style="font-size: 0.85rem; color:#ff3b30;">시스템<br>차단</span>`; } let qrButton = ''; if(res.status === 'approved') { qrButton = `<br><button class="btn btn-dark mt-2" style="font-size: 0.7rem; padding: 4px 10px;" onclick="openQrPwModal('${res.id}', '${res.student_name}')">QR 패스</button>`; } list.innerHTML += `<tr><td>${displayName}</td><td>${roomName}</td><td>${compactTime}</td><td><span class="badge ${badgeClass}">${badgeText}</span>${qrButton}</td></tr>`; }); }
         function openQrPwModal(id, name) { currentQrId = id; currentQrName = name; document.getElementById('qr-pw-input').value = ''; if(!qrPwModal) qrPwModal = new bootstrap.Modal(document.getElementById('qrPwModal')); qrPwModal.show(); }
-        async function verifyQrPw() {
-            const pw = document.getElementById('qr-pw-input').value; if(!pw) return alert("비밀번호를 입력해주세요.");
-            const { data } = await db.from('reservations').select('password').eq('id', currentQrId).single();
-            if(data && data.password === pw) {
-                qrPwModal.hide(); document.getElementById('qr-student-name').innerText = `${currentQrName} 학생의 패스`; document.getElementById('qr-display-area').style.display = 'block'; document.getElementById('qr-success-msg').style.display = 'none'; document.getElementById('fac-qr-image').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${currentQrId}&margin=10`;
-                if(!qrModal) qrModal = new bootstrap.Modal(document.getElementById('qrModal')); qrModal.show();
-                if(qrCheckInterval) clearInterval(qrCheckInterval);
-                qrCheckInterval = setInterval(async () => {
-                    const { data: checkData } = await db.from('reservations').select('status').eq('id', currentQrId).single();
-                    if(checkData && checkData.status === 'used') { clearInterval(qrCheckInterval); document.getElementById('qr-display-area').style.display = 'none'; document.getElementById('qr-success-msg').style.display = 'block'; loadStatus(); }
-                }, 2000);
-            } else { alert("❌ 비밀번호가 일치하지 않습니다."); }
-        }
+        async function verifyQrPw() { const pw = document.getElementById('qr-pw-input').value; if(!pw) return alert("비밀번호를 입력해주세요."); const { data } = await db.from('reservations').select('password').eq('id', currentQrId).single(); if(data && data.password === pw) { qrPwModal.hide(); document.getElementById('qr-student-name').innerText = `${currentQrName} 학생의 패스`; document.getElementById('qr-display-area').style.display = 'block'; document.getElementById('qr-success-msg').style.display = 'none'; document.getElementById('fac-qr-image').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${currentQrId}&margin=10`; if(!qrModal) qrModal = new bootstrap.Modal(document.getElementById('qrModal')); qrModal.show(); if(qrCheckInterval) clearInterval(qrCheckInterval); qrCheckInterval = setInterval(async () => { const { data: checkData } = await db.from('reservations').select('status').eq('id', currentQrId).single(); if(checkData && checkData.status === 'used') { clearInterval(qrCheckInterval); document.getElementById('qr-display-area').style.display = 'none'; document.getElementById('qr-success-msg').style.display = 'block'; loadStatus(); } }, 2000); } else { alert("❌ 비밀번호가 일치하지 않습니다."); } }
         function openCancelModal() { cancelModal = new bootstrap.Modal(document.getElementById('cancelModal')); cancelModal.show(); }
-        async function processCancel() {
-            const name = document.getElementById('c_name').value; const sid = document.getElementById('c_sid').value; const pw = document.getElementById('c_pw').value;
-            if(!name || !sid || !pw) return alert("모든 정보를 입력해 주세요.");
-            const { data } = await db.from('reservations').select('*').eq('student_name', name).eq('student_id', sid).eq('password', pw).in('status', ['pending', 'approved', 'standby']);
-            if (!data || data.length === 0) return alert("일치하는 예약 정보가 없거나, 이미 취소/거절된 예약입니다.");
-            const targetId = data[0].id; const { error } = await db.from('reservations').update({ status: 'cancelled' }).eq('id', targetId);
-            if (!error) { alert("성공적으로 예약이 취소되었습니다."); cancelModal.hide(); loadStatus(); } else { alert("오류 발생: " + error.message); }
-        }
+        async function processCancel() { const name = document.getElementById('c_name').value; const sid = document.getElementById('c_sid').value; const pw = document.getElementById('c_pw').value; if(!name || !sid || !pw) return alert("모든 정보를 입력해 주세요."); const { data } = await db.from('reservations').select('*').eq('student_name', name).eq('student_id', sid).eq('password', pw).in('status', ['pending', 'approved', 'standby']); if (!data || data.length === 0) return alert("일치하는 예약 정보가 없거나, 이미 취소/거절된 예약입니다."); const targetId = data[0].id; const { error } = await db.from('reservations').update({ status: 'cancelled' }).eq('id', targetId); if (!error) { alert("성공적으로 예약이 취소되었습니다."); cancelModal.hide(); loadStatus(); } else { alert("오류 발생: " + error.message); } }
 
-        // === 4. 학사/수행 달력
+        // === 4. 우리반 일정 (학사/수행 달력) ===
         async function fetchNeisCalendar() { 
             const listDiv = document.getElementById('neis-calendar-list'); 
             try { 
@@ -455,10 +430,8 @@
                 const yyyy = d.getFullYear(); 
                 const mm = String(d.getMonth() + 1).padStart(2, '0');
                 const dd = String(d.getDate()).padStart(2, '0');
-                
                 const fromDate = `${yyyy}${mm}${dd}`; 
                 const toDate = `${yyyy}1231`; 
-                
                 const todayYMD = parseInt(fromDate);
                 
                 const res = await fetch(`https://open.neis.go.kr/hub/SchoolSchedule?Type=json&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480070&AA_FROM_YMD=${fromDate}&AA_TO_YMD=${toDate}`); 
@@ -466,43 +439,157 @@
                 
                 if(data.SchoolSchedule) { 
                     const events = data.SchoolSchedule[1].row.filter(e => e.EVENT_NM !== '토요휴업일' && e.EVENT_NM !== '휴업일' && parseInt(e.AA_YMD) >= todayYMD); 
-                    
-                    if(events.length === 0) { 
-                        listDiv.innerHTML = '<p style="color:#86868b;">다가오는 공식 일정이 없습니다.</p>'; 
-                        return; 
-                    } 
-                    
+                    if(events.length === 0) { listDiv.innerHTML = '<p style="color:#86868b;">다가오는 공식 일정이 없습니다.</p>'; return; } 
                     const displayEvents = events.slice(0, 5);
-
                     listDiv.innerHTML = displayEvents.map(e => `<div class="list-item"><strong style="color:#0071e3; margin-right:10px;">${e.AA_YMD.substring(4,6)}/${e.AA_YMD.substring(6,8)}</strong> ${e.EVENT_NM}</div>`).join(''); 
-                } else { 
-                    listDiv.innerHTML = '<p style="color:#86868b;">일정이 없습니다.</p>'; 
-                } 
-            } catch(e) { 
-                listDiv.innerHTML = '<p style="color:#86868b;">일정을 불러오지 못했습니다.</p>'; 
-            } 
+                } else { listDiv.innerHTML = '<p style="color:#86868b;">일정이 없습니다.</p>'; } 
+            } catch(e) { listDiv.innerHTML = '<p style="color:#86868b;">일정을 불러오지 못했습니다.</p>'; } 
         }
         
-        async function loadClassCalendar() { const listDiv = document.getElementById('class-calendar-list'); listDiv.innerHTML = '불러오는 중...'; const { data } = await db.from('calendar_events').select('*').eq('target_grade', document.getElementById('cal-grade').value).eq('target_class', document.getElementById('cal-class').value).gte('event_date', todayStr).order('event_date', { ascending: true }); if (!data || !data.length) { listDiv.innerHTML = '<p style="color:#86868b;">다가오는 일정이 없습니다.</p>'; return; } listDiv.innerHTML = data.map(ev => `<div class="list-item"><strong style="color:#0071e3; margin-right:10px;">${ev.event_date.substring(5).replace('-','/')}</strong> <span>${ev.title}</span> <span style="font-size:0.75rem; color:#86868b; float:right;">by ${ev.author}</span></div>`).join(''); }
-        async function submitCalendar() { const date = document.getElementById('cal-reg-date').value; const title = document.getElementById('cal-reg-title').value; const author = document.getElementById('cal-reg-author').value; if(!date || !title || !author) return alert("항목을 모두 입력해주세요."); if(date < todayStr) return alert("과거 날짜는 등록할 수 없습니다."); const { error } = await db.from('calendar_events').insert([{ target_grade: document.getElementById('cal-grade').value, target_class: document.getElementById('cal-class').value, event_date: date, title: title, author: author }]); if(!error) { alert("일정이 등록되었습니다."); loadClassCalendar(); } }
+        async function loadClassCalendar() { 
+            const listDiv = document.getElementById('class-calendar-list'); 
+            listDiv.innerHTML = '불러오는 중...'; 
+            const { data } = await db.from('calendar_events').select('*').eq('target_grade', document.getElementById('cal-grade').value).eq('target_class', document.getElementById('cal-class').value).gte('event_date', todayStr).order('event_date', { ascending: true }); 
+            if (!data || !data.length) { listDiv.innerHTML = '<p style="color:#86868b;">다가오는 일정이 없습니다.</p>'; return; } 
+            
+            listDiv.innerHTML = data.map(ev => `
+                <div class="list-item" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="color:#0071e3; margin-right:10px;">${ev.event_date.substring(5).replace('-','/')}</strong>
+                        <span style="font-weight:bold;">${ev.title}</span>
+                        <div style="font-size:0.75rem; color:#86868b; margin-top:4px;">등록자: ${ev.author}</div>
+                    </div>
+                    <!-- 수정/삭제 버튼 추가 -->
+                    <div style="display:flex; gap:5px;">
+                        <button onclick="editCalendarEvent(${ev.id}, '${ev.title.replace(/'/g, "\\'")}')" class="btn btn-sm btn-outline-secondary" style="font-size:0.7rem; padding:4px 8px;">수정</button>
+                        <button onclick="deleteCalendarEvent(${ev.id})" class="btn btn-sm btn-outline-danger" style="font-size:0.7rem; padding:4px 8px;">삭제</button>
+                    </div>
+                </div>`).join(''); 
+        }
+        
+        async function submitCalendar() { 
+            const date = document.getElementById('cal-reg-date').value; 
+            const period = document.getElementById('cal-reg-period').value; // 교시 정보 가져오기
+            const baseTitle = document.getElementById('cal-reg-title').value.trim(); 
+            const author = document.getElementById('cal-reg-author').value.trim(); 
+            
+            if(!date || !baseTitle || !author) return alert("항목을 모두 입력해주세요."); 
+            if(date < todayStr) return alert("과거 날짜는 등록할 수 없습니다."); 
+            
+            // 제목에 교시 정보를 예쁘게 붙여서 저장합니다!
+            const finalTitle = period === "종일" ? baseTitle : `[${period}] ${baseTitle}`;
+            
+            const { error } = await db.from('calendar_events').insert([{ target_grade: document.getElementById('cal-grade').value, target_class: document.getElementById('cal-class').value, event_date: date, title: finalTitle, author: author }]); 
+            if(!error) { 
+                alert("일정이 등록되었습니다."); 
+                document.getElementById('cal-reg-title').value = ''; // 입력창 비우기
+                loadClassCalendar(); 
+            } 
+        }
 
-        // === 5. 게시판 ===
+        // 일정 삭제 함수
+        async function deleteCalendarEvent(id) {
+            if(!confirm("이 일정을 정말 삭제할까요?")) return;
+            const { error } = await db.from('calendar_events').delete().eq('id', id);
+            if(!error) { alert("삭제되었습니다!"); loadClassCalendar(); }
+            else { alert("삭제 중 오류가 발생했습니다."); }
+        }
+
+        // 일정 수정 함수
+        async function editCalendarEvent(id, oldTitle) {
+            const newTitle = prompt("일정 내용을 수정해주세요:", oldTitle);
+            if(newTitle === null || newTitle.trim() === '') return; // 취소했거나 빈칸이면 종료
+            
+            const { error } = await db.from('calendar_events').update({ title: newTitle }).eq('id', id);
+            if(!error) { alert("수정되었습니다!"); loadClassCalendar(); }
+            else { alert("수정 중 오류가 발생했습니다."); }
+        }
+
+        // === 5. 게시판 (학습자료실, 건의함) ===
         function goBoard(type, title) { 
             currentBoardType = type; 
             document.getElementById('board-title').innerText = title; 
-            document.getElementById('file-upload-area').style.display = (type === 'study') ? 'block' : 'none'; 
-            if (type === 'study') { document.getElementById('board-write-title').innerText = '📚 자료 기여하기'; document.getElementById('board-submit-btn').innerText = '자료 기여하기'; } 
-            else { document.getElementById('board-write-title').innerText = '새 글 등록/요청'; document.getElementById('board-submit-btn').innerText = '등록하기'; }
             
+            const writeContainer = document.getElementById('board-write-container');
+            const listContainer = document.getElementById('board-list-container');
+            const fileArea = document.getElementById('file-upload-area');
+            const studyMetaArea = document.getElementById('study-meta-inputs');
+            
+            // 입력칸 초기화
             document.getElementById('board-author').value = '';
             document.getElementById('board-input-title').value = ''; 
             document.getElementById('board-content').value = '';
+            if(document.getElementById('board-subject')) document.getElementById('board-subject').value = '';
             if(document.getElementById('board-file')) document.getElementById('board-file').value = '';
 
-            goPage('board'); loadBoardData(type); 
+            if (type === 'study') { 
+                document.getElementById('board-write-title').innerText = '📚 자료 기여하기'; 
+                document.getElementById('board-submit-btn').innerText = '자료 기여하기'; 
+                listContainer.style.display = 'block'; // 목록 보이기
+                fileArea.style.display = 'block'; // 파일 업로드 보이기
+                studyMetaArea.style.display = 'flex'; // 학년, 과목 선택 보이기
+                
+            } else if (type === 'suggestion') { 
+                document.getElementById('board-write-title').innerText = '💡 새 건의사항 작성 (비공개)'; 
+                document.getElementById('board-submit-btn').innerText = '건의하기'; 
+                fileArea.style.display = 'none'; // 파일 업로드 숨기기
+                studyMetaArea.style.display = 'none'; // 학년, 과목 선택 숨기기
+                // 건의함은 비공개이므로 목록을 아예 숨깁니다!
+                listContainer.style.display = 'none';
+            }
+            
+            goPage('board'); 
+            loadBoardData(type); 
         }
         
-        async function loadBoardData(type) { const listDiv = document.getElementById('board-list'); listDiv.innerHTML = '<p>불러오는 중...</p>'; const { data, error } = await db.from('board_posts').select('*').eq('board_type', type).order('created_at', { ascending: false }); if (error || !data.length) { listDiv.innerHTML = '<p style="text-align:center; color:#86868b;">등록된 글이 없습니다.</p>'; return; } listDiv.innerHTML = data.map(post => { const d = new Date(post.created_at); const dateStr = `${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; const fileBtn = post.file_url ? `<a href="${post.file_url}" target="_blank" style="color:#0071e3; font-weight:bold; text-decoration:none; background:#e3f2fd; padding:4px 8px; border-radius:8px; font-size:0.8rem;">📁 첨부파일 열기</a>` : ''; return `<div class="list-item"><div style="font-weight:700; font-size:1.05rem; margin-bottom:5px;">${post.title}</div><div style="font-size:0.9rem; margin-bottom:8px;">${post.content}</div><div style="font-size:0.8rem; color:#86868b; display:flex; justify-content:space-between;"><span>${post.author} | ${dateStr}</span>${fileBtn}</div></div>`; }).join(''); }
+        async function loadBoardData(type) { 
+            const listDiv = document.getElementById('board-list'); 
+            
+            // 건의함일 경우 목록을 불러오지 않고 안내 문구를 띄웁니다.
+            if(type === 'suggestion') {
+                return; // 함수 종료 (데이터를 불러오지 않음)
+            }
+
+            listDiv.innerHTML = '<p>불러오는 중...</p>'; 
+            const { data, error } = await db.from('board_posts').select('*').eq('board_type', type).order('created_at', { ascending: false }); 
+            if (error || !data.length) { listDiv.innerHTML = '<p style="text-align:center; color:#86868b;">등록된 글이 없습니다.</p>'; return; } 
+            
+            listDiv.innerHTML = data.map(post => { 
+                const d = new Date(post.created_at); 
+                const dateStr = `${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; 
+                const fileBtn = post.file_url ? `<a href="${post.file_url}" target="_blank" style="color:#0071e3; font-weight:bold; text-decoration:none; background:#e3f2fd; padding:4px 8px; border-radius:8px; font-size:0.8rem;">📁 첨부파일 열기</a>` : ''; 
+                
+                // 표시할 데이터 설정 (JSON으로 저장된 학년/과목 정보를 안전하게 빼냅니다)
+                let displayContent = post.content;
+                let displayAuthor = post.author;
+                let tagsHtml = '';
+
+                if (post.board_type === 'study') {
+                    displayAuthor = '비공개'; // 학습자료실은 작성자 비공개 처리
+                    try {
+                        const parsed = JSON.parse(post.content); // JSON으로 저장한 데이터 풀기
+                        displayContent = parsed.text;
+                        if(parsed.grade && parsed.subject) {
+                            // 예쁜 색상 꼬리표(배지) 만들기
+                            tagsHtml = `<span style="background:#f1f5f9; color:#475569; padding:4px 8px; border-radius:8px; font-size:0.75rem; font-weight:bold; margin-right:5px;">${parsed.grade}</span>
+                                        <span style="background:#e0e7ff; color:#4f46e5; padding:4px 8px; border-radius:8px; font-size:0.75rem; font-weight:bold; margin-right:10px;">${parsed.subject}</span>`;
+                        }
+                    } catch(e) { /* 예전 데이터(JSON이 아닌 일반 텍스트)일 경우 무시하고 그대로 출력 */ }
+                }
+
+                return `<div class="list-item">
+                            <div style="display:flex; align-items:center; margin-bottom:5px;">
+                                ${tagsHtml}
+                                <span style="font-weight:700; font-size:1.05rem;">${post.title}</span>
+                            </div>
+                            <div style="font-size:0.9rem; margin-bottom:8px;">${displayContent}</div>
+                            <div style="font-size:0.8rem; color:#86868b; display:flex; justify-content:space-between;">
+                                <span>${displayAuthor} | ${dateStr}</span>
+                                ${fileBtn}
+                            </div>
+                        </div>`; 
+            }).join(''); 
+        }
         
         async function submitBoard() { 
             const author = document.getElementById('board-author').value.trim(); 
@@ -511,12 +598,11 @@
             const fileInput = document.getElementById('board-file'); 
             
             if(!author || !title || !content) return alert("모든 항목을 입력해주세요."); 
+            if(currentBoardType === 'study' && !document.getElementById('board-subject').value.trim()) return alert("과목을 입력해주세요.");
             
             let uploadedFileUrl = null; 
             if(currentBoardType === 'study' && fileInput.files.length > 0) { 
                 const file = fileInput.files[0]; 
-                
-                // [수정 포인트] 파일 이름에서 확장자만 가져오고, 앞부분은 안전한 무작위 문자열로 변경
                 const ext = file.name.split('.').pop(); 
                 const randomString = Math.random().toString(36).substring(2, 10); 
                 const safeFileName = `${Date.now()}_${randomString}.${ext}`; 
@@ -528,19 +614,66 @@
                 uploadedFileUrl = data.publicUrl; 
             } 
             
-            const { error } = await db.from('board_posts').insert([{ board_type: currentBoardType, title: title, content: content, author: author, file_url: uploadedFileUrl }]); 
+            // 학습자료실일 경우, 학년과 과목 정보를 content에 함께 묶어서(JSON 형태로) 영리하게 저장합니다!
+            let finalContent = content;
+            if(currentBoardType === 'study') {
+                const grade = document.getElementById('board-grade').value;
+                const subject = document.getElementById('board-subject').value.trim();
+                finalContent = JSON.stringify({ text: content, grade: grade, subject: subject });
+            }
+
+            const { error } = await db.from('board_posts').insert([{ board_type: currentBoardType, title: title, content: finalContent, author: author, file_url: uploadedFileUrl }]); 
             if(!error) { 
-                alert("등록이 완료되었습니다."); 
+                if(currentBoardType === 'suggestion') {
+                    alert("소중한 의견이 비공개로 전달되었습니다! 감사합니다.");
+                } else {
+                    alert("등록이 완료되었습니다."); 
+                }
+                
                 document.getElementById('board-author').value = '';
                 document.getElementById('board-input-title').value = ''; 
                 document.getElementById('board-content').value = ''; 
+                if(document.getElementById('board-subject')) document.getElementById('board-subject').value = '';
                 if(fileInput) fileInput.value = ''; 
-                loadBoardData(currentBoardType); 
+                
+                // 건의함은 목록 새로고침을 할 필요가 없습니다.
+                if(currentBoardType === 'study') loadBoardData(currentBoardType); 
             } 
         }
 
         // === 6. 분실물 센터 ===
-        async function fetchLostItems() { const listDiv = document.getElementById('lost-list'); listDiv.innerHTML = '<p>불러오는 중...</p>'; const { data, error } = await db.from('lost_and_found').select('*').order('created_at', { ascending: false }); if (error || !data.length) { listDiv.innerHTML = '<p style="text-align:center; color:#86868b;">현재 등록된 분실물이 없습니다.</p>'; return; } listDiv.innerHTML = data.map(item => { const imgHtml = item.photo_url ? `<img src="${item.photo_url}" class="lost-img">` : `<div class="lost-img" style="display:flex; align-items:center; justify-content:center; font-size:2rem; color:#fff; background:#c7c7cc;">📸</div>`; return `<div class="lost-card">${imgHtml}<div class="lost-info"><h4>${item.item_name}</h4><p>📍 발견장소: ${item.found_location}</p><span class="lost-badge">🏃‍♂️ 찾아가는 곳: ${item.pickup_location}</span></div></div>`; }).join(''); }
+        // 사진 클릭 시 모달창 띄워주는 함수
+        function openImageModal(url) {
+            document.getElementById('enlarged-img').src = url;
+            new bootstrap.Modal(document.getElementById('imageModal')).show();
+        }
+
+        async function fetchLostItems() { 
+            const listDiv = document.getElementById('lost-list'); 
+            listDiv.innerHTML = '<p>불러오는 중...</p>'; 
+            const { data, error } = await db.from('lost_and_found').select('*').order('created_at', { ascending: false }); 
+            if (error || !data.length) { listDiv.innerHTML = '<p style="text-align:center; color:#86868b;">현재 등록된 분실물이 없습니다.</p>'; return; } 
+            
+            listDiv.innerHTML = data.map(item => { 
+                // 날짜 깔끔하게 포맷팅
+                const dateObj = new Date(item.created_at);
+                const dateStr = `${dateObj.getFullYear()}.${dateObj.getMonth()+1}.${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+                
+                const imgHtml = item.photo_url 
+                    ? `<img src="${item.photo_url}" class="lost-img" onclick="openImageModal('${item.photo_url}')" title="클릭해서 크게 보기">` 
+                    : `<div class="lost-img" style="display:flex; align-items:center; justify-content:center; font-size:2rem; color:#fff; background:#c7c7cc; cursor:default;">📸</div>`; 
+                
+                return `<div class="lost-card">
+                            ${imgHtml}
+                            <div class="lost-info">
+                                <h4>${item.item_name}</h4>
+                                <p>📍 발견장소: <strong style="color:#1d1d1f; margin-left:4px;">${item.found_location}</strong></p>
+                                <p>🏃‍♂️ 찾아가는 곳: <strong style="color:#0071e3; margin-left:4px;">${item.pickup_location}</strong></p>
+                                <p style="font-size:0.8rem; color:#86868b; margin-top:6px;">🕒 등록 일시: ${dateStr}</p>
+                            </div>
+                        </div>`; 
+            }).join(''); 
+        }
 
         initHome();
         checkBookingWindow();
