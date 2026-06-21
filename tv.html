@@ -73,8 +73,8 @@
 </div>
 
 <div id="qrPopup">
-    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://muryonghs.github.io/muryong-lunch/" class="qr-img" alt="QR Code">
-    <div class="qr-text">QR 코드를 스캔해<br>스마트폰으로 간단하게 이용해 보세요</div>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://muryonghs.github.io/muryonghs-mr-student/" class="qr-img" alt="QR Code">
+    <div class="qr-text">스마트폰으로 스캔하여<br>학생용 페이지에서 간편하게 확인하세요</div>
 </div>
 
 <header>
@@ -105,7 +105,6 @@
 </div>
 
 <script>
-    // 💡 [수정됨] 관리자/학생 페이지와 동일한 Supabase 프로젝트로 주소 통일
     const SUPABASE_URL = 'https://vfftkdnzjemeipuhlzfv.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_9Q7vn7So6HvUSMPu5BhyDA_9qz928H-';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -273,7 +272,6 @@
         } catch (e) { document.getElementById('tvMenu').innerText = "식단 정보를 불러오지 못했습니다."; }
     }
 
-    // 💡 [수정됨] 명확하게 테이블별로 감지하도록 강화된 실시간 연동 코드
     supabaseClient.channel('tv-channel')
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'lunch_status' }, p => {
             updateTVUI(p.new.current_index);
