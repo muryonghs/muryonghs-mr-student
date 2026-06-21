@@ -12,10 +12,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
+        /* === 공통 및 모바일 최적화 (어떤 기기든 동일하게) === */
         * { box-sizing: border-box; }
         :root { --bg: #f5f5f7; --text-main: #1d1d1f; --card: #ffffff; --primary: #0071e3; --danger: #ff3b30; --success: #34c759; --purple: #8b5cf6; --dark: #334155; }
         
-        body { font-family: 'Pretendard', sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 0; padding-bottom: 30px; overflow-x: hidden; }
+        body { font-family: 'Pretendard', sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 0; padding-bottom: 30px; overflow-x: hidden; -webkit-text-size-adjust: 100%;}
         
         .page { display: none !important; padding: 20px; max-width: 600px; margin: 0 auto; min-height: 100vh; animation: fadeIn 0.3s ease; }
         .page.active { display: block !important; }
@@ -28,9 +29,9 @@
         .back-btn { background: #e8f0fe; border: none; font-size: 0.95rem; color: var(--primary); cursor: pointer; padding: 10px 16px; border-radius: 12px; font-weight: 800; transition: 0.2s; display: inline-flex; align-items: center; gap: 4px; }
         
         .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #e5e5ea; width: 100%;}
-        .input-box { width: 100%; max-width: 100%; padding: 15px; border: 1px solid #e5e5ea; border-radius: 12px; font-size: 1rem; margin-bottom: 12px; font-family: inherit; background: #fbfbfd; display: block; resize: none; min-height: 52px; }
+        .input-box { width: 100%; max-width: 100%; padding: 15px; border: 1px solid #e5e5ea; border-radius: 12px; font-size: 1rem; margin-bottom: 12px; font-family: inherit; background: #fbfbfd; display: block; resize: none; min-height: 52px; -webkit-appearance: none; appearance: none;}
         
-        .btn-main { padding: 15px; border-radius: 14px; font-weight: 800; border: none; cursor: pointer; color: white; width: 100%; font-size: 1.05rem; transition: 0.2s; text-align: center; }
+        .btn-main { padding: 15px; border-radius: 14px; font-weight: 800; border: none; cursor: pointer; color: white; width: 100%; font-size: 1.05rem; transition: 0.2s; text-align: center; -webkit-appearance: none; appearance: none;}
         .btn-blue { background: var(--primary); }
         .btn-red { background: var(--danger); }
         .btn-dark { background: #1d1d1f; }
@@ -38,19 +39,25 @@
         .btn-outline-danger { background: transparent; border: 1.5px solid var(--danger); color: var(--danger); }
 
         .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .list-header h3 { margin: 0; font-size: 1.2rem; font-weight: 800; color: #1d1d1f; }
-        .list-header-btns { display: flex; gap: 8px; }
+        .list-header h3 { margin: 0; font-size: 1.2rem; font-weight: 800; color: #1d1d1f; white-space: nowrap;}
+        
+        /* 💡 버튼 가로 유지 설정 */
+        .list-header-btns { display: flex; gap: 6px; align-items: center; overflow-x: auto; padding-bottom: 5px;}
+        .btn-sm-main, .btn-sm-manage { padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer; border: none; color: white; white-space: nowrap; flex-shrink: 0; -webkit-appearance: none; appearance: none;}
+        .btn-sm-main { background: var(--purple); }
+        .btn-sm-manage { background: var(--dark); }
         
         .list-item { display: flex; flex-direction: column; gap: 10px; padding: 15px; border-radius: 12px; margin-bottom: 12px; background: #fff; border: 1px solid #e5e5ea; box-shadow: 0 2px 8px rgba(0,0,0,0.02);}
         .list-info h4 { margin: 0 0 5px 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
         .list-info p { margin: 0; font-size: 0.9rem; color: #64748b; line-height: 1.5; word-break: break-all;}
         .action-btns { display: flex; gap: 8px; justify-content: flex-end; width: 100%; border-top: 1px solid #f5f5f7; padding-top: 12px; margin-top: 5px;}
-        .btn-action { font-size: 0.85rem; font-weight: 800; padding: 10px 16px; border-radius: 10px; border: none; cursor: pointer; transition: 0.2s;}
+        .btn-action { font-size: 0.85rem; font-weight: 800; padding: 10px 16px; border-radius: 10px; border: none; cursor: pointer; transition: 0.2s; white-space: nowrap;}
         .btn-danger-soft { background: #fee2e2; color: var(--danger); }
         .btn-success-soft { background: #dcfce7; color: var(--success); }
         
         .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .menu-item { background: #ffffff; border-radius: 20px; padding: 20px; text-decoration: none; color: #1d1d1f; box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer; transition: 0.2s; display:block; text-align: left; border: 1px solid #f1f5f9;}
+        .menu-item:active { transform: scale(0.96); }
         .menu-icon { font-size: 2.2rem; margin-bottom: 12px; }
         .menu-item h3 { margin: 0 0 5px 0; font-size: 1.1rem; font-weight: 800; }
         .menu-item p { margin: 0; font-size: 0.8rem; color: #86868b; font-weight: 600; line-height: 1.4; }
@@ -63,69 +70,75 @@
         .badge-cancelled { background: #f2f2f7; color: #86868b; }
         .badge-blocked { background: #3a3a3c; color: #ffffff; }
         .badge-used { background: var(--primary); color: #ffffff; }
+        .badge-priority { background: #ffefed; color: #ff3b30; border: 1px solid #ffcecb; }
 
+        /* 급식실 폰트 큼직하게 유지 */
         .status-val { font-size: 2.2rem; font-weight: 900; color: #3b82f6; margin-bottom: 15px; text-align: center; }
         .wait-display-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 15px; }
         .active-timer { font-size: 3.5rem; font-weight: 900; color: #2563eb; line-height: 1; }
 
-        .btn-sm-main { background: var(--purple); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; }
-        .btn-sm-manage { background: var(--dark); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition:0.2s;}
-        
-        .rental-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 10px; border-left: 4px solid #cbd5e1; cursor: pointer; transition: transform 0.1s; border-top: 1px solid #e5e5ea; border-right: 1px solid #e5e5ea; border-bottom: 1px solid #e5e5ea;}
-        .rental-card.status-rent { border-left-color: var(--danger); }
-        .rental-card.status-return { border-left-color: var(--success); }
-        .rental-card.status-broken { border-left-color: var(--dark); background-color: #f8fafc; } 
-
-        .card-top { display: flex; justify-content: space-between; align-items: center; }
-        .umb-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; }
-        .umb-badge.rent { background: #fee2e2; color: var(--danger); }
-        .umb-badge.return { background: #dcfce7; color: var(--success); }
-        .umb-badge.broken { background: var(--dark); color: white; } 
-        .time-text { font-size: 12px; color: #94a3b8; font-weight: bold;}
-
-        .card-body { display: flex; justify-content: space-between; align-items: center; }
-        .student-info { display: flex; flex-direction: column; }
-        .s-name { font-size: 18px; font-weight: 800; color: #0f172a; }
-        .s-id { font-size: 13px; color: #64748b; margin-top: 2px; }
-        .umbrella-num { background: white; padding: 8px 14px; border-radius: 10px; font-size: 14px; font-weight: bold; color: var(--primary); text-align: right; border: 1px solid #e2e8f0;}
-        
+        /* 모달 스타일 공통 */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;}
         .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 24px; padding: 25px; max-height: 90vh; overflow-y: auto; position: relative;}
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #f1f5f9; }
         .modal-header h3 { margin: 0; font-size: 1.2rem; font-weight: 800; }
         .close-btn { background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 16px; font-weight: bold; color: #64748b; cursor: pointer; }
+
+        .rental-card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 10px; border-left: 4px solid #cbd5e1; cursor: pointer; border-top: 1px solid #e5e5ea; border-right: 1px solid #e5e5ea; border-bottom: 1px solid #e5e5ea;}
+        .rental-card.status-rent { border-left-color: var(--danger); }
+        .rental-card.status-return { border-left-color: var(--success); }
+        .rental-card.status-broken { border-left-color: var(--dark); background-color: #f8fafc; } 
     </style>
 </head>
 <body>
 
     <div id="page-home" class="page active">
-        <header class="app-header"><h1>무룡고 통합 관리자</h1></header>
+        <header class="app-header">
+            <h1>무룡고 통합 관리자</h1>
+        </header>
+
         <div class="menu-grid">
-            <div class="menu-item" onclick="goPage('lunch')"><div class="menu-icon">🍱</div><h3>급식실 제어</h3><p>배식 순서 및 알림</p></div>
-            <div class="menu-item" onclick="goPage('umbrella')"><div class="menu-icon">☔️</div><h3>양심우산</h3><p>목록 및 운영 관리</p></div>
-            <div class="menu-item" onclick="goPage('facility')"><div class="menu-icon">🏟️</div><h3>시설예약</h3><p>승인 및 전체 제어</p></div>
-            <div class="menu-item" onclick="goPage('council')"><div class="menu-icon">🎉</div><h3>학생회 행사</h3><p>행사 등록 및 관리</p></div>
-            <div class="menu-item" onclick="goPage('study')"><div class="menu-icon">📚</div><h3>학습자료실</h3><p>자료실 글 삭제 관리</p></div>
-            <div class="menu-item" onclick="goPage('lost')"><div class="menu-icon">🔍</div><h3>분실물 센터</h3><p>분실물 등록 및 관리</p></div>
+            <div class="menu-item" onclick="goPage('lunch')">
+                <div class="menu-icon">🍱</div><h3>급식실 제어</h3><p>배식 순서 및 알림</p>
+            </div>
+            <div class="menu-item" onclick="goPage('umbrella')">
+                <div class="menu-icon">☔️</div><h3>양심우산</h3><p>목록 관리 및 출력</p>
+            </div>
+            <div class="menu-item" onclick="goPage('facility')">
+                <div class="menu-icon">🏟️</div><h3>시설예약</h3><p>승인 및 전체 제어</p>
+            </div>
+            <div class="menu-item" onclick="goPage('council')">
+                <div class="menu-icon">🎉</div><h3>학생회 행사</h3><p>행사 등록 및 관리</p>
+            </div>
+            <div class="menu-item" onclick="goPage('study')">
+                <div class="menu-icon">📚</div><h3>학습자료실</h3><p>자료실 글 삭제 관리</p>
+            </div>
+            <div class="menu-item" onclick="goPage('lost')">
+                <div class="menu-icon">🔍</div><h3>분실물 센터</h3><p>분실물 등록 및 관리</p>
+            </div>
             <div class="menu-item" style="grid-column: span 2; display: flex; align-items: center; background: #fffcf0;" onclick="goPage('suggestion')">
-                <div class="menu-icon" style="margin:0 15px 0 0;">💡</div><div><h3>건의함 관리</h3><p>학생들의 익명 건의사항 열람</p></div>
+                <div class="menu-icon" style="margin:0 15px 0 0;">💡</div>
+                <div><h3>건의함 관리</h3><p>학생들의 익명 건의사항 열람</p></div>
             </div>
         </div>
     </div>
 
-    <!-- 1. 급식실 제어 -->
     <div id="page-lunch" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
+        
         <div class="card">
             <h3 class="mb-3" style="font-size:1.2rem; font-weight:800;">배식 순서 제어</h3>
             <div class="status-val" id="curGrade">데이터 연결 중...</div>
             <div id="subStatus" style="font-size:0.95rem; color:#ef4444; margin-top:-10px; margin-bottom:15px; font-weight:800; display:none; text-align:center;">오늘은 급식 호출 미운영</div>
+
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 <button class="btn-main btn-blue" onclick="updateIdx('next')">다음 학년/상태 호출</button>
                 <button class="btn-main btn-gray" onclick="updateIdx('reset')">순서 초기화 (배식 전)</button>
                 <button class="btn-main btn-outline-danger" onclick="updateIdx('close')">오늘 미운영 설정</button>
             </div>
+
             <hr style="border:0; border-top:1px dashed #cbd5e1; margin: 25px 0;">
+            
             <h3 class="mb-3" style="font-size:1.1rem; font-weight:800;">다음 호출 타이머</h3>
             <div class="wait-display-box">
                 <span style="font-size: 0.85rem; color: #64748b; font-weight: 700; display: block;">진행 중인 타이머</span>
@@ -134,6 +147,7 @@
                 <span style="font-size: 0.85rem; color: #64748b; font-weight: 700; display: block;">추가/설정할 시간</span>
                 <div><span id="tempWaitDisplay" style="font-size: 1.8rem; font-weight: 900; color: #475569;">0</span> 분</div>
             </div>
+
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                 <button class="btn-main btn-gray" style="padding:10px;" onclick="addWait(1)">+1분</button>
                 <button class="btn-main btn-gray" style="padding:10px;" onclick="addWait(5)">+5분</button>
@@ -144,6 +158,7 @@
                 <button class="btn-main btn-dark" style="flex: 1; padding:10px;" onclick="sendWaitTime()">적용하기</button>
             </div>
         </div>
+
         <div class="card" style="border: 1px solid #fecaca; background: #fff5f5;">
             <h3 class="mb-3" style="font-size:1.1rem; font-weight:800; color:var(--danger);">긴급 팝업 (TV/학생화면)</h3>
             <textarea id="popupInput" class="input-box" placeholder="내용을 비우고 '내리기'를 누르면 화면에서 사라집니다." rows="2"></textarea>
@@ -152,6 +167,7 @@
                 <button class="btn-main btn-red" style="flex:1; padding:12px;" onclick="sendPopup(document.getElementById('popupInput').value)">팝업 띄우기</button>
             </div>
         </div>
+
         <div class="card">
             <h3 class="mb-3" style="font-size:1.1rem; font-weight:800;">일반 알림판 텍스트</h3>
             <textarea id="noticeInput" class="input-box" placeholder="화면 우측 알림판에 띄울 내용을 적어주세요." rows="2"></textarea>
@@ -159,9 +175,9 @@
         </div>
     </div>
 
-    <!-- 2. 양심우산 관리 -->
     <div id="page-umbrella" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
+        
         <div class="card" style="background: #f0f8ff; border: 1px solid #cce5ff; text-align:center;">
             <h3 style="margin-top:0; font-size:1.2rem; font-weight:800;">우산 대여/반납 스캐너</h3>
             <p style="font-size:0.85rem; color:#555; margin-bottom:15px;">학생이 생성한 우산 전용 QR코드를 스캔하세요.</p>
@@ -171,7 +187,6 @@
         <div class="list-header">
             <h3>전체 이용 내역</h3>
             <div class="list-header-btns">
-                <!-- 양심우산 운영 중단 버튼 추가 -->
                 <button id="umb-block-btn" class="btn-sm-manage" style="background:#ef4444;" onclick="toggleUmbrellaBlock()">운영 중단</button>
                 <button class="btn-sm-manage" onclick="openBrokenModal()">고장 우산</button>
                 <button class="btn-sm-main" onclick="openPdfModal()">PDF 출력</button>
@@ -180,9 +195,9 @@
         <div id="rental-list">데이터를 불러오는 중...</div>
     </div>
 
-    <!-- 3. 시설예약 관리 -->
     <div id="page-facility" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
+
         <div class="card" style="padding: 15px; display: flex; flex-direction: row; justify-content: space-between; align-items: center; border-radius: 16px;">
             <div>
                 <h4 style="font-size:0.95rem; font-weight:800; color:var(--danger); margin:0 0 3px 0;">시스템 제어</h4>
@@ -193,21 +208,216 @@
                 <button class="btn-action" style="background:#f2f2f7; color:#1d1d1f; padding: 8px 12px; font-size: 0.8rem;" onclick="openSuperAdmin()">명단 초기화</button>
             </div>
         </div>
-        <div class="list-header mt-4"><h3>예약 승인 및 관리</h3><button class="btn-action btn-danger-soft" onclick="openBlockModal()">시간 부분차단</button></div>
+
+        <div class="card" style="background: #fdf5e6; border: 1px solid #ffeeba; text-align:center;">
+            <h3 style="margin-top:0; font-size:1.2rem; font-weight:800;">예약 승인 확인 스캐너</h3>
+            <p style="font-size:0.85rem; color:#555; margin-bottom:15px;">승인 완료된 예약 QR 패스를 스캔하여 사용처리합니다.</p>
+            <button class="btn-main" style="background:#ff9500;" onclick="startScanner()">📷 QR 스캔하기</button>
+        </div>
+
+        <div class="list-header mt-4">
+            <h3>예약 승인 및 관리</h3>
+            <button class="btn-action btn-danger-soft" onclick="openBlockModal()">시간 부분차단</button>
+        </div>
+        <p class="text-muted" style="font-size:0.85rem; margin-top:-10px; margin-bottom: 15px;">카드를 누르면 상세 승인/거절 메뉴가 나타납니다.</p>
         <div id="reserve-list">데이터를 불러오는 중...</div>
     </div>
 
-    <div id="page-council" class="page"><div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div><div class="list-header mt-4"><h3>🎉 학생회 행사</h3></div><div id="admin-council-list">준비 중...</div></div>
-    <div id="page-study" class="page"><div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div><div class="list-header"><h3>📚 학습자료실 관리</h3></div><div id="admin-study-list">불러오는 중...</div></div>
-    <div id="page-lost" class="page"><div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div><div class="list-header mt-4"><h3>🔍 분실물 관리</h3></div><div id="admin-lost-list">준비 중...</div></div>
-    <div id="page-suggestion" class="page"><div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div><div class="list-header"><h3>💡 학생 건의사항 열람</h3></div><div id="admin-suggestion-list">불러오는 중...</div></div>
+    <div id="page-council" class="page">
+        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
+        
+        <div class="card" style="background: #f8fafc;">
+            <h3 style="margin-top:0; font-size:1.2rem; font-weight:800;">새로운 행사 등록</h3>
+            <input type="text" id="ev-title" class="input-box" placeholder="행사 이름 (예: 무룡제, 체육대회)">
+            <input type="text" id="ev-dept" class="input-box" placeholder="주최 부서 (예: 학생회 기획부)">
+            <input type="text" id="ev-period" class="input-box" placeholder="행사 기간 (예: 10/24(목) ~ 10/25(금))">
+            <input type="text" id="ev-apply-period" class="input-box" placeholder="신청 기간 (선택 사항)">
+            <input type="url" id="ev-apply-url" class="input-box" placeholder="신청 링크 (구글폼 등 / 선택 사항)">
+            <label style="font-size:0.85rem; font-weight:bold; color:#555; margin-bottom:5px; display:block;">행사 포스터 (사진)</label>
+            <input type="file" id="ev-poster" class="input-box" accept="image/*" style="padding:10px; background:white;">
+            <button class="btn-main btn-dark" onclick="submitCouncilEvent()">행사 등록하기</button>
+        </div>
 
-    <!-- 스캐너 / 모달 등 -->
-    <div class="modal fade" id="scannerModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered"><div class="modal-content" style="border-radius: 20px; padding:0;"><div class="modal-header border-0 pb-0 pt-4 px-4"><h5 class="modal-title fw-bold">카메라 스캔</h5><button type="button" class="btn-close" data-bs-dismiss="modal" onclick="stopScanner()"></button></div><div class="modal-body text-center p-4"><div id="reader-container"><div id="reader"></div></div></div></div></div>
+        <div class="list-header mt-4"><h3>🎉 진행중인 행사 목록</h3></div>
+        <div id="admin-council-list">불러오는 중...</div>
     </div>
-    
+
+    <div id="page-study" class="page">
+        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
+        <div class="list-header"><h3>📚 학습자료실 관리</h3></div>
+        <div id="admin-study-list">불러오는 중...</div>
+    </div>
+
+    <div id="page-lost" class="page">
+        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
+
+        <div class="card" style="background: #fdf5e6; border: 1px solid #d2e4f6;">
+            <h3 style="margin-top:0; font-size:1.2rem; font-weight:800;">새 분실물 등록</h3>
+            <input type="text" id="lf-name" class="input-box" placeholder="분실물 이름 (예: 검은색 지갑, 에어팟 등)">
+            <input type="text" id="lf-found" class="input-box" placeholder="발견 장소 (예: 2층 남자화장실 앞)">
+            <input type="text" id="lf-pickup" class="input-box" placeholder="찾아가는 곳 (예: 2학년 교무실 홍길동 선생님)">
+            <label style="font-size:0.85rem; font-weight:bold; color:#555; margin-bottom:5px; display:block;">사진 첨부 (선택)</label>
+            <input type="file" id="lf-photo" class="input-box" accept="image/*" style="padding:10px; background:white;">
+            <button class="btn-main btn-blue" onclick="submitLostItem()">분실물 등록하기</button>
+        </div>
+
+        <div class="list-header mt-4"><h3>🔍 등록된 분실물</h3></div>
+        <div id="admin-lost-list">불러오는 중...</div>
+    </div>
+
+    <div id="page-suggestion" class="page">
+        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
+        <div class="list-header"><h3>💡 학생 건의사항 열람</h3></div>
+        <p class="text-muted" style="font-size:0.85rem; margin-top:-10px;">건의사항은 관리자와 학생회만 볼 수 있는 익명 데이터입니다.</p>
+        <div id="admin-suggestion-list">불러오는 중...</div>
+    </div>
+
+
+    <div class="modal fade" id="scannerModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden; padding:0;">
+            <div class="modal-header border-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+              <h5 class="modal-title fw-bold">카메라 스캔</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="stopScanner()"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div id="reader-container" style="display:block; margin-top:0;">
+                    <div id="reader"></div>
+                </div>
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <div id="pdfModal" class="modal-overlay" onclick="closeCustomModal(event)">
+        <div class="modal-content" style="max-width: 360px;">
+            <div class="modal-header">
+                <h3>PDF 출력 옵션</h3>
+                <button class="close-btn" onclick="closeCustomModal(event)">✕</button>
+            </div>
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 20px; line-height: 1.4;">추출할 명단의 용도를 선택해 주세요.</p>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button id="btn-pdf-public" class="btn-main" style="background: var(--purple);" onclick="executePDF('public')">
+                    공개용 명단 (게시판/공지용)<br>
+                    <span style="font-size: 13px; font-weight: normal; color: #ede9fe;">이름 가운데 가림, 학년만 표시</span>
+                </button>
+                <button id="btn-pdf-admin" class="btn-main" style="background: #475569;" onclick="executePDF('admin')">
+                    관리자용 명단 (내부 보관용)<br>
+                    <span style="font-size: 13px; font-weight: normal; color: #f1f5f9;">학번, 이름 전체 표시</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="umbrellaDetailModal" class="modal-overlay" onclick="closeCustomModal(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="u-name-title">상세 정보</h3>
+                <button class="close-btn" onclick="closeCustomModal(event)">✕</button>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px;">
+                <span style="color: #64748b; font-weight: bold; width: 80px;">학번</span>
+                <span style="color: #1e293b; font-weight: 600;" id="u-id"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px;">
+                <span style="color: #64748b; font-weight: bold; width: 80px;">우산번호</span>
+                <span style="color: var(--primary); font-weight: 600;" id="u-umbrella"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px;">
+                <span style="color: #64748b; font-weight: bold; width: 80px;">전화번호</span>
+                <span style="color: #1e293b; font-weight: 600;" id="u-phone"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px;">
+                <span style="color: #64748b; font-weight: bold; width: 80px;" id="u-label-rent">대여일시</span>
+                <span style="color: #1e293b; font-weight: 600;" id="u-rent-date"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px;">
+                <span style="color: #64748b; font-weight: bold; width: 80px;" id="u-label-return">반납일시</span>
+                <span style="color: #1e293b; font-weight: 600;" id="u-return-date"></span>
+            </div>
+            
+            <button id="manual-return-btn" style="display: none; background:var(--success); color:white; width:100%; padding:14px; border:none; border-radius:12px; font-size:15px; font-weight:bold; margin-top:15px; cursor:pointer;">수동 반납처리</button>
+            <button id="delete-umbrella-btn" style="background:#f1f5f9; color:var(--danger); width:100%; padding:14px; border:1px solid #e2e8f0; border-radius:12px; font-size:15px; font-weight:bold; margin-top:10px; cursor:pointer;">이 기록 삭제</button>
+        </div>
+    </div>
+
+    <div id="damageModal" class="modal-overlay" onclick="closeCustomModal(event)">
+        <div class="modal-content" style="max-width: 360px; text-align: center; border-radius: 24px;">
+            <div class="modal-header" style="justify-content: center; border: none; padding-bottom: 0;">
+                <h3 style="color: #0f172a; font-size: 22px;">우산 상태 확인</h3>
+            </div>
+            <p style="color: #64748b; font-size: 15px; margin-bottom: 25px; line-height: 1.5;">
+                <strong id="d-student-name" style="color: var(--primary);"></strong> 학생이 반납하는<br>
+                <strong id="d-umbrella-num" style="color: var(--danger);"></strong>번 우산이 파손되었습니까?
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn-main" style="background: var(--success);" onclick="executeReturn(false)">정상 반납</button>
+                <button class="btn-main btn-dark" onclick="executeReturn(true)">파손됨</button>
+                <button class="btn-main btn-gray" onclick="document.getElementById('damageModal').style.display='none'">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="brokenModal" class="modal-overlay" onclick="closeCustomModal(event)">
+        <div class="modal-content" style="border-radius: 24px; padding: 20px;">
+            <div class="modal-header">
+                <h3>파손 우산 관리</h3>
+                <button class="close-btn" onclick="closeCustomModal(event)">✕</button>
+            </div>
+            <p style="color: #64748b; font-size: 13px; margin-bottom: 15px;">파손된 우산을 선택하여 수리 완료 처리를 할 수 있습니다.</p>
+            <div id="broken-list"></div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+                <div class="modal-header">
+                    <h5 class="fw-bold m-0">예약 상세 정보</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="text-center mb-3" id="detail-badge-area"></div>
+                    <div class="bg-light p-3 mb-3" style="border-radius: 12px; font-size:0.95rem;">
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted fw-bold">신청자</span><span class="fw-bold" id="detail-name"></span></div>
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted fw-bold">연락처</span><span class="fw-bold" id="detail-phone"></span></div>
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted fw-bold">시설명</span><span class="fw-bold text-primary" id="detail-room"></span></div>
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted fw-bold">목적</span><span class="fw-bold" id="detail-purpose"></span></div>
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted fw-bold">시간</span><span class="fw-bold" id="detail-time"></span></div>
+                        <div class="d-flex justify-content-between"><span class="text-muted fw-bold">비밀번호</span><span class="fw-bold" id="detail-pw-area"></span></div>
+                    </div>
+                    <div class="d-flex flex-column gap-2" id="detail-action-area"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="blockModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="fw-bold m-0" style="color: #ff9500;">특정 시설/시간 차단</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-0">
+            <p class="small text-muted mb-3">선택한 시설과 시간대에 학생이 예약할 수 없도록 막습니다.</p>
+            <select id="b_room" class="input-box" style="padding:12px;">
+                <option value="더하우스">더하우스</option><option value="풋살장">풋살장</option><option value="소회의실">소회의실</option>
+            </select>
+            <input type="date" id="b_date" class="input-box" style="padding:12px;">
+            <div style="display:flex; gap:10px;">
+                <select id="b_start" class="input-box" style="padding:12px; flex:1;"></select>
+                <select id="b_end" class="input-box" style="padding:12px; flex:1;"></select>
+            </div>
+            <input type="text" id="b_purpose" class="input-box" placeholder="차단 사유 (선택사항)" style="padding:12px;">
+            <button type="button" class="btn-main" style="background-color: #ff9500;" onclick="submitSpecificBlock()">차단 등록하기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
         const DB_URL = 'https://vfftkdnzjemeipuhlzfv.supabase.co';
         const DB_KEY = 'sb_publishable_9Q7vn7So6HvUSMPu5BhyDA_9qz928H-';
@@ -224,8 +434,10 @@
             if(pageId === 'lunch') initLunchAdmin();
             if(pageId === 'umbrella') { fetchRentals(); loadUmbrellaStatus(); }
             if(pageId === 'facility') loadReservations();
+            if(pageId === 'council') loadAdminCouncilEvents();
             if(pageId === 'study') loadAdminBoard('study');
             if(pageId === 'suggestion') loadAdminBoard('suggestion');
+            if(pageId === 'lost') loadAdminLost();
         }
 
         async function loadSettings() {
@@ -235,7 +447,7 @@
             } catch (err) {}
         }
 
-        // --- 양심우산 운영 중단 관리 로직 ---
+        // --- 양심우산 운영 관리 ---
         async function loadUmbrellaStatus() {
             try {
                 const { data } = await db.from('announcements').select('content').eq('id', 4).single();
@@ -247,27 +459,24 @@
         function updateUmbBlockBtnUI() {
             const btn = document.getElementById('umb-block-btn');
             if(isUmbrellaBlocked) {
-                btn.innerText = "운영 재개하기"; btn.style.background = "#34c759";
+                btn.innerText = "운영 재개"; btn.style.background = "#34c759";
             } else {
-                btn.innerText = "운영 중단하기"; btn.style.background = "#ef4444";
+                btn.innerText = "운영 중단"; btn.style.background = "#ef4444";
             }
         }
 
         async function toggleUmbrellaBlock() {
             const newVal = isUmbrellaBlocked ? 'OPEN' : 'CLOSED';
-            const msg = isUmbrellaBlocked ? "양심우산 대여 운영을 재개하시겠습니까?" : "양심우산 대여 운영을 중단하시겠습니까?\n(학생 화면에 운영 중단 멘트가 표시되고 대여가 차단됩니다)";
+            const msg = isUmbrellaBlocked ? "양심우산 운영을 재개할까요?" : "양심우산 운영을 중단할까요?\n학생 화면에 대여 차단 멘트가 표시됩니다.";
             if(!confirm(msg)) return;
             
             const { error } = await db.from('announcements').upsert({ id: 4, content: newVal });
-            if(!error) {
-                isUmbrellaBlocked = !isUmbrellaBlocked;
-                updateUmbBlockBtnUI();
-            }
+            if(!error) { isUmbrellaBlocked = !isUmbrellaBlocked; updateUmbBlockBtnUI(); }
         }
 
-        /* 급식 제어 */
+        /* --- 1. 급식 제어 --- */
         const grades = ["배식 전", "3학년", "2학년", "1학년", "배식 종료", "미운영"];
-        let currentIdx = -1; let lunchIdx = 0; let tempWaitTime = 0; let adminWaitInterval = null; let liveWaitMin = 0; let liveSetAt = null;
+        let currentIdx = -1; let tempWaitTime = 0; let adminWaitInterval = null; let liveWaitMin = 0; let liveSetAt = null;
 
         function updateUI(index) {
             const gradeBox = document.getElementById('curGrade'); 
@@ -295,11 +504,19 @@
                 else { display.innerText = `${String(Math.floor(remainingSec / 60)).padStart(2, '0')}:${String(remainingSec % 60).padStart(2, '0')}`; }
             }, 1000);
         }
+        
+        // 💡 딜레이 없이 누르는 즉시 UI 업데이트 되게 수정
         async function updateIdx(type) {
             let nextIdx = currentIdx;
-            if(type === 'next' && nextIdx < 4) nextIdx++; else if(type === 'reset') { if(!confirm("순서를 초기화하시겠습니까?")) return; nextIdx = 0; } else if (type === 'close') { if(!confirm("오늘 급식을 '미운영'으로 설정하시겠습니까?")) return; nextIdx = 5; }
-            await db.from('lunch_status').update({ current_index: nextIdx, wait_minutes: 0 }).eq('id', 1); resetWait();
+            if(type === 'next' && nextIdx < 4) nextIdx++; 
+            else if(type === 'reset') { if(!confirm("순서를 초기화하시겠습니까?")) return; nextIdx = 0; } 
+            else if (type === 'close') { if(!confirm("오늘 급식을 '미운영'으로 설정하시겠습니까?")) return; nextIdx = 5; }
+            
+            updateUI(nextIdx); // 즉시 화면에 반영
+            await db.from('lunch_status').update({ current_index: nextIdx, wait_minutes: 0 }).eq('id', 1); 
+            resetWait();
         }
+
         function addWait(min) { tempWaitTime += min; document.getElementById('tempWaitDisplay').innerText = tempWaitTime; }
         function resetWait() { tempWaitTime = 0; document.getElementById('tempWaitDisplay').innerText = tempWaitTime; }
         async function sendWaitTime() {
@@ -312,13 +529,13 @@
         async function saveNotice() { await db.from('announcements').upsert({id: 1, content: document.getElementById('noticeInput').value}); alert("업데이트됨!"); }
         async function sendPopup(val) { await db.from('announcements').upsert({id: 2, content: val}); alert("적용됨!"); }
 
-        /* 스캐너 */
+        /* --- 스캐너 로직 --- */
         let html5QrCode; let isProcessing = false;
         function startScanner() { new bootstrap.Modal(document.getElementById('scannerModal')).show(); setTimeout(() => { html5QrCode = new Html5Qrcode("reader"); html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, ()=>{}).catch(e=>{alert("카메라 오류"); stopScanner();}); }, 500); }
         function stopScanner() { if (html5QrCode) html5QrCode.stop().then(() => { bootstrap.Modal.getInstance(document.getElementById('scannerModal'))?.hide(); }).catch(e=>{}); }
         async function onScanSuccess(decodedText) { /* 기존 스캐너 로직 동일 */ stopScanner(); }
 
-        /* 시설예약 */
+        /* --- 시설예약 로직 --- */
         function updateBlockButtonUI() {
             const btn = document.getElementById('block-btn');
             if (!btn) return;
@@ -326,29 +543,229 @@
             else { btn.innerText = "전체 예약 막기"; btn.classList.replace('btn-success-soft', 'btn-danger-soft');}
         }
         async function toggleBookingBlock() {
-            if (!confirm(isBookingBlocked ? "예약을 활성화할까요?" : "새로운 예약을 차단할까요?\n(학생 화면에 예약 불가 멘트가 뜹니다)")) return;
+            if (!confirm(isBookingBlocked ? "예약을 활성화할까요?" : "새로운 예약을 차단할까요?")) return;
             const { error } = await db.from('site_settings').update({ is_booking_blocked: !isBookingBlocked }).eq('id', 1);
             if (!error) { isBookingBlocked = !isBookingBlocked; updateBlockButtonUI(); }
         }
 
+        async function openSuperAdmin() {
+            if (confirm("⚠️ 예약 명단 전체 초기화를 진행하시겠습니까?")) {
+                if (prompt("진행하려면 '초기화진행' 이라고 입력해주세요.") === '초기화진행') {
+                    const { error } = await db.from('reservations').delete().neq('id', 0);
+                    if (!error) { alert("완벽하게 초기화되었습니다."); loadReservations(); } 
+                }
+            }
+        }
+
+        function getStatusBadge(status) {
+            if(status === 'pending') return '<span class="badge badge-pending">대기 중</span>';
+            if(status === 'approved') return '<span class="badge badge-approved">승인됨</span>';
+            if(status === 'standby') return '<span class="badge badge-standby">대기명단</span>';
+            if(status === 'rejected') return '<span class="badge badge-rejected">거절됨</span>';
+            if(status === 'cancelled') return '<span class="badge badge-cancelled">사용자취소</span>';
+            if(status === 'blocked') return '<span class="badge badge-blocked">시스템차단</span>'; 
+            if(status === 'used') return '<span class="badge badge-used">사용완료</span>'; 
+            return status;
+        }
+
+        let globalReservations = []; 
+        let currentSelectedRes = null;
         async function loadReservations() {
             const list = document.getElementById('reserve-list'); list.innerHTML = '로딩 중...';
             const { data } = await db.from('reservations').select('*').order('start_time', { ascending: true });
-            if(!data || data.length === 0) { list.innerHTML = '<p style="text-align:center; color:#86868b;">예약이 없습니다.</p>'; return; }
-            list.innerHTML = data.map(res => `<div class="list-item"><h4>${res.room_name}</h4><p>${res.student_name} (${res.status})</p></div>`).join('');
+            globalReservations = data || []; 
+            list.innerHTML = '';
+            if (globalReservations.length === 0) { list.innerHTML = '<p style="text-align:center; color:#86868b; margin-top:20px;">예약 내역이 없습니다.</p>'; return; }
+
+            globalReservations.forEach(res => {
+                const d1 = new Date(res.start_time); const d2 = new Date(res.end_time);
+                const compactTime = `<strong style="font-size:0.95rem; color:#1d1d1f;">${d1.getMonth()+1}.${d1.getDate()}</strong><br><span style="font-size:0.85rem; color:#86868b; font-weight:bold;">${String(d1.getHours()).padStart(2,'0')}:${String(d1.getMinutes()).padStart(2,'0')} - ${String(d2.getHours()).padStart(2,'0')}:${String(d2.getMinutes()).padStart(2,'0')}</span>`;
+                const badge = getStatusBadge(res.status);
+                let studentDisplay = `<span style="font-weight:800;">${res.student_name}</span> <span style="font-size:0.8rem; color:#86868b;">(${res.student_id})</span>`;
+                if (res.status === 'blocked') studentDisplay = `<span style="color:#ff3b30; font-weight:800;">관리자 시간 차단</span>`;
+                
+                list.innerHTML += `
+                    <div class="reserve-card" onclick="triggerDetailModal('${res.id}')">
+                        <div class="top-row"><div>${badge}</div><span style="font-size:0.85rem; color:#86868b; font-weight:800;">${d1.getMonth()+1}/${d1.getDate()}</span></div>
+                        <h5 style="font-size:1.15rem; font-weight:900; margin:5px 0; color:#1d1d1f;">${res.room_name}</h5>
+                        <div style="font-size:0.95rem; margin-bottom:8px;">${studentDisplay}</div>
+                        <div style="background:#f8fafc; padding:10px; text-align:center; border-radius:12px; border:1px solid #f1f5f9;">${compactTime}</div>
+                    </div>`;
+            });
         }
+
+        function triggerDetailModal(id) {
+            currentSelectedRes = globalReservations.find(r => String(r.id) === String(id));
+            if (!currentSelectedRes) return; const res = currentSelectedRes;
+            
+            document.getElementById('detail-badge-area').innerHTML = getStatusBadge(res.status);
+            document.getElementById('detail-name').innerHTML = res.status === 'blocked' ? '<span class="text-danger">시스템 차단</span>' : `${res.student_name} (${res.student_id})`;
+            document.getElementById('detail-phone').innerText = res.phone || '-';
+            document.getElementById('detail-room').innerText = res.room_name || '-';
+            document.getElementById('detail-purpose').innerText = res.purpose || '-';
+            
+            if (res.status === 'blocked' || res.status === 'used') document.getElementById('detail-pw-area').innerHTML = '-';
+            else document.getElementById('detail-pw-area').innerHTML = `<span id="detail-pw-text" style="font-family:monospace; color:#86868b; letter-spacing:2px;">****</span> <button class="btn-action btn-gray" style="padding:4px 8px; margin-left:5px;" onclick="actionRevealPw(this)">확인</button>`;
+
+            const actionArea = document.getElementById('detail-action-area');
+            if (res.status === 'blocked') actionArea.innerHTML = `<button class="btn-main btn-gray" onclick="actionUnblock()">차단 풀기</button>`;
+            else if (res.status === 'pending' || res.status === 'standby') actionArea.innerHTML = `<button class="btn-main btn-blue" onclick="actionUpdateStatus('approved')">승인 완료</button><button class="btn-main btn-outline-danger mt-2" onclick="actionUpdateStatus('rejected')">예약 거절</button>`;
+            else if (res.status === 'approved') actionArea.innerHTML = `<div style="display:flex; gap:10px;"><button class="btn-main btn-gray" style="flex:1;" onclick="actionUpdateStatus('used')">수동 사용완료</button><button class="btn-main btn-outline-danger" style="flex:1;" onclick="actionUpdateStatus('cancelled')">강제 취소</button></div>`;
+            else actionArea.innerHTML = `<button class="btn-main btn-gray" disabled>처리 완료</button>`;
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('detailModal')).show();
+        }
+        
+        function actionRevealPw(btn) { if(currentSelectedRes) { document.getElementById('detail-pw-text').innerText = currentSelectedRes.password; btn.style.display = 'none'; } }
+        async function actionUpdateStatus(status) { if(confirm(`이 예약 상태를 변경할까요?`)) { await db.from('reservations').update({ status: status }).eq('id', currentSelectedRes.id); bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); loadReservations(); } }
+        async function actionUnblock() { if(confirm("차단을 풀까요?")) { await db.from('reservations').delete().eq('id', currentSelectedRes.id); bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); loadReservations(); } }
+        function openBlockModal() { new bootstrap.Modal(document.getElementById('blockModal')).show(); }
+
+        /* --- 양심우산 리스트 로드 --- */
+        let pendingReturnData = null;
+        function formatFullDate(ds) { if(!ds) return '-'; const d = new Date(ds); return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+
         async function fetchRentals() {
             const list = document.getElementById('rental-list'); list.innerHTML = '로딩 중...';
-            const { data } = await db.from('umbrella_rentals').select('*').neq('status', '파손').order('rent_date', { ascending: false });
+            const { data } = await db.from('umbrella_rentals').select('*').neq('status', '파손').order('rent_date', { ascending: false }).limit(30);
             if(!data || data.length === 0) { list.innerHTML = '<p style="text-align:center; color:#86868b;">기록이 없습니다.</p>'; return; }
-            list.innerHTML = data.map(res => `<div class="list-item"><h4>우산 ${res.umbrella_number}번</h4><p>${res.student_name} (${res.status})</p></div>`).join('');
+            list.innerHTML = data.map(row => {
+                const isRent = row.status === '대여중'; const color = isRent ? 'var(--danger)' : 'var(--success)';
+                const dateObj = new Date(isRent ? row.rent_date : (row.return_date || row.rent_date)); 
+                return `
+                <div class="rental-card ${isRent?'status-rent':'status-return'}" onclick='openUmbrellaModal(${JSON.stringify(row).replace(/'/g, "&#39;")})'>
+                    <div class="card-top"><span class="umb-badge ${isRent?'rent':'return'}">${row.status}</span><span class="time-text">${isRent?'대여':'반납'}: ${dateObj.getMonth()+1}/${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}</span></div>
+                    <div class="card-body">
+                        <div class="student-info"><span class="s-name">${row.student_name}</span><span class="s-id">${row.student_id}</span></div>
+                        <div class="umbrella-num"><span>우산번호</span>${row.umbrella_number || '-'}번</div>
+                    </div>
+                </div>`;
+            }).join('');
         }
+
+        async function fetchBroken() {
+            const { data } = await db.from('umbrella_rentals').select('*').eq('status', '파손').order('rent_date', { ascending: false });
+            const listContainer = document.getElementById('broken-list');
+            if (!data || data.length === 0) { listContainer.innerHTML = '<p style="text-align:center; color:#64748b;">파손된 우산이 없습니다.</p>'; return; }
+            listContainer.innerHTML = data.map(row => `<div class="rental-card status-broken" onclick='openBrokenDetailModal(${JSON.stringify(row).replace(/'/g, "&#39;")})'><div class="card-top"><span class="umb-badge broken">${row.status}</span></div><div class="card-body"><div class="student-info"><span class="s-name">${row.umbrella_number}번 우산</span><span class="s-id text-danger">신고: ${row.student_name}</span></div></div></div>`).join('');
+        }
+
+        function openPdfModal() { document.getElementById('pdfModal').style.display = 'flex'; }
+        function openBrokenModal() { document.getElementById('brokenModal').style.display = 'flex'; fetchBroken(); }
+        function closeCustomModal(e) { if(e.target.classList.contains('modal-overlay') || e.target.classList.contains('close-btn')) e.target.closest('.modal-overlay').style.display = 'none'; }
+
+        function openUmbrellaModal(row) {
+            document.getElementById('u-name-title').innerText = `${row.student_name} 상세 정보`;
+            document.getElementById('u-id').innerText = row.student_id;
+            document.getElementById('u-umbrella').innerText = `${row.umbrella_number || '-'}번`;
+            document.getElementById('u-phone').innerText = row.phone_number || '미입력';
+            document.getElementById('u-rent-date').innerText = formatFullDate(row.rent_date);
+            document.getElementById('u-return-date').innerText = formatFullDate(row.return_date);
+
+            document.getElementById('delete-umbrella-btn').onclick = async () => {
+                if(confirm("기록을 삭제할까요?")) { await db.from('umbrella_rentals').delete().eq('id', row.id); document.getElementById('umbrellaDetailModal').style.display = 'none'; fetchRentals(); }
+            };
+
+            const manualBtn = document.getElementById('manual-return-btn');
+            if (row.status === '대여중') {
+                manualBtn.style.display = 'block';
+                manualBtn.onclick = () => {
+                    pendingReturnData = row;
+                    document.getElementById('umbrellaDetailModal').style.display = 'none';
+                    document.getElementById('d-student-name').innerText = row.student_name;
+                    document.getElementById('d-umbrella-num').innerText = row.umbrella_number;
+                    document.getElementById('damageModal').style.display = 'flex';
+                };
+            } else { manualBtn.style.display = 'none'; }
+            document.getElementById('umbrellaDetailModal').style.display = 'flex';
+        }
+
+        function openBrokenDetailModal(row) {
+            document.getElementById('u-name-title').innerText = `파손 신고 상세 정보`;
+            document.getElementById('u-id').innerText = row.student_id;
+            document.getElementById('u-umbrella').innerText = `${row.umbrella_number || '-'}번`;
+            document.getElementById('u-rent-date').innerText = formatFullDate(row.rent_date);
+            
+            document.getElementById('delete-umbrella-btn').onclick = async () => {
+                if(confirm("삭제할까요?")) { await db.from('umbrella_rentals').delete().eq('id', row.id); document.getElementById('umbrellaDetailModal').style.display = 'none'; fetchBroken(); }
+            };
+
+            const manualBtn = document.getElementById('manual-return-btn');
+            manualBtn.style.display = 'block'; manualBtn.style.background = 'var(--dark)'; manualBtn.innerHTML = '수리 완료 (파손 해제)';
+            manualBtn.onclick = async () => {
+                if(confirm("수리가 완료되었나요?")) { await db.from('umbrella_rentals').delete().eq('id', row.id); document.getElementById('umbrellaDetailModal').style.display = 'none'; fetchBroken(); }
+            };
+            document.getElementById('umbrellaDetailModal').style.display = 'flex';
+        }
+
+        async function executeReturn(isDamaged) {
+            document.getElementById('damageModal').style.display = 'none';
+            if (!pendingReturnData) return;
+            const { id, student_id, student_name, phone_number, umbrella_number } = pendingReturnData;
+            try {
+                await db.from('umbrella_rentals').update({ status: '반납완료', return_date: new Date().toISOString() }).eq('id', id);
+                if (isDamaged) {
+                    await db.from('umbrella_rentals').insert([{ student_id, student_name, phone_number, umbrella_number, status: '파손', rent_date: new Date().toISOString() }]);
+                    alert(`${umbrella_number}번 파손 처리 완료.`);
+                } else { alert('정상 반납 처리 완료.'); }
+            } catch (err) {} finally { pendingReturnData = null; fetchRentals(); }
+        }
+
+        async function executePDF(type) {
+            const btn = type === 'public' ? document.getElementById('btn-pdf-public') : document.getElementById('btn-pdf-admin');
+            const originalText = btn.innerHTML; btn.innerHTML = 'PDF 생성 중...'; btn.style.pointerEvents = 'none';
+            const isPublic = (type === 'public');
+            const { data } = await db.from('umbrella_rentals').select('*').eq('status', '대여중').order('rent_date', { ascending: true });
+            if (!data || data.length === 0) { alert('미반납자가 없습니다.'); btn.innerHTML = originalText; btn.style.pointerEvents = 'auto'; return; }
+
+            const container = document.createElement('div'); container.style.padding = '30px'; container.style.fontFamily = "'Pretendard', sans-serif";
+            let tableHTML = `<h2 style="text-align:center;">양심우산 미반납자 명단</h2><table style="width:100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background-color:#f1f5f9;"><th style="border:1px solid #cbd5e1; padding:12px;">${isPublic ? '학년' : '학번'}</th><th style="border:1px solid #cbd5e1; padding:12px;">이름</th><th style="border:1px solid #cbd5e1; padding:12px;">우산번호</th></tr></thead><tbody>`;
+
+            data.forEach(row => {
+                let dName = (row.student_name || '').trim(); let dId = row.student_id;
+                if (isPublic) {
+                    if (dName.length === 2) dName = dName.charAt(0) + '*';
+                    else if (dName.length === 3) dName = dName.charAt(0) + '*' + dName.charAt(2);
+                    if (String(dId).length === 4) dId = String(dId).charAt(0) + '학년'; else dId = '비공개'; 
+                }
+                tableHTML += `<tr style="text-align:center;"><td style="border:1px solid #cbd5e1; padding:10px;">${dId}</td><td style="border:1px solid #cbd5e1; padding:10px;">${dName}</td><td style="border:1px solid #cbd5e1; padding:10px; font-weight:bold; color:#3b82f6;">${row.umbrella_number || '-'}</td></tr>`;
+            });
+            tableHTML += `</tbody></table>`;
+            container.innerHTML = tableHTML;
+
+            html2pdf().set({ margin: 15, filename: `양심우산_${new Date().toISOString().slice(0,10)}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container).save().then(() => {
+                btn.innerHTML = originalText; btn.style.pointerEvents = 'auto'; document.getElementById('pdfModal').style.display = 'none'; 
+            });
+        }
+
+        /* 💡 4. 게시물, 행사, 분실물 로드 함수 (이름 오타 수정하여 완벽 복구) */
         async function loadAdminBoard(type) {
             const list = document.getElementById(`admin-${type}-list`); list.innerHTML = '로딩 중...';
             const { data } = await db.from('board_posts').select('*').eq('board_type', type).order('created_at', { ascending: false });
             if(!data || data.length === 0) { list.innerHTML = '<p style="text-align:center; color:#86868b;">글이 없습니다.</p>'; return; }
-            list.innerHTML = data.map(p => `<div class="list-item"><h4>${p.title}</h4><p>${p.author}</p></div>`).join('');
+            list.innerHTML = data.map(p => {
+                let content = p.content;
+                if (type === 'study') { try { content = JSON.parse(p.content).text; } catch(e){} }
+                return `<div class="list-item"><h4>${p.title}</h4><p>${content}</p><div class="action-btns"><button class="btn-action btn-danger-soft" onclick="deletePost(${p.id}, '${type}')">삭제</button></div></div>`;
+            }).join('');
         }
+        async function deletePost(id, type) { if(confirm("영구 삭제할까요?")) { await db.from('board_posts').delete().eq('id', id); loadAdminBoard(type); } }
+
+        async function loadAdminCouncilEvents() {
+            const list = document.getElementById('admin-council-list'); list.innerHTML = '로딩 중...';
+            const { data } = await db.from('student_council_events').select('*').order('created_at', { ascending: false });
+            if(!data || data.length === 0) { list.innerHTML = '<p style="text-align:center; color:#86868b;">행사가 없습니다.</p>'; return; }
+            list.innerHTML = data.map(ev => `<div class="list-item"><h4>${ev.title}</h4><p>${ev.event_period}</p><div class="action-btns"><button class="btn-action btn-danger-soft" onclick="deleteCouncilEvent(${ev.id})">종료(삭제)</button></div></div>`).join('');
+        }
+        async function deleteCouncilEvent(id) { if(confirm("종료할까요?")) { await db.from('student_council_events').delete().eq('id', id); loadAdminCouncilEvents(); } }
+
+        async function loadAdminLost() {
+            const list = document.getElementById('admin-lost-list'); list.innerHTML = '로딩 중...';
+            const { data } = await db.from('lost_and_found').select('*').order('created_at', { ascending: false });
+            if(!data || data.length === 0) { list.innerHTML = '<p style="text-align:center; color:#86868b;">분실물이 없습니다.</p>'; return; }
+            list.innerHTML = data.map(item => `<div class="list-item"><h4>${item.item_name}</h4><p>발견: ${item.found_location}</p><div class="action-btns"><button class="btn-action btn-success-soft" onclick="deleteLost(${item.id})">주인 찾음</button></div></div>`).join('');
+        }
+        async function deleteLost(id) { if(confirm("전달 완료하셨나요?")) { await db.from('lost_and_found').delete().eq('id', id); loadAdminLost(); } }
 
         loadSettings();
     </script>
