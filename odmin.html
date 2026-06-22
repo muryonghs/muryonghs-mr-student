@@ -232,6 +232,7 @@
             <input type="text" id="ev-title" class="input-box" placeholder="행사 이름 (예: 무룡제, 체육대회)">
             <input type="text" id="ev-dept" class="input-box" placeholder="주최 부서 (예: 학생회 기획부)">
             <input type="text" id="ev-period" class="input-box" placeholder="행사 기간 (예: 10/24(목) ~ 10/25(금))">
+            <input type="text" id="ev-place" class="input-box" placeholder="행사 장소 (선택 사항)">
             <input type="text" id="ev-apply-period" class="input-box" placeholder="신청 기간 (선택 사항)">
             <input type="url" id="ev-apply-url" class="input-box" placeholder="신청 링크 (구글폼 등 / 선택 사항)">
             <label style="font-size:0.85rem; font-weight:bold; color:#555; margin-bottom:5px; display:block;">행사 포스터 (사진)</label>
@@ -273,7 +274,6 @@
         <div id="admin-suggestion-list">불러오는 중...</div>
     </div>
 
-    <!-- 디스플레이 설정 모달 -->
     <div class="modal fade" id="displayModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius: 20px; border: none;">
@@ -633,6 +633,7 @@
                     let sId = dataObj.student_id ? dataObj.student_id : (dataObj.id ? dataObj.id : dataObj);
                     let sName = dataObj.student_name || "알수없음";
                     let sPhone = dataObj.phone_number || "";
+                    let passType = dataObj.type || "auto"; 
                     
                     const { data: activeRentals } = await db.from('umbrella_rentals')
                         .select('*')
@@ -641,50 +642,41 @@
 
                     if (activeRentals && activeRentals.length > 0) {
                         const active = activeRentals[0];
-                        
+                        if (passType === 'rent') {
+                            alert(`⚠️ 이미 우산(${active.umbrella_number}번)을 대여 중입니다.`);
+                            return;
+                        }
                         if (active.student_name !== sName && sName !== "알수없음") {
                             alert(`⚠️ 주의: QR코드의 이름(${sName})과 대여 기록의 이름(${active.student_name})이 일치하지 않습니다.`);
                         }
-
-                        if (confirm(`[${active.student_name} - ${active.student_id}] 학생이 대여 중인 ${active.umbrella_number}번 우산을 즉시 정상 반납 처리하시겠습니까?\n(우산이 파손된 경우 '취소'를 누르고 상세 내역에서 파손 처리를 진행하세요)`)) {
-                            await db.from('umbrella_rentals').update({ status: '반납완료', return_date: new Date().toISOString() }).eq('id', active.id);
-                            alert("정상 반납 처리되었습니다.");
-                            fetchRentals();
-                        }
+                        pendingReturnData = active;
+                        document.getElementById('d-student-name').innerText = active.student_name;
+                        document.getElementById('d-umbrella-num').innerText = active.umbrella_number;
+                        document.getElementById('damageModal').style.display = 'flex';
                     } else {
+                        if (passType === 'return') {
+                            alert(`⚠️ 대여 중인 우산이 없습니다.`);
+                            return;
+                        }
                         let uNum = prompt(`[${sName} - ${sId}] 학생에게 대여할 우산 번호를 입력하세요.`);
                         if (uNum) {
-                            await db.from('umbrella_rentals').insert([{
-                                student_id: sId,
-                                student_name: sName,
-                                phone_number: sPhone,
-                                umbrella_number: uNum,
-                                status: '대여중',
-                                rent_date: new Date().toISOString()
-                            }]);
-                            alert(`${uNum}번 우산이 성공적으로 대여되었습니다.`);
+                            const { data: dupCheck } = await db.from('umbrella_rentals').select('id').eq('umbrella_number', uNum).eq('status', '대여중');
+                            if (dupCheck && dupCheck.length > 0) { alert(`⚠️ ${uNum}번 우산은 현재 대여 중입니다.`); return; }
+                            await db.from('umbrella_rentals').insert([{ student_id: sId, student_name: sName, phone_number: sPhone, umbrella_number: uNum, status: '대여중', rent_date: new Date().toISOString() }]);
+                            alert(`${uNum}번 우산 대여 완료.`);
                             fetchRentals();
                         }
                     }
-                } else {
-                    alert("스캔 결과: " + decodedText);
                 }
-            } catch(err) {
-                alert("QR 스캔 처리 중 오류: " + err.message);
-            }
+            } catch(err) { alert("QR 스캔 처리 중 오류: " + err.message); }
         }
 
         /* --- 시설예약 로직 --- */
         function updateBlockButtonUI() {
             const btn = document.getElementById('block-btn');
             if (!btn) return;
-            if (isBookingBlocked) { 
-                btn.innerText = "예약 재개"; 
-                btn.style.background = "#34c759"; 
-            } else { 
-                btn.innerText = "전체 차단"; 
-                btn.style.background = "#ef4444"; 
-            }
+            if (isBookingBlocked) { btn.innerText = "예약 재개"; btn.style.background = "#34c759"; } 
+            else { btn.innerText = "전체 차단"; btn.style.background = "#ef4444"; }
         }
         async function toggleBookingBlock() {
             if (!confirm(isBookingBlocked ? "예약을 활성화할까요?" : "새로운 예약을 차단할까요?")) return;
@@ -1000,7 +992,7 @@
             const list = document.getElementById('admin-council-list'); list.innerHTML = '로딩 중...';
             const { data } = await db.from('student_council_events').select('*').order('created_at', { ascending: false });
             if(!data || data.length === 0) { list.innerHTML = '<p style="text-align:center; color:#86868b;">행사가 없습니다.</p>'; return; }
-            list.innerHTML = data.map(ev => `<div class="list-item"><h4>${ev.title}</h4><p>${ev.event_period}</p><div class="action-btns"><button class="btn-action btn-danger-soft" onclick="deleteCouncilEvent(${ev.id})">종료(삭제)</button></div></div>`).join('');
+            list.innerHTML = data.map(ev => `<div class="list-item"><h4>${ev.title}</h4><p>${ev.event_period}</p><p style="font-size:0.8rem; color:#86868b;">장소: ${ev.place || '미정'}</p><div class="action-btns"><button class="btn-action btn-danger-soft" onclick="deleteCouncilEvent(${ev.id})">종료(삭제)</button></div></div>`).join('');
         }
         async function deleteCouncilEvent(id) { if(confirm("종료할까요?")) { await db.from('student_council_events').delete().eq('id', id); loadAdminCouncilEvents(); } }
 
@@ -1008,6 +1000,7 @@
             const title = document.getElementById('ev-title').value;
             const dept = document.getElementById('ev-dept').value;
             const period = document.getElementById('ev-period').value;
+            const place = document.getElementById('ev-place').value; // 추가
             const applyPeriod = document.getElementById('ev-apply-period').value;
             const applyUrl = document.getElementById('ev-apply-url').value;
             const fileInput = document.getElementById('ev-poster');
@@ -1032,14 +1025,15 @@
                 posterUrl = data.publicUrl;
             }
 
-            const { error } = await db.from('student_council_events').insert([{ title: title, department: dept, event_period: period, apply_period: applyPeriod, apply_url: applyUrl, poster_url: posterUrl }]);
+            const { error } = await db.from('student_council_events').insert([{ title: title, department: dept, event_period: period, place: place, apply_period: applyPeriod, apply_url: applyUrl, poster_url: posterUrl }]);
             btn.innerText = originalText; btn.disabled = false;
             
             if(!error) {
                 alert("행사 등록 성공!");
                 document.getElementById('ev-title').value = ''; document.getElementById('ev-dept').value = '';
-                document.getElementById('ev-period').value = ''; document.getElementById('ev-apply-period').value = '';
-                document.getElementById('ev-apply-url').value = ''; fileInput.value = '';
+                document.getElementById('ev-period').value = ''; document.getElementById('ev-place').value = '';
+                document.getElementById('ev-apply-period').value = ''; document.getElementById('ev-apply-url').value = '';
+                fileInput.value = '';
                 loadAdminCouncilEvents();
             }
         }
