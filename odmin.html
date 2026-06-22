@@ -75,7 +75,7 @@
         /* 급식실 폰트 큼직하게 유지 */
         .status-val { font-size: 2.2rem; font-weight: 900; color: #3b82f6; margin-bottom: 15px; text-align: center; }
         .wait-display-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 15px; }
-        .active-timer { font-size: 3.5rem; font-weight: 900; color: #2563eb; line-height: 1; }
+        .active-timer { font-size: 3.5rem; font-weight: 900; color: #2563eb; line-height: 1; transition: 0.2s;}
 
         /* 모달 스타일 공통 */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;}
@@ -134,7 +134,7 @@
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 <button class="btn-main btn-blue" onclick="updateIdx('next')">다음 학년/상태 호출</button>
                 <button class="btn-main btn-gray" onclick="updateIdx('reset')">순서 초기화 (배식 전)</button>
-                <button class="btn-main btn-outline-danger" onclick="updateIdx('close')">오늘 미운영 설정</button>
+                <button class="btn-main btn-outline-danger" onclick="updateIdx('close')">미운영</button>
             </div>
 
             <hr style="border:0; border-top:1px dashed #cbd5e1; margin: 25px 0;">
@@ -181,7 +181,7 @@
         <div class="card" style="background: #f0f8ff; border: 1px solid #cce5ff; text-align:center;">
             <h3 style="margin-top:0; font-size:1.2rem; font-weight:800;">우산 대여/반납 스캐너</h3>
             <p style="font-size:0.85rem; color:#555; margin-bottom:15px;">학생이 생성한 우산 전용 QR코드를 스캔하세요.</p>
-            <button class="btn-main btn-blue" onclick="startScanner()">📷 스캐너 열기</button>
+            <button class="btn-main btn-blue" onclick="startScanner()">스캐너 열기</button>
         </div>
         
         <div class="list-header">
@@ -212,7 +212,7 @@
         <div class="card" style="background: #fdf5e6; border: 1px solid #ffeeba; text-align:center;">
             <h3 style="margin-top:0; font-size:1.2rem; font-weight:800;">예약 승인 확인 스캐너</h3>
             <p style="font-size:0.85rem; color:#555; margin-bottom:15px;">승인 완료된 예약 QR 패스를 스캔하여 사용처리합니다.</p>
-            <button class="btn-main" style="background:#ff9500;" onclick="startScanner()">📷 QR 스캔하기</button>
+            <button class="btn-main" style="background:#ff9500;" onclick="startScanner()">QR 스캔하기</button>
         </div>
 
         <div class="list-header mt-4">
@@ -235,7 +235,7 @@
             <input type="url" id="ev-apply-url" class="input-box" placeholder="신청 링크 (구글폼 등 / 선택 사항)">
             <label style="font-size:0.85rem; font-weight:bold; color:#555; margin-bottom:5px; display:block;">행사 포스터 (사진)</label>
             <input type="file" id="ev-poster" class="input-box" accept="image/*" style="padding:10px; background:white;">
-            <button class="btn-main btn-dark" onclick="submitCouncilEvent()">행사 등록하기</button>
+            <button class="btn-main btn-dark" id="btn-submit-council" onclick="submitCouncilEvent()">행사 등록하기</button>
         </div>
 
         <div class="list-header mt-4"><h3>🎉 진행중인 행사 목록</h3></div>
@@ -258,7 +258,7 @@
             <input type="text" id="lf-pickup" class="input-box" placeholder="찾아가는 곳 (예: 2학년 교무실 홍길동 선생님)">
             <label style="font-size:0.85rem; font-weight:bold; color:#555; margin-bottom:5px; display:block;">사진 첨부 (선택)</label>
             <input type="file" id="lf-photo" class="input-box" accept="image/*" style="padding:10px; background:white;">
-            <button class="btn-main btn-blue" onclick="submitLostItem()">분실물 등록하기</button>
+            <button class="btn-main btn-blue" id="btn-submit-lost" onclick="submitLostItem()">분실물 등록하기</button>
         </div>
 
         <div class="list-header mt-4"><h3>🔍 등록된 분실물</h3></div>
@@ -495,24 +495,23 @@
         function updateAdminWaitTimeUI(waitMin, setAtStr) {
             liveWaitMin = waitMin || 0; liveSetAt = setAtStr; const display = document.getElementById('activeTimerDisplay');
             if (adminWaitInterval) clearInterval(adminWaitInterval);
-            if (!liveWaitMin || liveWaitMin <= 0 || !liveSetAt) { display.innerText = "타이머 꺼짐"; display.style.color = "#94a3b8"; return; }
-            display.style.color = "#2563eb"; 
+            if (!liveWaitMin || liveWaitMin <= 0 || !liveSetAt) { display.innerText = "타이머 꺼짐"; display.style.color = "#94a3b8"; display.style.fontSize = "1.8rem"; return; }
+            display.style.color = "#2563eb"; display.style.fontSize = "3.5rem";
             adminWaitInterval = setInterval(() => {
                 const diffSec = Math.floor((new Date() - new Date(liveSetAt)) / 1000); 
                 const remainingSec = (liveWaitMin * 60) - diffSec;
-                if (remainingSec <= 0) { display.innerText = "타이머 꺼짐"; display.style.color = "#94a3b8"; clearInterval(adminWaitInterval); } 
+                if (remainingSec <= 0) { display.innerText = "타이머 꺼짐"; display.style.color = "#94a3b8"; display.style.fontSize = "1.8rem"; clearInterval(adminWaitInterval); } 
                 else { display.innerText = `${String(Math.floor(remainingSec / 60)).padStart(2, '0')}:${String(remainingSec % 60).padStart(2, '0')}`; }
             }, 1000);
         }
         
-        // 💡 딜레이 없이 누르는 즉시 UI 업데이트 되게 수정
         async function updateIdx(type) {
             let nextIdx = currentIdx;
             if(type === 'next' && nextIdx < 4) nextIdx++; 
             else if(type === 'reset') { if(!confirm("순서를 초기화하시겠습니까?")) return; nextIdx = 0; } 
             else if (type === 'close') { if(!confirm("오늘 급식을 '미운영'으로 설정하시겠습니까?")) return; nextIdx = 5; }
             
-            updateUI(nextIdx); // 즉시 화면에 반영
+            updateUI(nextIdx); 
             await db.from('lunch_status').update({ current_index: nextIdx, wait_minutes: 0 }).eq('id', 1); 
             resetWait();
         }
@@ -738,7 +737,7 @@
             });
         }
 
-        /* 💡 4. 게시물, 행사, 분실물 로드 함수 (이름 오타 수정하여 완벽 복구) */
+        /* 💡 4. 게시물, 행사, 분실물 로드 함수 및 등록 함수 추가 */
         async function loadAdminBoard(type) {
             const list = document.getElementById(`admin-${type}-list`); list.innerHTML = '로딩 중...';
             const { data } = await db.from('board_posts').select('*').eq('board_type', type).order('created_at', { ascending: false });
@@ -759,6 +758,47 @@
         }
         async function deleteCouncilEvent(id) { if(confirm("종료할까요?")) { await db.from('student_council_events').delete().eq('id', id); loadAdminCouncilEvents(); } }
 
+        /* 학생회 소식 등록 로직 */
+        async function submitCouncilEvent() {
+            const title = document.getElementById('ev-title').value;
+            const dept = document.getElementById('ev-dept').value;
+            const period = document.getElementById('ev-period').value;
+            const applyPeriod = document.getElementById('ev-apply-period').value;
+            const applyUrl = document.getElementById('ev-apply-url').value;
+            const fileInput = document.getElementById('ev-poster');
+
+            if(!title || !dept || !period) return alert("행사 이름, 주최 부서, 행사 기간은 필수 입력 사항입니다.");
+
+            const btn = document.getElementById('btn-submit-council');
+            const originalText = btn.innerText;
+            btn.innerText = "업로드중...";
+            btn.disabled = true;
+
+            let posterUrl = null;
+            if(fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const fileName = `${Date.now()}_${file.name}`;
+                const { error: uploadError } = await db.storage.from('event_posters').upload(fileName, file);
+                if(uploadError) {
+                    btn.innerText = originalText; btn.disabled = false;
+                    return alert("업로드 실패: " + uploadError.message);
+                }
+                const { data } = db.storage.from('event_posters').getPublicUrl(fileName);
+                posterUrl = data.publicUrl;
+            }
+
+            const { error } = await db.from('student_council_events').insert([{ title: title, department: dept, event_period: period, apply_period: applyPeriod, apply_url: applyUrl, poster_url: posterUrl }]);
+            btn.innerText = originalText; btn.disabled = false;
+            
+            if(!error) {
+                alert("행사 등록 성공!");
+                document.getElementById('ev-title').value = ''; document.getElementById('ev-dept').value = '';
+                document.getElementById('ev-period').value = ''; document.getElementById('ev-apply-period').value = '';
+                document.getElementById('ev-apply-url').value = ''; fileInput.value = '';
+                loadAdminCouncilEvents();
+            }
+        }
+
         async function loadAdminLost() {
             const list = document.getElementById('admin-lost-list'); list.innerHTML = '로딩 중...';
             const { data } = await db.from('lost_and_found').select('*').order('created_at', { ascending: false });
@@ -766,6 +806,44 @@
             list.innerHTML = data.map(item => `<div class="list-item"><h4>${item.item_name}</h4><p>발견: ${item.found_location}</p><div class="action-btns"><button class="btn-action btn-success-soft" onclick="deleteLost(${item.id})">주인 찾음</button></div></div>`).join('');
         }
         async function deleteLost(id) { if(confirm("전달 완료하셨나요?")) { await db.from('lost_and_found').delete().eq('id', id); loadAdminLost(); } }
+
+        /* 분실물 등록 로직 */
+        async function submitLostItem() {
+            const name = document.getElementById('lf-name').value;
+            const found = document.getElementById('lf-found').value;
+            const pickup = document.getElementById('lf-pickup').value;
+            const fileInput = document.getElementById('lf-photo');
+
+            if(!name || !found || !pickup) return alert("이름, 발견장소, 찾는곳을 모두 입력해주세요.");
+
+            const btn = document.getElementById('btn-submit-lost');
+            const originalText = btn.innerText;
+            btn.innerText = "업로드중...";
+            btn.disabled = true;
+
+            let photoUrl = null;
+            if(fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const fileName = `${Date.now()}_${file.name}`;
+                const { error: uploadError } = await db.storage.from('lost_found_photos').upload(fileName, file);
+                if(uploadError) {
+                    btn.innerText = originalText; btn.disabled = false;
+                    return alert("사진 업로드 실패: " + uploadError.message);
+                }
+                const { data } = db.storage.from('lost_found_photos').getPublicUrl(fileName);
+                photoUrl = data.publicUrl;
+            }
+
+            const { error } = await db.from('lost_and_found').insert([{ item_name: name, photo_url: photoUrl, found_location: found, pickup_location: pickup }]);
+            btn.innerText = originalText; btn.disabled = false;
+
+            if(!error) {
+                alert("분실물 등록 성공!");
+                document.getElementById('lf-name').value = ''; document.getElementById('lf-found').value = '';
+                document.getElementById('lf-pickup').value = ''; fileInput.value = '';
+                loadAdminLost();
+            }
+        }
 
         loadSettings();
     </script>
