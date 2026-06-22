@@ -285,7 +285,7 @@
               <div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-secondary fw-bold" style="border-radius:10px;" data-bs-dismiss="modal">취소</button><button type="button" class="btn btn-primary fw-bold" style="background-color: #0071e3; border: none; border-radius:10px;" onclick="submitReservation()">최종 신청</button></div></div>
             </div>
         </div>
-        <div class="modal fade" id="instaModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-light"><h5 class="modal-title fw-bold text-dark">📢 신청 완료</h5></div><div class="modal-body text-center py-4"><h4 class="fw-bold text-success mb-3">✅ 접수 완료</h4><p class="text-muted"><strong>학생회 인스타그램 DM</strong>을 보내주셔야 <strong>최종 승인</strong>됩니다.</p><a href="https://www.instagram.com/muryonghs_official" target="_blank" class="btn text-white fw-bold w-100 py-2 mt-2" style="background: linear-gradient(45deg, #f09433, #bc1888); border-radius: 10px;">인스타 바로가기</a></div><div class="modal-footer"><button type="button" class="btn btn-secondary w-100 fw-bold" data-bs-dismiss="modal" onclick="goPage('status')">확인 후 예약 현황으로 이동</button></div></div></div></div>
+        <div class="modal fade" id="instaModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-light"><h5 class="modal-title fw-bold text-dark">신청 완료</h5></div><div class="modal-body text-center py-4"><h4 class="fw-bold text-success mb-3">접수 완료</h4><p class="text-muted"><strong>학생회 인스타그램 DM</strong>으로 아래 메시지를 보내주셔야 <strong>최종 승인</strong>됩니다.<br><br><span style="background:#f1f5f9; padding:8px 12px; border-radius:8px; color:#1e293b; font-weight:bold; display:inline-block;">"시설예약했습니다. 확인부탁드립니다."</span></p><a href="https://www.instagram.com/muryonghs_official" target="_blank" class="btn text-white fw-bold w-100 py-2 mt-2" style="background: linear-gradient(45deg, #f09433, #bc1888); border-radius: 10px;">인스타 바로가기</a></div><div class="modal-footer"><button type="button" class="btn btn-secondary w-100 fw-bold" data-bs-dismiss="modal" onclick="goPage('status')">확인 후 예약 현황으로 이동</button></div></div></div></div>
     </div>
 
     <div id="page-status" class="page">
@@ -664,15 +664,15 @@
             if (!data || !data.length) { listDiv.innerHTML = '<p style="text-align:center; color:#86868b;">다가오는 일정이 없습니다.</p>'; return; } 
             
             listDiv.innerHTML = data.map(ev => `
-                <div class="list-item" style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="list-item" style="display:flex; justify-content:space-between; align-items:flex-start;">
                     <div style="flex:1; min-width:0; margin-right:10px;">
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <strong style="color:#0071e3; flex-shrink:0;">${ev.event_date.substring(5).replace('-','/')}</strong>
-                            <span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${ev.title}</span>
+                        <div style="display:flex; align-items:flex-start; gap:8px;">
+                            <strong style="color:#0071e3; flex-shrink:0; margin-top:2px;">${ev.event_date.substring(5).replace('-','/')}</strong>
+                            <span style="font-weight:bold; line-height:1.4; word-break:break-word;">${ev.title}</span>
                         </div>
-                        <div style="font-size:0.75rem; color:#86868b; margin-top:4px;">등록자: ${ev.author}</div>
+                        <div style="font-size:0.75rem; color:#86868b; margin-top:6px;">등록자: ${ev.author}</div>
                     </div>
-                    <div style="display:flex; gap:5px; flex-shrink:0;">
+                    <div style="display:flex; gap:5px; flex-shrink:0; align-items:center; margin-top:2px;">
                         <button onclick="editCalendarEvent(${ev.id}, '${ev.title.replace(/'/g, "\\'")}')" style="padding:6px 12px; font-size:0.75rem; border-radius:8px; border:1px solid #bfdbfe; background:#eff6ff; color:#0071e3; font-weight:700; cursor:pointer; white-space:nowrap;">수정</button>
                         <button onclick="deleteCalendarEvent(${ev.id})" style="padding:6px 12px; font-size:0.75rem; border-radius:8px; border:1px solid #fecaca; background:#fef2f2; color:#ef4444; font-weight:700; cursor:pointer; white-space:nowrap;">삭제</button>
                     </div>
@@ -810,7 +810,7 @@
             if(currentBoardType === 'study' && (!fileInput.files || fileInput.files.length === 0)) return alert("학습 자료 파일(PDF 등)을 첨부해주세요.");
             
             const originalBtnText = submitBtn.innerText;
-            submitBtn.innerText = currentBoardType === 'study' ? "⏳ 파일 업로드 중..." : "전송 중...";
+            submitBtn.innerText = "전송 중...";
             submitBtn.disabled = true;
 
             let uploadedFileUrl = null; 
