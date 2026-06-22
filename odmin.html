@@ -135,7 +135,7 @@
             </div>
             <div class="menu-item" style="grid-column: span 2; display: flex; align-items: center; background: #fffcf0;" onclick="goPage('suggestion')">
                 <div class="menu-icon" style="margin:0 15px 0 0;">💡</div>
-                <div><h3>건의함 관리</h3><p>학생들의 건의사항 열람 (작성자 확인)</p></div>
+                <div><h3>건의함 관리</h3><p>학생들의 건의사항 열람</p></div>
             </div>
         </div>
     </div>
@@ -229,8 +229,8 @@
         
         <div class="card" style="background: #f8fafc;">
             <h3 style="margin-top:0; font-size:1.2rem; font-weight:800;">새로운 행사 등록</h3>
-            <input type="text" id="ev-title" class="input-box" placeholder="행사 이름 (예: 농구 토너먼트, 체육대회)">
-            <input type="text" id="ev-dept" class="input-box" placeholder="주최 부서 (예: 총무부)">
+            <input type="text" id="ev-title" class="input-box" placeholder="행사 이름 (예: 무룡제, 체육대회)">
+            <input type="text" id="ev-dept" class="input-box" placeholder="주최 부서 (예: 학생회 기획부)">
             <input type="text" id="ev-period" class="input-box" placeholder="행사 기간 (예: 10/24(목) ~ 10/25(금))">
             <input type="text" id="ev-apply-period" class="input-box" placeholder="신청 기간 (선택 사항)">
             <input type="url" id="ev-apply-url" class="input-box" placeholder="신청 링크 (구글폼 등 / 선택 사항)">
@@ -273,6 +273,7 @@
         <div id="admin-suggestion-list">불러오는 중...</div>
     </div>
 
+    <!-- 디스플레이 설정 모달 -->
     <div class="modal fade" id="displayModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius: 20px; border: none;">
