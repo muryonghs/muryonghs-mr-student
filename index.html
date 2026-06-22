@@ -3,899 +3,1115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>무룡고 통합 포털</title>
+    <title>무룡고 통합 관리자</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* === 모든 요소가 화면을 벗어나지 않도록 방지 === */
+        /* === 공통 및 모바일 최적화 (어떤 기기든 동일하게) === */
         * { box-sizing: border-box; }
-
-        /* === 공통 SPA (화면 전환) 스타일 === */
-        body { font-family: 'Pretendard', sans-serif; background: #f5f5f7; margin: 0; padding: 0; overflow-x: hidden; }
+        :root { --bg: #f5f5f7; --text-main: #1d1d1f; --card: #ffffff; --primary: #0071e3; --danger: #ff3b30; --success: #34c759; --purple: #8b5cf6; --dark: #334155; }
+        
+        body { font-family: 'Pretendard', sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 0; padding-bottom: 30px; overflow-x: hidden; -webkit-text-size-adjust: 100%;}
+        
         .page { display: none !important; padding: 20px; max-width: 600px; margin: 0 auto; min-height: 100vh; animation: fadeIn 0.3s ease; }
         .page.active { display: block !important; }
-        #page-umbrella.active { display: flex !important; } 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .app-header { background: transparent; padding: 20px 0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .app-header h1 { margin: 0; font-size: 1.5rem; font-weight: 900; letter-spacing: -0.5px; }
         
-        /* === 제목 없는 깔끔한 상단 바 디자인 === */
-        .top-nav { display: flex; align-items: center; margin-bottom: 20px; padding-top: 10px; width: 100%; min-height: 45px; }
-        .back-btn { background: #e8f0fe; border: none; font-size: 0.95rem; color: #0071e3; cursor: pointer; padding: 10px 16px; border-radius: 12px; font-weight: 800; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 4px; }
-        .back-btn:active { transform: scale(0.95); background: #d2e3fc; }
-
-        /* === 홈 화면 특화 스타일 === */
-        #page-home .weather-badge { background: rgba(0, 113, 227, 0.1); color: #0071e3; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 700; display: inline-block; margin-bottom: 15px; }
-        #page-home .greeting { font-size: 1.7rem; font-weight: 800; line-height: 1.4; margin: 0 0 25px 0; letter-spacing: -0.5px; color: #1d1d1f;}
-        #page-home .greeting span { color: #0071e3; display: inline-block; white-space: nowrap; font-size: 1.4rem; letter-spacing: -0.5px; }
-        #page-home .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        #page-home .menu-item { background: #ffffff; border-radius: 20px; padding: 20px; text-decoration: none; color: #1d1d1f; box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer; transition: 0.2s; display:block; text-align: left; position: relative;}
-        #page-home .menu-item:active { transform: scale(0.96); }
-        #page-home .menu-item.wide { grid-column: span 2; display: flex; align-items: center; background: linear-gradient(135deg, #e3f2fd, #bbdefb); }
-        #page-home .menu-icon { font-size: 2rem; margin-bottom: 10px; }
-        #page-home .menu-item.wide .menu-icon { margin-bottom: 0; margin-right: 15px; font-size: 2.5rem; }
-        #page-home .menu-item h3 { margin: 0 0 5px 0; font-size: 1.05rem; font-weight: 800; }
-        #page-home .menu-item p { margin: 0; font-size: 0.8rem; color: #86868b; font-weight: 600; line-height: 1.4; }
-
-        /* === 배지 스타일 (운영중, NEW 등) - 카드 안으로 위치 변경 === */
-        .menu-badge { position: absolute; top: 15px; right: 15px; padding: 5px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 800; color: white; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1); line-height: 1; display: none; }
-        .badge-on { background: #34c759; }
-        .badge-off { background: #ff3b30; }
-        .badge-new { background: #ff9500; }
-
-        /* === 1. 급식실 === */
-        #page-lunch { background: #f1f5f9; color: #1e293b; max-width: 500px;}
-        #alertOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(239, 68, 68, 0.95); color: white; z-index: 9999; flex-direction: column; justify-content: center; align-items: center; text-align: center; cursor: pointer; }
-        .alert-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 10px; }
-        .alert-msg { font-size: 4rem; font-weight: 900; margin-bottom: 20px; }
-        .alert-hint { font-size: 1rem; opacity: 0.8; }
+        .top-nav { display: flex; align-items: center; margin-bottom: 25px; padding-top: 10px; width: 100%; min-height: 45px; }
+        .back-btn { background: #e8f0fe; border: none; font-size: 0.95rem; color: var(--primary); cursor: pointer; padding: 10px 16px; border-radius: 12px; font-weight: 800; transition: 0.2s; display: inline-flex; align-items: center; gap: 4px; }
         
-        #importantPopup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 10000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; opacity: 0; transition: opacity 0.5s ease-in-out; }
-        #page-lunch .important-content { background: white; width: 100%; max-width: 350px; padding: 30px 20px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        #page-lunch .notice-banner { display: none; background: #ef4444; color: white; padding: 18px; border-radius: 15px; text-align: center; font-size: 1.4rem; font-weight: 800; margin-bottom: 20px; box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3); }
-        #page-lunch .lunch-card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.8); }
-        #page-lunch .notice-card { background: #eff6ff; border: 1.5px solid #dbeafe; }
-        #page-lunch .notice-title { font-size: 0.95rem; font-weight: 800; color: #1e40af; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-        #page-lunch .notice-content { font-size: 1.05rem; line-height: 1.5; color: #1e3a8a; font-weight: 600; word-break: break-all; }
-        #page-lunch .queue-status { font-size: 2.2rem; text-align: center; font-weight: 900; color: #3b82f6; margin-bottom: 5px; }
-        #page-lunch .wait-box { display: none; margin-top: 20px; background: #f8fafc; border-radius: 16px; padding: 18px 20px; text-align: center; border: 1px solid #e2e8f0; }
-        #page-lunch .menu-content { text-align: center; line-height: 1.8; font-size: 1.15rem; background: #f8fafc; padding: 20px; border-radius: 15px; border: 1px solid #f1f5f9; color: #334155; }
-        #page-lunch textarea { width: 100%; height: 90px; padding: 15px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-family: inherit; resize: none; font-size: 1rem; box-sizing: border-box; }
-        #page-lunch button.lunch-btn { width:100%; background: #1e293b; color: white; padding: 16px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
-
-        /* === 2. 양심우산 === */
-        #page-umbrella { background-color: #F8F9FA; color: #343A40; flex-direction:column; align-items:center; }
-        #page-umbrella .umb-card { background: white; width: 100%; max-width: 400px; padding: 30px 20px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; margin-top: 10px; position: relative; overflow: hidden; }
-        #page-umbrella .tab-container { display: flex; background: #f1f5f9; border-radius: 12px; padding: 4px; margin-bottom: 25px; }
-        #page-umbrella .tab { flex: 1; padding: 12px; cursor: pointer; border-radius: 10px; font-weight: bold; color: #64748b; transition: all 0.3s ease; text-align:center;}
-        #page-umbrella .tab.active { background: white; color: #00B4D8; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        #page-umbrella .tab.active-return { background: white; color: #2B9348; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        #page-umbrella .form-group { margin-bottom: 15px; text-align: left; }
-        #page-umbrella input { width: 100%; padding: 14px; box-sizing: border-box; border: 1.5px solid #e2e8f0; border-radius: 12px; font-size: 15px; background: #fafafa; }
-        #page-umbrella button.umb-btn { width: 100%; padding: 16px; background: #00B4D8; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; margin-top: 10px; }
-        #page-umbrella button.umb-btn.btn-return { background: #2B9348; }
-        #page-umbrella #qr-container { margin-top: 30px; display: flex; flex-direction: column; align-items: center; min-height: 220px; justify-content: center; }
-        #page-umbrella #qr-image { display: none; width: 180px; height: 180px; border: 2px solid #f1f5f9; padding: 15px; border-radius: 20px; background: white; }
-        #page-umbrella #welcome-box { width: 100%; padding: 25px 15px; background: #f8fafc; border-radius: 16px; border: 2px dashed #cbd5e1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        #page-umbrella #success-msg { display: none; width: 100%; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-        #page-umbrella .modal-content { background: white; width: 100%; max-width: 380px; border-radius: 20px; padding: 25px; box-sizing: border-box; text-align: left; }
-
-        /* === 3. 시설예약 === */
-        #page-facility { background-color: #f0f2f5; max-width: 100%; padding-bottom: 50px;}
-        #page-facility .reservation-card { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
-        #page-facility .btn-primary { background-color: #004a99; border: none; padding: 12px; font-weight: bold; border-radius: 10px; }
-        #page-facility .notice-box { background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px; }
-        #page-facility .btn-main { width: 100%; background: #0071e3; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: 0.2s; margin-top: 10px; }
-        #page-facility .btn-main:active { transform: scale(0.98); }
-        #page-facility .btn-main:disabled { background: #86868b; cursor: not-allowed; }
-
-        /* 💡 운영 중단/예약 차단 시 덮어버리는 오버레이 (z-index 상향) */
-        .blocked-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); text-align: center; }
-        .blocked-icon { font-size: 3.5rem; margin-bottom: 15px; }
-        .blocked-text { font-size: 1.3rem; font-weight: 900; color: #1d1d1f; margin-bottom: 8px; }
-        .blocked-desc { font-size: 0.95rem; color: #ef4444; font-weight: 700; line-height: 1.5; padding: 0 20px; }
-
-        /* === 4. 추가 기능 공통 === */
-        .new-card { background: #ffffff; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; width: 100%; }
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #e5e5ea; width: 100%;}
+        .input-box { width: 100%; max-width: 100%; padding: 15px; border: 1px solid #e5e5ea; border-radius: 12px; font-size: 1rem; margin-bottom: 12px; font-family: inherit; background: #fbfbfd; display: block; resize: none; min-height: 52px; -webkit-appearance: none; appearance: none;}
         
-        .new-input { width: 100%; max-width: 100%; padding: 15px; border: 1.5px solid #e5e5ea; border-radius: 12px; font-size: 1rem; margin: 0 0 12px 0; background: #fbfbfd; font-family: inherit; box-sizing: border-box; display: block; min-height: 52px; }
-        input[type="date"].new-input { -webkit-appearance: none; appearance: none; overflow: hidden; background-color: #fbfbfd; }
-        
-        .new-btn { width: 100%; padding: 16px; background: #0071e3; color: white; border: none; border-radius: 14px; font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: background 0.2s ease; box-sizing: border-box;}
-        .new-btn:disabled { background: #86868b; cursor: not-allowed; }
-        .list-item { border-bottom: 1px solid #f5f5f7; padding: 15px 0; }
-        .list-item:last-child { border-bottom: none; }
-        
-        .lost-card { display: flex; gap: 15px; padding: 15px 0; border-bottom: 1px solid #e5e5ea; align-items: flex-start; }
-        .lost-img { width: 100px; height: 100px; border-radius: 12px; object-fit: cover; background: #e5e5ea; cursor: zoom-in; box-shadow: 0 2px 8px rgba(0,0,0,0.1); flex-shrink: 0; }
-        .lost-info h4 { font-size: 1.1rem; font-weight: 800; margin: 0 0 8px 0; color: #1d1d1f; }
-        .lost-info p { margin: 0 0 4px 0; font-size: 0.9rem; color: #555; display: flex; align-items: center; gap: 5px; }
-        
-        .event-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e5e5ea;}
-        .event-poster { width: 100%; height: auto; max-height: 400px; object-fit: contain; background: #f5f5f7; display: block; border-bottom: 1px solid #e5e5ea;}
-        .event-info { padding: 20px; }
-        .event-title { font-size: 1.2rem; font-weight: 800; color: #1d1d1f; margin: 0 0 10px 0; }
-        .event-meta { font-size: 0.9rem; color: #555; margin: 0 0 5px 0; display: flex; align-items: center; gap: 8px;}
-        .event-dept { display: inline-block; background: #f0f8ff; color: #0071e3; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; margin-bottom: 10px;}
-        .apply-btn { display: inline-block; width: 100%; text-align: center; background: #1d1d1f; color: white; padding: 12px; border-radius: 10px; font-weight: bold; text-decoration: none; margin-top: 15px; }
+        .btn-main { padding: 15px; border-radius: 14px; font-weight: 800; border: none; cursor: pointer; color: white; width: 100%; font-size: 1.05rem; transition: 0.2s; text-align: center; -webkit-appearance: none; appearance: none;}
+        .btn-blue { background: var(--primary); }
+        .btn-red { background: var(--danger); }
+        .btn-dark { background: #1d1d1f; }
+        .btn-gray { background: #e5e5ea; color: #1d1d1f; }
+        .btn-outline-danger { background: transparent; border: 1.5px solid var(--danger); color: var(--danger); }
 
-        .status-table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
-        .status-table th { border-bottom: 2px solid #e5e5ea; color: #86868b; font-weight: 600; font-size: 0.75rem; padding: 12px 4px; text-align: center; white-space: nowrap;}
-        .status-table td { border-bottom: 1px solid #f5f5f7; padding: 14px 4px; vertical-align: middle; text-align: center; font-size: 0.9rem; color: #1d1d1f; }
-        .badge { border-radius: 20px; padding: 6px 10px; font-weight: 600; font-size: 0.7rem; }
+        .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .list-header h3 { margin: 0; font-size: 1.2rem; font-weight: 800; color: #1d1d1f; white-space: nowrap;}
+        
+        .list-header-btns { display: flex; gap: 6px; align-items: center; overflow-x: auto; padding-bottom: 5px;}
+        .btn-sm-main, .btn-sm-manage { padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer; border: none; color: white; white-space: nowrap; flex-shrink: 0; -webkit-appearance: none; appearance: none;}
+        .btn-sm-main { background: var(--purple); }
+        .btn-sm-manage { background: var(--dark); }
+        
+        .list-item { display: flex; flex-direction: column; gap: 10px; padding: 15px; border-radius: 12px; margin-bottom: 12px; background: #fff; border: 1px solid #e5e5ea; box-shadow: 0 2px 8px rgba(0,0,0,0.02);}
+        .list-info h4 { margin: 0 0 5px 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
+        .list-info p { margin: 0; font-size: 0.9rem; color: #64748b; line-height: 1.5; word-break: break-all;}
+        .action-btns { display: flex; gap: 8px; justify-content: flex-end; width: 100%; border-top: 1px solid #f5f5f7; padding-top: 12px; margin-top: 5px;}
+        .btn-action { font-size: 0.85rem; font-weight: 800; padding: 10px 16px; border-radius: 10px; border: none; cursor: pointer; transition: 0.2s; white-space: nowrap;}
+        .btn-danger-soft { background: #fee2e2; color: var(--danger); }
+        .btn-success-soft { background: #dcfce7; color: var(--success); }
+        
+        .list-item-row { display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 15px; border-radius: 12px; margin-bottom: 10px; background: #fff; border: 1px solid #e5e5ea; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .list-item-row .info-col { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; padding-right: 10px;}
+        .list-item-row h4 { margin: 0; font-size: 1rem; font-weight: 800; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .list-item-row p { margin: 0; font-size: 0.85rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .list-item-row .action-btns { display: flex; border: none; padding: 0; margin: 0; width: auto; flex-shrink: 0; }
+
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .menu-item { background: #ffffff; border-radius: 20px; padding: 20px; text-decoration: none; color: #1d1d1f; box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer; transition: 0.2s; display:block; text-align: left; border: 1px solid #f1f5f9;}
+        .menu-item:active { transform: scale(0.96); }
+        .menu-icon { font-size: 2.2rem; margin-bottom: 12px; }
+        .menu-item h3 { margin: 0 0 5px 0; font-size: 1.1rem; font-weight: 800; }
+        .menu-item p { margin: 0; font-size: 0.8rem; color: #86868b; font-weight: 600; line-height: 1.4; }
+
+        .badge { border-radius: 20px; padding: 4px 10px; font-weight: 800; font-size: 0.75rem; }
         .badge-pending { background: #fdf0cd; color: #9c6500; }
         .badge-approved { background: #e3f5eb; color: #196a3e; }
         .badge-standby { background: #e5f0ff; color: #004a99; }
         .badge-rejected { background: #fce8e6; color: #c92a2a; }
         .badge-cancelled { background: #f2f2f7; color: #86868b; }
         .badge-blocked { background: #3a3a3c; color: #ffffff; }
-        .badge-used { background: #0071e3; color: #ffffff; }
+        .badge-used { background: var(--primary); color: #ffffff; }
         .badge-priority { background: #ffefed; color: #ff3b30; border: 1px solid #ffcecb; }
+
+        .reserve-card { background: #ffffff; border-radius: 16px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; cursor: pointer; transition: transform 0.2s; display: flex; flex-direction: column; gap: 8px;}
+        .reserve-card:active { transform: scale(0.98); }
+        .reserve-card .top-row { display: flex; justify-content: space-between; align-items: center; }
+
+        .rental-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid #e5e5ea; box-shadow: 0 2px 8px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; }
+        .rental-card:active { transform: scale(0.98); }
+        .rental-card .r-left { display: flex; align-items: center; gap: 12px; }
+        .rental-card .r-info { display: flex; flex-direction: column; gap: 4px; }
+        .rental-card .r-name { font-size: 1.05rem; font-weight: 800; color: #1d1d1f; display: flex; align-items: center; gap: 6px;}
+        .rental-card .r-id { font-size: 0.85rem; font-weight: 600; color: #64748b; }
+        .rental-card .r-date { font-size: 0.75rem; color: #94a3b8; font-weight: 500;}
+        .rental-card .r-right { text-align: right; }
+        .rental-card .umb-num { font-size: 1.3rem; font-weight: 900; color: var(--primary); }
+        
+        .umb-badge { font-size: 0.75rem; font-weight: 800; padding: 4px 8px; border-radius: 8px; white-space: nowrap; }
+        .umb-badge.rent { background: #fee2e2; color: #ef4444; }
+        .umb-badge.return { background: #dcfce7; color: #22c55e; }
+        .umb-badge.broken { background: #f1f5f9; color: #475569; }
+
+        .status-val { font-size: 2.2rem; font-weight: 900; color: #3b82f6; margin-bottom: 15px; text-align: center; }
+        .wait-display-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 15px; }
+        .active-timer { font-size: 3.5rem; font-weight: 900; color: #2563eb; line-height: 1; transition: 0.2s;}
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;}
+        .modal-content { background: white; width: 100%; max-width: 400px; border-radius: 24px; padding: 25px; max-height: 90vh; overflow-y: auto; position: relative;}
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #f1f5f9; }
+        .modal-header h3 { margin: 0; font-size: 1.2rem; font-weight: 800; }
+        .close-btn { background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 16px; font-weight: bold; color: #64748b; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="page-home" class="page active">
-        <div class="weather-badge" id="weather">🌤 날씨 로딩중...</div>
-        <h1 class="greeting" id="greeting">무룡고 학생 여러분,<br><span>오늘도 즐거운 하루 보내세요!</span></h1>
-        
+        <header class="app-header">
+            <h1>무룡고 통합 관리자</h1>
+        </header>
+
         <div class="menu-grid">
-            <div class="menu-item wide" onclick="goPage('lunch')">
-                <div class="menu-icon">🍱</div><div><h3>실시간 급식실</h3><p>현재 배식 현황 및 식단표</p></div>
+            <div class="menu-item" onclick="goPage('lunch')">
+                <div class="menu-icon">🍱</div><h3>급식실 제어</h3><p>배식 순서 및 알림</p>
             </div>
             <div class="menu-item" onclick="goPage('umbrella')">
-                <div id="badge-umbrella" class="menu-badge"></div>
-                <div class="menu-icon">☔️</div><h3>양심우산</h3><p>대여 및 반납</p>
+                <div class="menu-icon">☔️</div><h3>양심우산</h3><p>목록 관리 및 출력</p>
             </div>
             <div class="menu-item" onclick="goPage('facility')">
-                <div id="badge-facility" class="menu-badge"></div>
-                <div class="menu-icon">🏟️</div><h3>시설예약</h3><p>더하우스, 풋살장 등</p>
-            </div>
-            <div class="menu-item" onclick="window.open('https://school.use.go.kr/muryong-h/M010301/', '_blank')">
-                <div class="menu-icon">📢</div><h3>학교 공지</h3><p>공식 홈페이지 이동</p>
+                <div class="menu-icon">🏟️</div><h3>시설예약</h3><p>승인 및 전체 제어</p>
             </div>
             <div class="menu-item" onclick="goPage('council')">
-                <div id="badge-council" class="menu-badge badge-new">NEW</div>
-                <div class="menu-icon">🎉</div><h3>학생회 소식</h3><p>행사 및 안내</p>
+                <div class="menu-icon">🎉</div><h3>학생회 행사</h3><p>행사 등록 및 관리</p>
             </div>
-            <div class="menu-item" onclick="goPage('calendar')">
-                <div class="menu-icon">📅</div><h3>학사/우리반 일정</h3><p>학교 및 반 일정 확인</p>
-            </div>
-            <div class="menu-item" onclick="goBoard('study', '학습자료실')">
-                <div id="badge-study" class="menu-badge badge-new">NEW</div>
-                <div class="menu-icon">📚</div><h3>학습자료실</h3><p>자료 업로드 및 다운</p>
+            <div class="menu-item" onclick="goPage('study')">
+                <div class="menu-icon">📚</div><h3>학습자료실</h3><p>자료실 글 삭제 관리</p>
             </div>
             <div class="menu-item" onclick="goPage('lost')">
-                <div id="badge-lost" class="menu-badge badge-new">NEW</div>
-                <div class="menu-icon">🔍</div><h3>분실물</h3><p>주인 잃은 물건 찾기</p>
+                <div class="menu-icon">🔍</div><h3>분실물 센터</h3><p>분실물 등록 및 관리</p>
             </div>
-            <div class="menu-item" onclick="goBoard('suggestion', '건의함')">
-                <div class="menu-icon">💡</div><h3>건의함</h3><p>더 나은 무룡고를 위해</p>
+            <div class="menu-item" style="grid-column: span 2; display: flex; align-items: center; background: #fffcf0;" onclick="goPage('suggestion')">
+                <div class="menu-icon" style="margin:0 15px 0 0;">💡</div>
+                <div><h3>건의함 관리</h3><p>학생들의 건의사항 열람</p></div>
             </div>
         </div>
     </div>
 
     <div id="page-lunch" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
-        <div id="alertOverlay" onclick="closeAlert()">
-            <div class="alert-title">지금 즉시 급식실로 내려오세요!</div>
-            <div id="alertGrade" class="alert-msg">O학년</div>
-            <div class="alert-hint">터치하면 닫힙니다</div>
-        </div>
-        <div id="importantPopup"><div class="important-content"><h2 style="margin: 0 0 15px 0; color: #e11d48; font-size: 1.3rem; font-weight: 900;">🚨 중요 공지사항</h2><div id="importantPopupText"></div></div></div>
         
-        <div id="noticeBanner" class="notice-banner"><span id="targetGrade">O학년</span> 학생들은<br>지금 즉시 급식실로 내려오세요!</div>
-        <div class="lunch-card notice-card"><div class="notice-title">📢 알림판</div><div id="realNotice" class="notice-content">불러오는 중...</div></div>
-        <div class="lunch-card">
-            <span class="status-header" style="font-size: 0.95rem; color: #64748b; font-weight: 600; margin-bottom: 10px; display: block; text-align: center;">현재 배식 중인 학년</span>
-            <div class="queue-status" id="studentQueue">데이터 연결 중...</div>
-            <div id="subStatus" style="font-size: 0.9rem; color: #ef4444; font-weight: 700; text-align: center; margin-top: -5px; margin-bottom: 15px; display: none;">오늘은 급식 호출을 진행하지 않습니다</div>
-            <div id="waitTimeBox" class="wait-box"><div class="wait-time-text" style="font-size: 1.3rem; font-weight: 800; color: #2563eb; margin-bottom: 8px;">다음 호출 예상시간 <span id="displayTime" style="font-size: 1.6rem; font-weight: 900;">00:00</span></div><div class="wait-notice" style="font-size: 0.8rem; color: #64748b; font-weight: 600;">※ 안내된 시간은 다를 수 있습니다.</div></div>
+        <div class="card">
+            <h3 class="mb-3" style="font-size:1.2rem; font-weight:800;">배식 순서 제어</h3>
+            <div class="status-val" id="curGrade">데이터 연결 중...</div>
+            <div id="subStatus" style="font-size:0.95rem; color:#ef4444; margin-top:-10px; margin-bottom:15px; font-weight:800; display:none; text-align:center;">오늘은 급식 호출 미운영</div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn-main btn-blue" onclick="updateIdx('next')">다음 학년/상태 호출</button>
+                <button class="btn-main btn-gray" onclick="updateIdx('reset')">순서 초기화 (배식 전)</button>
+                <button class="btn-main btn-outline-danger" onclick="updateIdx('close')">미운영</button>
+            </div>
+
+            <hr style="border:0; border-top:1px dashed #cbd5e1; margin: 25px 0;">
+            
+            <h3 class="mb-3" style="font-size:1.1rem; font-weight:800;">다음 호출 타이머</h3>
+            <div class="wait-display-box">
+                <span style="font-size: 0.85rem; color: #64748b; font-weight: 700; display: block;">진행 중인 타이머</span>
+                <div id="activeTimerDisplay" class="active-timer">타이머 꺼짐</div>
+                <hr style="border:0; border-top:1px solid #e2e8f0; margin: 15px 0;">
+                <span style="font-size: 0.85rem; color: #64748b; font-weight: 700; display: block;">추가/설정할 시간</span>
+                <div><span id="tempWaitDisplay" style="font-size: 1.8rem; font-weight: 900; color: #475569;">0</span> 분</div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <button class="btn-main btn-gray" style="padding:10px;" onclick="addWait(1)">+1분</button>
+                <button class="btn-main btn-gray" style="padding:10px;" onclick="addWait(5)">+5분</button>
+                <button class="btn-main btn-gray" style="padding:10px;" onclick="addWait(10)">+10분</button>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-main btn-gray" style="flex: 1; padding:10px;" onclick="resetWait()">0분 (끄기)</button>
+                <button class="btn-main btn-dark" style="flex: 1; padding:10px;" onclick="sendWaitTime()">적용하기</button>
+            </div>
         </div>
-        <div class="lunch-card"><div class="section-title" style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; color: #334155;">🍚 오늘의 메뉴</div><div class="menu-content" id="menuContent">불러오는 중...</div></div>
-        <div class="lunch-card feedback-box"><div class="section-title" style="font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; color: #334155;">✍️ 급식실 건의사항</div><textarea id="feedbackText" placeholder="의견을 남겨주세요!"></textarea><button class="lunch-btn" onclick="sendFeedback()">의견 보내기</button></div>
+
+        <div class="card" style="background: #f8fafc; border: 1px solid #e2e8f0; text-align: center;">
+            <h3 class="mb-2" style="font-size:1.1rem; font-weight:800;">TV 화면 및 디스플레이 관리</h3>
+            <p style="font-size:0.85rem; color:#64748b; margin-bottom:15px;">긴급 팝업과 알림판 내용을 실시간으로 관리합니다.</p>
+            <button class="btn-main btn-dark" onclick="openDisplayModal()">설정 열기</button>
+        </div>
     </div>
 
     <div id="page-umbrella" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
-        <div class="umb-card">
-            
-            <div id="umbrella-blocked-overlay" class="blocked-overlay">
-                <div class="blocked-icon">🌧️</div>
-                <div class="blocked-text">현재 양심우산 운영 중단</div>
-                <div class="blocked-desc">지금은 양심우산을 대여하거나<br>반납할 수 없는 시간입니다.<br>나중에 다시 시도해 주세요.</div>
-            </div>
-
-            <h2 style="margin-top: 0; font-weight: 800; color: #1f2937; margin-bottom: 25px; font-size:1.5rem;">양심우산 대여/반납</h2>
-            <div class="tab-container"><div class="tab active" id="tab-rent" onclick="setMode('rent')">대여하기</div><div class="tab" id="tab-return" onclick="setMode('return')">반납하기</div></div>
-            <div id="form-container">
-                <div class="form-group"><label>학번 (4자리)</label><input type="text" inputmode="numeric" id="student_id" placeholder="예: 3705" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '');"></div>
-                <div class="form-group"><label>이름</label><input type="text" id="student_name" placeholder="예: 홍길동"></div>
-                <div class="form-group" id="phone-group"><label>전화번호</label><input type="text" inputmode="numeric" id="phone_number" placeholder="예: 01012345678" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '');"></div>
-                <button class="umb-btn" id="generate-btn" onclick="checkAndShowConsent()">대여 패스 발급받기</button>
-            </div>
-            <div id="qr-container">
-                <div id="welcome-box"><p class="emoji" style="font-size: 45px; margin: 0 0 10px 0;">☔️</p><p id="welcome-text" style="margin: 0; color: #64748b; font-size: 14px; font-weight: 600;">정보를 입력하고<br><strong style="color: #00B4D8;">대여 패스 발급받기</strong>를 눌러주세요!</p></div>
-                <img id="qr-image" src="" alt="QR">
-                <div id="success-msg"><p class="checkmark" style="font-size: 65px; margin: 0;">✅</p><p class="success-text" id="success-title" style="color: #00B4D8; font-size: 22px; font-weight: 800; margin: 15px 0;">대여 완료!</p><div class="success-sub" id="success-desc" style="background: #f0f9ff; padding: 15px; border-radius: 12px; color: #0369a1; font-weight: bold;">우산을 수령해 주세요.</div></div>
+        
+        <div class="card" style="background: #f0f8ff; border: 1px solid #cce5ff; text-align:center;">
+            <h3 style="margin-top:0; font-size:1.2rem; font-weight:800;">우산 대여/반납 스캐너</h3>
+            <p style="font-size:0.85rem; color:#555; margin-bottom:15px;">학생이 생성한 우산 전용 QR코드를 스캔하세요.</p>
+            <button class="btn-main btn-blue" onclick="startScanner()">스캐너 열기</button>
+        </div>
+        
+        <div class="list-header">
+            <h3>전체 이용 내역</h3>
+            <div class="list-header-btns">
+                <button id="umb-block-btn" class="btn-sm-manage" style="background:#ef4444;" onclick="toggleUmbrellaBlock()">운영 중단</button>
+                <button class="btn-sm-manage" onclick="openBrokenModal()">고장 우산</button>
+                <button class="btn-sm-main" onclick="openPdfModal()">PDF 출력</button>
             </div>
         </div>
-        <div id="consent-modal" class="modal-overlay">
-            <div class="modal-content">
-                <h3 style="margin-top: 0; color: #0f172a; font-size: 1.3rem; margin-bottom: 15px; font-weight:900;">⚠️ 필수 확인 수칙</h3>
-                <div style="background: #fff5f5; border: 1px solid #fed7d7; padding: 18px; border-radius: 14px; margin-bottom: 20px;">
-                    <p style="margin: 0 0 10px 0; font-size: 14px; color: #334155; line-height: 1.5; font-weight:700;">1. 대여한 우산은 지정된 기한 내에 학생회실로 반드시 반납해야 합니다.</p>
-                    <p style="margin: 0 0 10px 0; font-size: 14px; color: #334155; line-height: 1.5; font-weight:700;">2. 우산을 분실하거나 고의 파손 시 <span style="color: #ef4444; font-weight:900;">변상금(5,000원)</span>이 청구됩니다.</p>
-                    <p style="margin: 0 0 15px 0; font-size: 14px; color: #334155; line-height: 1.5; font-weight:700;">3. 기한을 어길 경우 향후 우산 및 시설 이용에 제한을 받을 수 있습니다.</p>
-                    <hr style="border:0; border-top:1px dashed #fca5a5; margin-bottom:12px;">
-                    <p style="margin: 0; font-size: 15px; color: #1e293b; line-height: 1.5; font-weight:900;">⏰ 반납 기한: <br><span style="color: #00B4D8;" id="modal-return-time">계산중...</span></p>
-                </div>
-                <div style="display: flex; gap: 10px;"><button class="umb-btn" style="background: #f1f5f9; color: #64748b; flex: 1; margin-top: 0;" onclick="closeConsentModal()">취소</button><button class="umb-btn" style="background: #00B4D8; color: white; flex: 2; margin-top: 0;" onclick="agreeAndGenerate()">동의하고 대여</button></div>
-            </div>
-        </div>
+        <div id="rental-list">데이터를 불러오는 중...</div>
     </div>
 
     <div id="page-facility" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
-        <div id="facility-content">
-            <div class="reservation-card">
-                
-                <div id="facility-blocked-overlay" class="blocked-overlay">
-                    <div class="blocked-icon">🔒</div>
-                    <div class="blocked-text">현재 예약 불가 시간입니다</div>
-                    <div class="blocked-desc">관리자가 시설 예약을 마감했거나,<br>예약 명단을 확인하고 있는 중입니다.<br>자세한 사항은 공지를 확인해주세요.</div>
-                </div>
 
-                <h2 style="color: #2c3e50; font-weight: 900; text-align: center; margin-bottom: 25px;">무룡고등학교 시설 예약</h2>
-                <div style="background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px;">🔔 안내: [다음 주 월~금] 일정 예약 진행 중</div>
-                
-                <div class="mb-3"><label class="form-label" style="font-weight: bold;">이름</label><input type="text" id="name" class="form-control"></div>
-                <div class="mb-3">
-                    <label class="form-label" style="font-weight: bold;">학번 (4자리)</label>
-                    <input type="text" inputmode="numeric" id="sid" class="form-control" maxlength="4" placeholder="예: 3705" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
-                </div>
-                <div class="mb-3"><label class="form-label" style="font-weight: bold;">전화번호</label><input type="tel" id="phone" class="form-control" maxlength="11"></div>
-                <div class="mb-3"><label class="form-label" style="font-weight: bold;">이용 목적</label><input type="text" id="purpose" class="form-control"></div>
-                <div class="mb-3"><label class="form-label" style="font-weight: bold;">시설 선택</label><select id="room" class="form-select"><option value="더하우스">더하우스</option><option value="풋살장">풋살장</option><option value="소회의실">소회의실</option></select></div>
-                <div class="mb-4 mt-2 px-2"><div class="form-check"><input type="checkbox" class="form-check-input" id="is_priority" onchange="handlePriorityCheck(this)"><label class="form-check-label fw-bold text-secondary" for="is_priority">우선권 사용</label></div></div>
-                <div class="mb-3"><label class="form-label" style="font-weight: bold;">이용 일자</label><select id="use_date" class="form-select"></select></div>
-                <div class="row"><div class="col-6 mb-3"><label class="form-label" style="font-weight: bold;">시작 시간</label><select id="start_time" class="form-select"></select></div><div class="col-6 mb-3"><label class="form-label" style="font-weight: bold;">종료 시간</label><select id="end_time" class="form-select"></select></div></div>
-                <div class="mb-4 p-3 border rounded bg-light"><label class="form-label text-danger" style="font-weight: bold;">🔒 예약 비밀번호 (숫자 4자리)</label><input type="password" id="password" class="form-control" maxlength="4"></div>
-                
-                <button onclick="openTermsModal()" class="btn-main">예약 신청하기</button>
-                <div class="text-center mt-3"><a href="#" onclick="goPage('status'); return false;" class="text-secondary small" style="text-decoration: none;">📅 실시간 예약 현황 및 취소</a></div>
-            </div>
+        <div class="card" style="background: #fdf5e6; border: 1px solid #ffeeba; text-align:center;">
+            <h3 style="margin-top:0; font-size:1.2rem; font-weight:800;">예약 승인 확인 스캐너</h3>
+            <p style="font-size:0.85rem; color:#555; margin-bottom:15px;">승인 완료된 예약 QR 패스를 스캔하여 사용처리합니다.</p>
+            <button class="btn-main" style="background:#ff9500;" onclick="startScanner()">QR 스캔하기</button>
         </div>
-        <div class="modal fade" id="termsModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-              <div class="modal-content"><div class="modal-header"><h5 class="modal-title fw-bold">이용 약관 및 수칙</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-              <div class="modal-body">
-                  <div class="text-muted small mb-3" style="max-height: 250px; overflow-y: auto; background: #f8f9fa; padding: 18px; border-radius: 12px; border: 1px solid #dee2e6; line-height: 1.6;" onscroll="checkTermsScroll(this)">
-                      <h6 class="fw-bold text-dark mb-3" style="font-size: 1rem;">📌 무룡고등학교 시설 이용 수칙</h6>
-                      <p><strong>1. 정리정돈 및 청결 유지</strong><br>사용 후 발생한 쓰레기는 반드시 스스로 치우고, 시설물을 원래 상태로 깨끗하게 정리해야 합니다.</p>
-                      <p><strong>2. 시간 엄수</strong><br>예약한 시간에만 이용할 수 정며, 다음 사용자를 위해 종료 시간을 정확히 지켜야 합니다.</p>
-                      <p><strong>3. 시설물 보호 및 변상</strong><br>고의 또는 과실로 시설 및 비품을 파손할 경우 원상복구 및 변상 책임이 따릅니다. 파손 발견 즉시 학생회나 교무실에 알립니다.</p>
-                      <p><strong>4. 안전 및 에티켓</strong><br>시설 내에서는 안전에 유의하며, 타인에게 방해가 되는 지나친 소란 행위를 금지합니다.</p>
-                      <p><strong>5. 이용 제한 규정</strong><br>위 수칙을 위반하거나 예약 후 무단 노쇼(No-Show)를 할 경우, 즉시 퇴장 조치되며 향후 예약 및 이용이 전면 제한될 수 있습니다.</p>
-                      <br><p class="text-danger fw-bold text-center mb-0" style="font-size: 0.95rem;">스크롤을 끝까지 내리면 아래 입력창이 활성화됩니다.</p>
-                  </div>
-                  <div class="border-top pt-3"><p id="scrollMsg" class="text-danger small fw-bold mb-2">🚨 끝까지 스크롤해야 동의를 입력할 수 있습니다.</p><div class="input-group"><span class="input-group-text bg-light fw-bold" style="font-size: 0.9rem;">동의 입력</span><input type="text" id="agreeText" class="form-control" placeholder="'동의합니다' 입력" disabled></div></div>
-              </div>
-              <div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-secondary fw-bold" style="border-radius:10px;" data-bs-dismiss="modal">취소</button><button type="button" class="btn btn-primary fw-bold" style="background-color: #0071e3; border: none; border-radius:10px;" onclick="submitReservation()">최종 신청</button></div></div>
-            </div>
-        </div>
-        <div class="modal fade" id="instaModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-light"><h5 class="modal-title fw-bold text-dark">신청 완료</h5></div><div class="modal-body text-center py-4"><h4 class="fw-bold text-success mb-3">접수 완료</h4><p class="text-muted"><strong>학생회 인스타그램 DM</strong>으로 아래 메시지를 보내주셔야 <strong>최종 승인</strong>됩니다.<br><br><span style="background:#f1f5f9; padding:8px 12px; border-radius:8px; color:#1e293b; font-weight:bold; display:inline-block;">"시설예약했습니다. 확인부탁드립니다."</span></p><a href="https://www.instagram.com/muryonghs_official" target="_blank" class="btn text-white fw-bold w-100 py-2 mt-2" style="background: linear-gradient(45deg, #f09433, #bc1888); border-radius: 10px;">인스타 바로가기</a></div><div class="modal-footer"><button type="button" class="btn btn-secondary w-100 fw-bold" data-bs-dismiss="modal" onclick="goPage('status')">확인 후 예약 현황으로 이동</button></div></div></div></div>
-    </div>
 
-    <div id="page-status" class="page">
-        <div class="top-nav"><button class="back-btn" onclick="goPage('facility')">❮ 뒤로</button></div>
-        <div class="new-card">
-            <h3 style="margin-top:0; font-size:1.2rem; font-weight: 800; text-align: center; margin-bottom: 15px;">시설 예약 현황</h3>
-            <div style="background-color: #fbfbfd; border: 1px solid #e5e5ea; padding: 15px; border-radius: 14px; text-align: center; font-size: 0.85rem; line-height: 1.5; color: #86868b; margin-bottom: 20px;">💡 <strong style="color:#0071e3;">승인된 예약</strong>만 시설 이용이 가능하며,<br>승인된 예약은 <strong>QR 패스</strong>로 본인 확인이 진행됩니다.</div>
-            <div style="overflow-x: auto;">
-                <table class="status-table">
-                    <thead><tr><th>이름</th><th>장소</th><th>시간</th><th>상태</th></tr></thead>
-                    <tbody id="public-list"></tbody>
-                </table>
-            </div>
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button class="new-btn" style="background:transparent; color:#ff3b30; border:1px solid #ff3b30;" onclick="openCancelModal()">예약 취소하기</button>
-                <button class="new-btn" onclick="goPage('facility')">새로 예약하기</button>
+        <div class="list-header mt-4">
+            <h3>예약 승인 및 관리</h3>
+            <div class="list-header-btns">
+                <button id="block-btn" class="btn-sm-manage" style="background:#ef4444;" onclick="toggleBookingBlock()">전체 차단</button>
+                <button class="btn-sm-manage" style="background:#f97316;" onclick="openBlockModal()">시간 차단</button>
+                <button class="btn-sm-manage" style="background:#475569;" onclick="openSuperAdmin()">초기화</button>
             </div>
         </div>
-        <div class="modal fade" id="qrPwModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content" style="border-radius: 20px; border: none;"><div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">🔒 패스 인증</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center pt-2"><p class="small text-muted mb-3">설정하신 <strong>숫자 4자리</strong>를 입력해주세요.</p><input type="password" id="qr-pw-input" class="form-control text-center mb-3 bg-light border-0 py-2" placeholder="비밀번호" maxlength="4" style="border-radius: 12px; font-weight: bold; letter-spacing: 2px;"><button class="btn btn-dark w-100" style="padding:12px; border-radius:12px; font-weight:bold;" onclick="verifyQrPw()">QR코드 열기</button></div></div></div></div>
-        <div class="modal fade" id="qrModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden;"><div class="modal-header bg-dark text-white border-0"><h5 class="modal-title fw-bold">📱 모바일 패스</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body text-center py-5"><h5 id="qr-student-name" class="fw-bold mb-3"></h5><div id="qr-display-area"><p class="text-muted small mb-4">관리자에게 아래 QR코드를 보여주세요.</p><img id="fac-qr-image" src="" style="width: 200px; height: 200px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 15px;"></div><div id="qr-success-msg" style="display: none;"><h1 style="font-size: 4rem;">✅</h1><h4 class="fw-bold mt-3" style="color: #0071e3;">인증이 완료되었습니다</h4></div></div></div></div></div>
-        <div class="modal fade" id="cancelModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content" style="border-radius: 20px; border: none;"><div class="modal-header border-0"><h5 class="modal-title fw-bold" style="color: #ff3b30;">내 예약 취소하기</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body pt-1"><input type="text" id="c_name" class="form-control mb-2 bg-light border-0 py-2" placeholder="이름" style="border-radius: 10px;"><input type="number" id="c_sid" class="form-control mb-2 bg-light border-0 py-2" placeholder="학번 4자리" style="border-radius: 10px;"><input type="password" id="c_pw" class="form-control mb-3 bg-light border-0 py-2" placeholder="비밀번호 (숫자 4자리)" maxlength="4" style="border-radius: 10px;"></div><div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background-color: #f2f2f7; color: #1d1d1f; border: none;">닫기</button><button type="button" class="btn btn-danger px-4" onclick="processCancel()">예약 취소</button></div></div></div></div>
+        <p class="text-muted" style="font-size:0.85rem; margin-top:-10px; margin-bottom: 15px;">카드를 누르면 상세 승인/거절 메뉴가 나타납니다.</p>
+        <div id="reserve-list">데이터를 불러오는 중...</div>
     </div>
 
     <div id="page-council" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
-        <div id="council-list">행사 정보를 불러오는 중...</div>
+        
+        <div class="card" style="background: #f8fafc;">
+            <h3 style="margin-top:0; font-size:1.2rem; font-weight:800;">새로운 행사 등록</h3>
+            <input type="text" id="ev-title" class="input-box" placeholder="행사 이름 (예: 무룡제, 체육대회)">
+            <input type="text" id="ev-dept" class="input-box" placeholder="주최 부서 (예: 학생회 기획부)">
+            <input type="text" id="ev-period" class="input-box" placeholder="행사 기간 (예: 10/24(목) ~ 10/25(금))">
+            <input type="text" id="ev-apply-period" class="input-box" placeholder="신청 기간 (선택 사항)">
+            <input type="url" id="ev-apply-url" class="input-box" placeholder="신청 링크 (구글폼 등 / 선택 사항)">
+            <label style="font-size:0.85rem; font-weight:bold; color:#555; margin-bottom:5px; display:block;">행사 포스터 (사진)</label>
+            <input type="file" id="ev-poster" class="input-box" accept="image/*" style="padding:10px; background:white;">
+            <button class="btn-main btn-dark" id="btn-submit-council" onclick="submitCouncilEvent()">행사 등록하기</button>
+        </div>
+
+        <div class="list-header mt-4"><h3>🎉 진행중인 행사 목록</h3></div>
+        <div id="admin-council-list">불러오는 중...</div>
     </div>
 
-    <div id="page-calendar" class="page">
+    <div id="page-study" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
-        
-        <div class="new-card"><h3 style="margin-top:0; font-size:1.1rem;">🏫 다가오는 공식 일정</h3><div id="neis-calendar-list">데이터를 불러오는 중...</div></div>
-        <div class="new-card">
-            <h3 style="margin-top:0; font-size:1.1rem; margin-bottom: 15px;">📝 다가오는 반별 일정</h3>
-            
-            <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center;">
-                <select id="cal-grade" class="new-input" style="margin:0;"><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option></select>
-                <select id="cal-class" class="new-input" style="margin:0;">
-                    <option value="1">1반</option><option value="2">2반</option><option value="3">3반</option>
-                    <option value="4">4반</option><option value="5">5반</option><option value="6">6반</option>
-                    <option value="7">7반</option><option value="8">8반</option><option value="9">9반</option>
-                </select>
-                <button class="new-btn" style="width:auto; padding:12px 20px; white-space:nowrap; flex-shrink:0; display:flex; align-items:center; justify-content:center; margin:0;" onclick="loadClassCalendar()">조회</button>
-            </div>
-            
-            <div id="class-calendar-list" style="margin-bottom:20px;">반을 선택하고 조회를 눌러주세요.</div>
-            
-            <hr style="border:0; border-top:1px solid #e5e5ea; margin-bottom:15px;">
-            <p style="font-weight:bold; font-size:0.9rem; margin-bottom:10px;">일정 등록 (반장/학습도우미)</p>
-            <input type="date" id="cal-reg-date" class="new-input">
-            
-            <select id="cal-reg-period" class="new-input">
-                <option value="종일">종일 / 시간미정</option>
-                <option value="1교시">1교시</option>
-                <option value="2교시">2교시</option>
-                <option value="3교시">3교시</option>
-                <option value="4교시">4교시</option>
-                <option value="5교시">5교시</option>
-                <option value="6교시">6교시</option>
-                <option value="7교시">7교시</option>
-                <option value="방과후">방과후</option>
-            </select>
-            
-            <input type="text" id="cal-reg-title" class="new-input" placeholder="내용 (예: 수학 프린트 제출)">
-            <input type="text" id="cal-reg-author" class="new-input" placeholder="등록자">
-            <button class="new-btn" style="background:#e5e5ea; color:#1d1d1f;" onclick="submitCalendar()">등록하기</button>
-        </div>
-    </div>
-
-    <div id="page-board" class="page">
-        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
-        
-        <div class="new-card" id="board-list-container">
-            <h3 id="board-list-title" style="margin-top:0; font-size:1.2rem; font-weight:800; margin-bottom: 15px;">게시판 목록</h3>
-            <div id="board-list">불러오는 중...</div>
-        </div>
-        
-        <div class="new-card" id="board-write-container">
-            <h3 id="board-write-title" style="margin-top:0; font-size:1.1rem; font-weight:800;">새 글 등록</h3>
-            
-            <p id="board-desc" style="font-size:0.9rem; color:#6c757d; margin-bottom:15px; display:none; line-height:1.4;"></p>
-            
-            <input type="text" id="board-author" class="new-input" placeholder="작성자">
-            
-            <div id="study-meta-inputs" style="display:none; gap:10px; margin-bottom:12px;">
-                <select id="board-grade" class="new-input" style="margin-bottom:0; flex:1;">
-                    <option value="공통">공통 학년</option><option value="1학년">1학년</option><option value="2학년">2학년</option><option value="3학년">3학년</option>
-                </select>
-                <input type="text" id="board-subject" class="new-input" placeholder="과목 (예: 수학)" style="margin-bottom:0; flex:1;">
-            </div>
-
-            <input type="text" id="board-input-title" class="new-input" placeholder="제목">
-            <textarea id="board-content" class="new-input" placeholder="내용" rows="4"></textarea>
-            
-            <div id="file-upload-area" style="display:none; margin-bottom:12px;">
-                <label style="font-size:0.85rem; font-weight:bold; color:#86868b; display:block; margin-bottom:5px;">첨부파일 (PDF 등 필수)</label>
-                <input type="file" id="board-file" class="new-input" style="padding:10px;">
-            </div>
-            
-            <button id="board-submit-btn" class="new-btn" onclick="submitBoard()">등록하기</button>
-        </div>
+        <div class="list-header"><h3>📚 학습자료실 관리</h3></div>
+        <div id="admin-study-list">불러오는 중...</div>
     </div>
 
     <div id="page-lost" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
-        <div class="new-card" id="lost-list">데이터를 불러오는 중...</div>
+
+        <div class="card" style="background: #fdf5e6; border: 1px solid #d2e4f6;">
+            <h3 style="margin-top:0; font-size:1.2rem; font-weight:800;">새 분실물 등록</h3>
+            <input type="text" id="lf-name" class="input-box" placeholder="분실물 이름 (예: 검은색 지갑, 에어팟 등)">
+            <input type="text" id="lf-found" class="input-box" placeholder="발견 장소 (예: 2층 남자화장실 앞)">
+            <input type="text" id="lf-pickup" class="input-box" placeholder="찾아가는 곳 (예: 2학년 교무실 홍길동 선생님)">
+            <label style="font-size:0.85rem; font-weight:bold; color:#555; margin-bottom:5px; display:block;">사진 첨부 (선택)</label>
+            <input type="file" id="lf-photo" class="input-box" accept="image/*" style="padding:10px; background:white;">
+            <button class="btn-main btn-blue" id="btn-submit-lost" onclick="submitLostItem()">분실물 등록하기</button>
+        </div>
+
+        <div class="list-header mt-4"><h3>🔍 등록된 분실물</h3></div>
+        <div id="admin-lost-list">불러오는 중...</div>
     </div>
 
-    <div class="modal fade" id="imageModal" tabindex="-1">
+    <div id="page-suggestion" class="page">
+        <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
+        <div class="list-header"><h3>💡 학생 건의사항 열람</h3></div>
+        <p class="text-muted" style="font-size:0.85rem; margin-top:-10px;">건의사항 내용과 작성자를 확인할 수 있습니다.</p>
+        <div id="admin-suggestion-list">불러오는 중...</div>
+    </div>
+
+    <div class="modal fade" id="displayModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-transparent border-0">
-                <div class="modal-body text-center">
-                    <img id="enlarged-img" src="" style="width: 100%; max-height: 70vh; object-fit: contain; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); background: #f5f5f7;">
-                    <button type="button" class="btn btn-light mt-3 fw-bold px-4 rounded-pill" data-bs-dismiss="modal">닫기</button>
+            <div class="modal-content" style="border-radius: 20px; border: none;">
+                <div class="modal-header border-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="modal-title fw-bold">디스플레이 관리</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <label class="fw-bold mb-1 text-danger">긴급 팝업</label>
+                    <textarea id="popupInput" class="input-box mb-2" placeholder="내용을 비우고 '내리기'를 누르면 사라집니다." rows="2"></textarea>
+                    <div style="display:flex; gap:10px; margin-bottom:20px;">
+                        <button class="btn-main btn-outline-danger" style="flex:1; padding:10px;" onclick="sendPopup('')">내리기</button>
+                        <button class="btn-main btn-red" style="flex:1; padding:10px;" onclick="sendPopup(document.getElementById('popupInput').value)">띄우기</button>
+                    </div>
+
+                    <label class="fw-bold mb-1">일반 알림판 텍스트</label>
+                    <textarea id="noticeInput" class="input-box mb-2" placeholder="우측 알림판 내용" rows="2"></textarea>
+                    <button class="btn-main btn-dark mb-2" style="padding:10px;" onclick="saveNotice()">알림판 수정</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <div class="modal fade" id="scannerModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden; padding:0;">
+            <div class="modal-header border-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+              <h5 class="modal-title fw-bold">카메라 스캔</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="stopScanner()"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div id="reader-container" style="display:block; margin-top:0;">
+                    <div id="reader"></div>
+                </div>
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <div id="pdfModal" class="modal-overlay" onclick="closeCustomModal(event)">
+        <div class="modal-content" style="max-width: 360px;">
+            <div class="modal-header">
+                <h3>PDF 출력 옵션</h3>
+                <button class="close-btn" onclick="closeCustomModal(event)">✕</button>
+            </div>
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 20px; line-height: 1.4;">추출할 명단의 용도를 선택해 주세요.</p>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button id="btn-pdf-public" class="btn-main" style="background: var(--purple);" onclick="executePDF('public')">
+                    공개용 명단 (게시판/공지용)<br>
+                    <span style="font-size: 13px; font-weight: normal; color: #ede9fe;">이름 가운데 가림, 학년만 표시</span>
+                </button>
+                <button id="btn-pdf-admin" class="btn-main" style="background: #475569;" onclick="executePDF('admin')">
+                    관리자용 명단 (내부 보관용)<br>
+                    <span style="font-size: 13px; font-weight: normal; color: #f1f5f9;">학번, 이름 전체 표시</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="umbrellaDetailModal" class="modal-overlay" onclick="closeCustomModal(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="u-name-title">상세 정보</h3>
+                <button class="close-btn" onclick="closeCustomModal(event)">✕</button>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px;">
+                <span style="color: #64748b; font-weight: bold; width: 80px;">학번</span>
+                <span style="color: #1e293b; font-weight: 600;" id="u-id"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px;">
+                <span style="color: #64748b; font-weight: bold; width: 80px;">우산번호</span>
+                <span style="color: var(--primary); font-weight: 600;" id="u-umbrella"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px;">
+                <span style="color: #64748b; font-weight: bold; width: 80px;">전화번호</span>
+                <span style="color: #1e293b; font-weight: 600;" id="u-phone"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px;">
+                <span style="color: #64748b; font-weight: bold; width: 80px;" id="u-label-rent">대여일시</span>
+                <span style="color: #1e293b; font-weight: 600;" id="u-rent-date"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px;">
+                <span style="color: #64748b; font-weight: bold; width: 80px;" id="u-label-return">반납일시</span>
+                <span style="color: #1e293b; font-weight: 600;" id="u-return-date"></span>
+            </div>
+            
+            <button id="manual-return-btn" style="display: none; background:var(--success); color:white; width:100%; padding:14px; border:none; border-radius:12px; font-size:15px; font-weight:bold; margin-top:15px; cursor:pointer;">수동 반납처리</button>
+            <button id="delete-umbrella-btn" style="background:#f1f5f9; color:var(--danger); width:100%; padding:14px; border:1px solid #e2e8f0; border-radius:12px; font-size:15px; font-weight:bold; margin-top:10px; cursor:pointer;">이 기록 삭제</button>
+        </div>
+    </div>
+
+    <div id="damageModal" class="modal-overlay" onclick="closeCustomModal(event)">
+        <div class="modal-content" style="max-width: 360px; text-align: center; border-radius: 24px;">
+            <div class="modal-header" style="justify-content: center; border: none; padding-bottom: 0;">
+                <h3 style="color: #0f172a; font-size: 22px;">우산 상태 확인</h3>
+            </div>
+            <p style="color: #64748b; font-size: 15px; margin-bottom: 25px; line-height: 1.5;">
+                <strong id="d-student-name" style="color: var(--primary);"></strong> 학생이 반납하는<br>
+                <strong id="d-umbrella-num" style="color: var(--danger);"></strong>번 우산이 파손되었습니까?
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn-main" style="background: var(--success);" onclick="executeReturn(false)">정상 반납</button>
+                <button class="btn-main btn-dark" onclick="executeReturn(true)">파손됨</button>
+                <button class="btn-main btn-gray" onclick="document.getElementById('damageModal').style.display='none'">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="brokenModal" class="modal-overlay" onclick="closeCustomModal(event)">
+        <div class="modal-content" style="border-radius: 24px; padding: 20px;">
+            <div class="modal-header">
+                <h3>파손 우산 관리</h3>
+                <button class="close-btn" onclick="closeCustomModal(event)">✕</button>
+            </div>
+            <p style="color: #64748b; font-size: 13px; margin-bottom: 15px;">파손된 우산을 선택하여 수리 완료 처리를 할 수 있습니다.</p>
+            <div id="broken-list"></div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+                <div class="modal-header">
+                    <h5 class="fw-bold m-0">예약 상세 정보</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="text-center mb-3" id="detail-badge-area"></div>
+                    <div class="bg-light p-3 mb-3" style="border-radius: 12px; font-size:0.95rem;">
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted fw-bold">신청자</span><span class="fw-bold" id="detail-name"></span></div>
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted fw-bold">연락처</span><span class="fw-bold" id="detail-phone"></span></div>
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted fw-bold">시설명</span><span class="fw-bold text-primary" id="detail-room"></span></div>
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted fw-bold">목적</span><span class="fw-bold" id="detail-purpose"></span></div>
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted fw-bold">시간</span><span class="fw-bold" id="detail-time"></span></div>
+                        <div class="d-flex justify-content-between"><span class="text-muted fw-bold">비밀번호</span><span class="fw-bold" id="detail-pw-area"></span></div>
+                    </div>
+                    <div class="d-flex flex-column gap-2" id="detail-action-area"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="blockModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="fw-bold m-0" style="color: #ff9500;">특정 시설/시간 차단</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-0">
+            <p class="small text-muted mb-3">선택한 시설과 시간대에 학생이 예약할 수 없도록 막습니다.</p>
+            <select id="b_room" class="input-box" style="padding:12px;">
+                <option value="더하우스">더하우스</option><option value="풋살장">풋살장</option><option value="소회의실">소회의실</option>
+            </select>
+            <input type="date" id="b_date" class="input-box" style="padding:12px;">
+            <div style="display:flex; gap:10px;">
+                <input type="time" id="b_start" class="input-box" style="padding:12px; flex:1;">
+                <input type="time" id="b_end" class="input-box" style="padding:12px; flex:1;">
+            </div>
+            <input type="text" id="b_purpose" class="input-box" placeholder="차단 사유 (선택사항)" style="padding:12px;">
+            <button type="button" class="btn-main" style="background-color: #ff9500;" onclick="submitSpecificBlock()">차단 등록하기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
         const DB_URL = 'https://vfftkdnzjemeipuhlzfv.supabase.co';
         const DB_KEY = 'sb_publishable_9Q7vn7So6HvUSMPu5BhyDA_9qz928H-';
         const db = window.supabase.createClient(DB_URL, DB_KEY);
 
-        // KST 기준 오늘 날짜 문자열
-        const curr = new Date();
-        const utc = curr.getTime() + (curr.getTimezoneOffset() * 60 * 1000);
-        const kstDate = new Date(utc + (9 * 60 * 60 * 1000));
-        const todayStr = kstDate.toISOString().split('T')[0];
-
-        let currentBoardType = '';
-        let checkInterval; 
-
-        // 💡 페이지 접속 원천 차단을 위한 전역 변수
-        let isFacilityBlocked = false;
+        let isBookingBlocked = false; 
         let isUmbrellaBlocked = false;
 
-        async function goPage(pageId) {
-            // 💡 관리자가 막았을 경우 알림 띄우고 진입 완벽 차단
-            if (pageId === 'facility') {
-                const now = new Date();
-                const day = now.getDay();
-                const hour = now.getHours();
-                let isTimeBlocked = ((day === 0 && hour >= 18) || (day === 1 && hour < 18));
-                try {
-                    const { data: set } = await db.from('site_settings').select('is_booking_blocked').eq('id', 1).single();
-                    if (set && set.is_booking_blocked) isTimeBlocked = true;
-                } catch(e) {}
-                
-                if (isTimeBlocked) {
-                    alert("현재 예약 불가 시간입니다.\n관리자가 시설 예약을 마감했거나 확인 중입니다.");
-                    return;
-                }
-            }
-            if (pageId === 'umbrella') {
-                try {
-                    const { data: umb } = await db.from('announcements').select('content').eq('id', 4).single();
-                    if (umb && umb.content === 'CLOSED') {
-                        alert("현재 양심우산 운영이 중단되었습니다.\n나중에 다시 시도해 주세요.");
-                        return;
-                    }
-                } catch(e) {}
-            }
-
+        function goPage(pageId) {
             document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); });
             document.getElementById('page-' + pageId).classList.add('active');
             window.scrollTo(0, 0);
 
-            if(pageId !== 'umbrella' && typeof checkInterval !== 'undefined') clearInterval(checkInterval);
-            if(pageId === 'lunch') { loadLunchData(); fetchMenu(); }
-            if(pageId === 'status') { loadStatus(); } 
-            if(pageId === 'calendar') fetchNeisCalendar();
-            if(pageId === 'lost') fetchLostItems();
-            if(pageId === 'council') fetchCouncilEvents();
+            if(pageId === 'lunch') initLunchAdmin();
+            if(pageId === 'umbrella') { fetchRentals(); loadUmbrellaStatus(); }
+            if(pageId === 'facility') loadReservations();
+            if(pageId === 'council') loadAdminCouncilEvents();
+            if(pageId === 'study') loadAdminBoard('study');
+            if(pageId === 'suggestion') loadAdminBoard('suggestion');
+            if(pageId === 'lost') loadAdminLost();
         }
 
-        async function initHome() {
-            let dynamicGreeting = "오늘도 즐거운 하루 보내세요!";
-            const currentHour = new Date().getHours();
-            let willRain = false;
-
+        async function loadSettings() {
             try {
-                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=35.5384&longitude=129.3114&current_weather=true&hourly=precipitation_probability,weathercode&timezone=Asia/Seoul');
-                const data = await res.json();
-                document.getElementById('weather').innerText = `🌤 현재 울산 기온 : ${Math.round(data.current_weather.temperature)}℃`;
-                
-                if (data.hourly && data.hourly.time) {
-                    for (let i = 0; i < data.hourly.time.length; i++) {
-                        const hourTime = new Date(data.hourly.time[i]).getHours();
-                        const hourDate = new Date(data.hourly.time[i]).getDate();
-                        if (hourDate === new Date().getDate() && hourTime > currentHour && hourTime <= 17) {
-                            const code = data.hourly.weathercode[i];
-                            // Rain codes check
-                            if ([51,53,55,61,63,65,80,81,82,95,96,99].includes(code) || data.hourly.precipitation_probability[i] >= 40) {
-                                willRain = true;
-                                break;
+                const { data } = await db.from('site_settings').select('is_booking_blocked').eq('id', 1).single();
+                if (data) { isBookingBlocked = data.is_booking_blocked === true; updateBlockButtonUI(); } 
+            } catch (err) {}
+        }
+
+        async function loadUmbrellaStatus() {
+            try {
+                const { data } = await db.from('announcements').select('content').eq('id', 4).single();
+                isUmbrellaBlocked = (data && data.content === 'CLOSED');
+                updateUmbBlockBtnUI();
+            } catch(e) {}
+        }
+
+        function updateUmbBlockBtnUI() {
+            const btn = document.getElementById('umb-block-btn');
+            if(isUmbrellaBlocked) {
+                btn.innerText = "운영 재개"; btn.style.background = "#34c759";
+            } else {
+                btn.innerText = "운영 중단"; btn.style.background = "#ef4444";
+            }
+        }
+
+        async function toggleUmbrellaBlock() {
+            const newVal = isUmbrellaBlocked ? 'OPEN' : 'CLOSED';
+            const msg = isUmbrellaBlocked ? "양심우산 운영을 재개할까요?" : "양심우산 운영을 중단할까요?\n학생 화면에 대여 차단 멘트가 표시됩니다.";
+            if(!confirm(msg)) return;
+            
+            const { error } = await db.from('announcements').upsert({ id: 4, content: newVal });
+            if(!error) { isUmbrellaBlocked = !isUmbrellaBlocked; updateUmbBlockBtnUI(); }
+            else { alert("오류 발생: " + error.message); }
+        }
+
+        /* --- 1. 급식 제어 --- */
+        const grades = ["배식 전", "3학년", "2학년", "1학년", "배식 종료", "미운영"];
+        let currentIdx = -1; let tempWaitTime = 0; let adminWaitInterval = null; let liveWaitMin = 0; let liveSetAt = null;
+
+        function updateUI(index) {
+            const gradeBox = document.getElementById('curGrade'); 
+            const subStatus = document.getElementById('subStatus'); 
+            currentIdx = index; 
+            if(gradeBox) {
+                gradeBox.innerText = grades[index];
+                if (index === 5) { gradeBox.style.color = "#ef4444"; if(subStatus) subStatus.style.display = "block"; } 
+                else { if(subStatus) subStatus.style.display = "none"; if (index === 0 || index === 4) gradeBox.style.color = "#94a3b8"; else gradeBox.style.color = "#3b82f6"; } 
+            }
+        }
+        async function initLunchAdmin() {
+            const { data: s } = await db.from('lunch_status').select('*').eq('id', 1).single();
+            if(s) { currentIdx = s.current_index; updateUI(s.current_index); updateAdminWaitTimeUI(s.wait_minutes, s.wait_set_at); }
+        }
+        
+        function updateAdminWaitTimeUI(waitMin, setAtStr) {
+            liveWaitMin = waitMin || 0; liveSetAt = setAtStr; const display = document.getElementById('activeTimerDisplay');
+            if (adminWaitInterval) clearInterval(adminWaitInterval);
+            if (!liveWaitMin || liveWaitMin <= 0 || !liveSetAt) { 
+                display.innerText = "타이머 꺼짐"; 
+                display.style.color = "#94a3b8"; 
+                return; 
+            }
+            display.style.color = "#2563eb"; 
+            adminWaitInterval = setInterval(() => {
+                const diffSec = Math.floor((new Date() - new Date(liveSetAt)) / 1000); 
+                const remainingSec = (liveWaitMin * 60) - diffSec;
+                if (remainingSec <= 0) { 
+                    display.innerText = "00:00"; 
+                    display.style.color = "#ef4444"; 
+                    clearInterval(adminWaitInterval); 
+                } 
+                else { display.innerText = `${String(Math.floor(remainingSec / 60)).padStart(2, '0')}:${String(remainingSec % 60).padStart(2, '0')}`; }
+            }, 1000);
+        }
+        
+        async function updateIdx(type) {
+            let nextIdx = currentIdx;
+            if(type === 'next' && nextIdx < 4) nextIdx++; 
+            else if(type === 'reset') { if(!confirm("순서를 초기화하시겠습니까?")) return; nextIdx = 0; } 
+            else if (type === 'close') { if(!confirm("오늘 급식을 '미운영'으로 설정하시겠습니까?")) return; nextIdx = 5; }
+            
+            updateUI(nextIdx); 
+            await db.from('lunch_status').upsert({ id: 1, current_index: nextIdx, wait_minutes: 0 }); 
+            resetWait();
+        }
+
+        function addWait(min) { tempWaitTime += min; document.getElementById('tempWaitDisplay').innerText = tempWaitTime; }
+        function resetWait() { tempWaitTime = 0; document.getElementById('tempWaitDisplay').innerText = tempWaitTime; }
+        
+        async function sendWaitTime() {
+            if (tempWaitTime === 0) {
+                await db.from('lunch_status').upsert({ id: 1, wait_minutes: 0, wait_set_at: null });
+            } else {
+                let remainingSec = 0;
+                if (liveSetAt && liveWaitMin > 0) { remainingSec = (liveWaitMin * 60) - Math.floor((new Date() - new Date(liveSetAt)) / 1000); }
+                if (remainingSec > 0) { 
+                    await db.from('lunch_status').upsert({ id: 1, wait_minutes: Math.ceil(remainingSec / 60) + tempWaitTime }); 
+                } else { 
+                    await db.from('lunch_status').upsert({ id: 1, wait_minutes: tempWaitTime, wait_set_at: new Date().toISOString() }); 
+                }
+            }
+            resetWait();
+            initLunchAdmin();
+        }
+        
+        async function openDisplayModal() { 
+            try {
+                const { data } = await db.from('announcements').select('*').in('id', [1, 2]);
+                if (data) {
+                    let noticeText = ''; let popupText = '';
+                    data.forEach(d => {
+                        if (d.id === 1) noticeText = d.content || '';
+                        if (d.id === 2) popupText = d.content || '';
+                    });
+                    document.getElementById('noticeInput').value = noticeText;
+                    document.getElementById('popupInput').value = popupText;
+                }
+            } catch(e) {}
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('displayModal')).show(); 
+        }
+        
+        async function saveNotice() { 
+            const val = document.getElementById('noticeInput').value;
+            const { error } = await db.from('announcements').upsert({ id: 1, content: val }); 
+            if(error) alert("오류 발생: " + error.message);
+            else alert("알림판이 성공적으로 업데이트되었습니다!"); 
+        }
+        
+        async function sendPopup(val) { 
+            const { error } = await db.from('announcements').upsert({ id: 2, content: val }); 
+            if(error) alert("오류 발생: " + error.message);
+            else {
+                alert(val === '' ? "긴급 팝업이 화면에서 내려갔습니다." : "긴급 팝업이 적용되었습니다!");
+                if(val === '') document.getElementById('popupInput').value = '';
+            }
+        }
+
+        /* --- 스캐너 로직 --- */
+        let html5QrCode; let isProcessing = false;
+        function startScanner() { bootstrap.Modal.getOrCreateInstance(document.getElementById('scannerModal')).show(); setTimeout(() => { html5QrCode = new Html5Qrcode("reader"); html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, ()=>{}).catch(e=>{alert("카메라 오류"); stopScanner();}); }, 500); }
+        function stopScanner() { if (html5QrCode) html5QrCode.stop().then(() => { bootstrap.Modal.getInstance(document.getElementById('scannerModal'))?.hide(); }).catch(e=>{}); }
+        
+        async function onScanSuccess(decodedText) { 
+            stopScanner();
+            try {
+                let dataObj = decodedText;
+                try { dataObj = JSON.parse(decodedText); } catch(e) {}
+
+                if (document.getElementById('page-facility').classList.contains('active')) {
+                    let targetId = dataObj.id ? dataObj.id : dataObj;
+                    const { data: res } = await db.from('reservations').select('*').eq('id', targetId).single();
+                    if (res) {
+                        if (res.status === 'approved') {
+                            if (confirm(`[${res.room_name}] ${res.student_name} 학생의 예약을 사용 완료 처리하시겠습니까?`)) {
+                                await db.from('reservations').update({status: 'used'}).eq('id', targetId);
+                                alert("사용 완료 처리되었습니다.");
+                                loadReservations();
                             }
+                        } else {
+                            let st = res.status === 'pending' ? '대기중' : (res.status === 'used' ? '이미 사용완료' : res.status);
+                            alert(`해당 예약은 승인된 상태가 아닙니다.\n(현재 상태: ${st})`);
+                        }
+                    } else {
+                        alert("유효한 시설예약 QR코드가 아닙니다.\n(데이터베이스에서 정보를 찾을 수 없음)");
+                    }
+
+                } else if (document.getElementById('page-umbrella').classList.contains('active')) {
+                    let sId = dataObj.student_id ? dataObj.student_id : (dataObj.id ? dataObj.id : dataObj);
+                    let sName = dataObj.student_name || "알수없음";
+                    let sPhone = dataObj.phone_number || "";
+                    let passType = dataObj.type || "auto"; // 'rent' or 'return'
+                    
+                    const { data: activeRentals } = await db.from('umbrella_rentals')
+                        .select('*')
+                        .eq('student_id', sId)
+                        .eq('status', '대여중');
+
+                    if (activeRentals && activeRentals.length > 0) {
+                        const active = activeRentals[0];
+                        
+                        if (passType === 'rent') {
+                            alert(`⚠️ 이미 우산(${active.umbrella_number}번)을 대여 중입니다. 반납을 먼저 진행해주세요.`);
+                            return;
+                        }
+
+                        if (active.student_name !== sName && sName !== "알수없음") {
+                            alert(`⚠️ 주의: QR코드의 이름(${sName})과 대여 기록의 이름(${active.student_name})이 일치하지 않습니다.`);
+                        }
+
+                        // 반납 패스 스캔 시 파손 처리 모달 바로 연결
+                        pendingReturnData = active;
+                        document.getElementById('d-student-name').innerText = active.student_name;
+                        document.getElementById('d-umbrella-num').innerText = active.umbrella_number;
+                        document.getElementById('damageModal').style.display = 'flex';
+
+                    } else {
+                        if (passType === 'return') {
+                            alert(`⚠️ 대여 중인 우산이 없습니다. 대여 패스를 이용해주세요.`);
+                            return;
+                        }
+
+                        let uNum = prompt(`[${sName} - ${sId}] 학생에게 대여할 우산 번호를 입력하세요.`);
+                        if (uNum) {
+                            // 중복 번호 검사
+                            const { data: dupCheck } = await db.from('umbrella_rentals')
+                                .select('id')
+                                .eq('umbrella_number', uNum)
+                                .eq('status', '대여중');
+
+                            if (dupCheck && dupCheck.length > 0) {
+                                alert(`⚠️ ${uNum}번 우산은 현재 다른 학생이 대여 중입니다.`);
+                                return;
+                            }
+
+                            await db.from('umbrella_rentals').insert([{
+                                student_id: sId,
+                                student_name: sName,
+                                phone_number: sPhone,
+                                umbrella_number: uNum,
+                                status: '대여중',
+                                rent_date: new Date().toISOString()
+                            }]);
+                            alert(`${uNum}번 우산이 성공적으로 대여되었습니다.`);
+                            fetchRentals();
                         }
                     }
+                } else {
+                    alert("스캔 결과: " + decodedText);
                 }
-            } catch (e) { document.getElementById('weather').innerText = `🌤 날씨 로딩 실패`; }
-            
-            if (willRain) {
-                dynamicGreeting = "오늘 비가 온다 ☔ 우산챙겨라!";
+            } catch(err) {
+                alert("QR 스캔 처리 중 오류: " + err.message);
+            }
+        }
+
+        /* --- 시설예약 로직 --- */
+        function updateBlockButtonUI() {
+            const btn = document.getElementById('block-btn');
+            if (!btn) return;
+            if (isBookingBlocked) { 
+                btn.innerText = "예약 재개"; 
+                btn.style.background = "#34c759"; 
+            } else { 
+                btn.innerText = "전체 차단"; 
+                btn.style.background = "#ef4444"; 
+            }
+        }
+        async function toggleBookingBlock() {
+            if (!confirm(isBookingBlocked ? "예약을 활성화할까요?" : "새로운 예약을 차단할까요?")) return;
+            const { error } = await db.from('site_settings').upsert({ id: 1, is_booking_blocked: !isBookingBlocked });
+            if (!error) { isBookingBlocked = !isBookingBlocked; updateBlockButtonUI(); }
+        }
+
+        async function openSuperAdmin() {
+            if (confirm("⚠️ 예약 명단 전체 초기화를 진행하시겠습니까?")) {
+                if (prompt("진행하려면 '초기화진행' 이라고 입력해주세요.") === '초기화진행') {
+                    const { error } = await db.from('reservations').delete().neq('id', 0);
+                    if (!error) { alert("완벽하게 초기화되었습니다."); loadReservations(); } 
+                }
+            }
+        }
+
+        function getStatusBadge(status) {
+            if(status === 'pending') return '<span class="badge badge-pending">대기 중</span>';
+            if(status === 'approved') return '<span class="badge badge-approved">승인됨</span>';
+            if(status === 'standby') return '<span class="badge badge-standby">대기명단</span>';
+            if(status === 'rejected') return '<span class="badge badge-rejected">거절됨</span>';
+            if(status === 'cancelled') return '<span class="badge badge-cancelled">사용자취소</span>';
+            if(status === 'blocked') return '<span class="badge badge-blocked">시스템차단</span>'; 
+            if(status === 'used') return '<span class="badge badge-used">사용완료</span>'; 
+            return status;
+        }
+
+        let globalReservations = []; 
+        let currentSelectedRes = null;
+        async function loadReservations() {
+            const list = document.getElementById('reserve-list'); list.innerHTML = '로딩 중...';
+            const { data } = await db.from('reservations').select('*').order('start_time', { ascending: true });
+            globalReservations = data || []; 
+            list.innerHTML = '';
+            if (globalReservations.length === 0) { list.innerHTML = '<p style="text-align:center; color:#86868b; margin-top:20px;">예약 내역이 없습니다.</p>'; return; }
+
+            globalReservations.forEach(res => {
+                const d1 = new Date(res.start_time); const d2 = new Date(res.end_time);
+                const compactTime = `<strong style="font-size:0.95rem; color:#1d1d1f;">${d1.getMonth()+1}.${d1.getDate()}</strong><br><span style="font-size:0.85rem; color:#86868b; font-weight:bold;">${String(d1.getHours()).padStart(2,'0')}:${String(d1.getMinutes()).padStart(2,'0')} - ${String(d2.getHours()).padStart(2,'0')}:${String(d2.getMinutes()).padStart(2,'0')}</span>`;
+                const badge = getStatusBadge(res.status);
+                let studentDisplay = `<span style="font-weight:800;">${res.student_name}</span> <span style="font-size:0.8rem; color:#86868b;">(${res.student_id})</span>`;
+                if (res.status === 'blocked') studentDisplay = `<span style="color:#ff3b30; font-weight:800;">관리자 시간 차단</span>`;
+                
+                list.innerHTML += `
+                    <div class="reserve-card" onclick="triggerDetailModal('${res.id}')">
+                        <div class="top-row"><div>${badge}</div><span style="font-size:0.85rem; color:#86868b; font-weight:800;">${d1.getMonth()+1}/${d1.getDate()}</span></div>
+                        <h5 style="font-size:1.15rem; font-weight:900; margin:5px 0; color:#1d1d1f;">${res.room_name}</h5>
+                        <div style="font-size:0.95rem; margin-bottom:8px;">${studentDisplay}</div>
+                        <div style="background:#f8fafc; padding:10px; text-align:center; border-radius:12px; border:1px solid #f1f5f9;">${compactTime}</div>
+                    </div>`;
+            });
+        }
+
+        async function submitSpecificBlock() {
+            const room = document.getElementById('b_room').value;
+            const date = document.getElementById('b_date').value;
+            const start = document.getElementById('b_start').value;
+            const end = document.getElementById('b_end').value;
+            const purpose = document.getElementById('b_purpose').value || "관리자 차단";
+
+            if (!date || !start || !end) return alert("날짜와 시작/종료 시간을 모두 선택해주세요.");
+
+            const startDateTime = `${date}T${start}:00`;
+            const endDateTime = `${date}T${end}:00`;
+
+            const { error } = await db.from('reservations').insert([{
+                room_name: room,
+                start_time: startDateTime,
+                end_time: endDateTime,
+                purpose: purpose,
+                student_name: '관리자',
+                student_id: 'SYSTEM',
+                status: 'blocked'
+            }]);
+
+            if (!error) {
+                alert("해당 시간 차단이 등록되었습니다!");
+                bootstrap.Modal.getInstance(document.getElementById('blockModal')).hide();
+                loadReservations();
             } else {
-                if (currentHour >= 6 && currentHour < 11) dynamicGreeting = "상쾌한 아침! 오늘도 파이팅! ☀️";
-                else if (currentHour >= 11 && currentHour < 14) dynamicGreeting = "급식이 기대되는 시간이네요! 🍱";
-                else if (currentHour >= 14 && currentHour < 18) dynamicGreeting = "나른한 오후, 조금만 더 힘내요! 💪";
-                else dynamicGreeting = "오늘 하루도 정말 수고 많았어요 🌙";
+                alert("등록 실패: " + error.message);
             }
+        }
+
+        function triggerDetailModal(id) {
+            currentSelectedRes = globalReservations.find(r => String(r.id) === String(id));
+            if (!currentSelectedRes) return; const res = currentSelectedRes;
             
-            document.getElementById('greeting').innerHTML = `무룡고 학생 여러분,<br><span>${dynamicGreeting}</span>`;
+            document.getElementById('detail-badge-area').innerHTML = getStatusBadge(res.status);
+            document.getElementById('detail-name').innerHTML = res.status === 'blocked' ? '<span class="text-danger">시스템 차단</span>' : `${res.student_name} (${res.student_id})`;
+            document.getElementById('detail-phone').innerText = res.phone || '-';
+            document.getElementById('detail-room').innerText = res.room_name || '-';
+            document.getElementById('detail-purpose').innerText = res.purpose || '-';
             
-            // 페이지 로드 시 차단 상태 확인
-            checkSystemStatus();
-            checkNewItems();
+            if (res.status === 'blocked' || res.status === 'used') document.getElementById('detail-pw-area').innerHTML = '-';
+            else document.getElementById('detail-pw-area').innerHTML = `<span id="detail-pw-text" style="font-family:monospace; color:#86868b; letter-spacing:2px;">****</span> <button class="btn-action btn-gray" style="padding:4px 8px; margin-left:5px;" onclick="actionRevealPw(this)">확인</button>`;
+
+            const actionArea = document.getElementById('detail-action-area');
+            if (res.status === 'blocked') actionArea.innerHTML = `<button class="btn-main btn-gray" onclick="actionUnblock()">차단 풀기</button>`;
+            else if (res.status === 'pending' || res.status === 'standby') actionArea.innerHTML = `<button class="btn-main btn-blue" onclick="actionUpdateStatus('approved')">승인 완료</button><button class="btn-main btn-outline-danger mt-2" onclick="actionUpdateStatus('rejected')">예약 거절</button>`;
+            else if (res.status === 'approved') actionArea.innerHTML = `<div style="display:flex; gap:10px;"><button class="btn-main btn-gray" style="flex:1;" onclick="actionUpdateStatus('used')">수동 사용완료</button><button class="btn-main btn-outline-danger" style="flex:1;" onclick="actionUpdateStatus('cancelled')">강제 취소</button></div>`;
+            else actionArea.innerHTML = `<button class="btn-main btn-gray" disabled>처리 완료</button>`;
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('detailModal')).show();
         }
-
-        async function checkNewItems() {
-            const twoDaysAgo = new Date();
-            twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-            const isoTwoDaysAgo = twoDaysAgo.toISOString();
-
-            try {
-                const { data: council } = await db.from('student_council_events').select('created_at').gte('created_at', isoTwoDaysAgo).limit(1);
-                if (council && council.length > 0) document.getElementById('badge-council').style.display = 'block';
-            } catch(e) {}
-
-            try {
-                const { data: study } = await db.from('board_posts').select('created_at').eq('board_type', 'study').gte('created_at', isoTwoDaysAgo).limit(1);
-                if (study && study.length > 0) document.getElementById('badge-study').style.display = 'block';
-            } catch(e) {}
-
-            try {
-                const { data: lost } = await db.from('lost_and_found').select('created_at').gte('created_at', isoTwoDaysAgo).limit(1);
-                if (lost && lost.length > 0) document.getElementById('badge-lost').style.display = 'block';
-            } catch(e) {}
-        }
-
-        // 💡 통합 시스템 상태 감지 로직 (예약 차단, 우산 차단 변수 업데이트)
-        async function checkSystemStatus() {
-            try {
-                const { data: set } = await db.from('site_settings').select('is_booking_blocked').eq('id', 1).single();
-                isFacilityBlocked = (set && set.is_booking_blocked) ? true : false;
-                
-                const now = new Date();
-                const day = now.getDay();
-                const hour = now.getHours();
-                let isTimeBlocked = ((day === 0 && hour >= 18) || (day === 1 && hour < 18));
-                let finalFacBlocked = isFacilityBlocked || isTimeBlocked;
-
-                const facBadge = document.getElementById('badge-facility');
-                if(facBadge) {
-                    facBadge.style.display = 'block';
-                    if(finalFacBlocked) { facBadge.innerText = '예약불가'; facBadge.className = 'menu-badge badge-off'; }
-                    else { facBadge.innerText = '예약가능'; facBadge.className = 'menu-badge badge-on'; }
-                }
-
-                if(isFacilityBlocked) document.getElementById('facility-blocked-overlay').style.display = 'flex';
-                else document.getElementById('facility-blocked-overlay').style.display = 'none';
-            } catch (e) { document.getElementById('facility-blocked-overlay').style.display = 'none'; }
-
-            try {
-                const { data: umb } = await db.from('announcements').select('content').eq('id', 4).single();
-                isUmbrellaBlocked = (umb && umb.content === 'CLOSED') ? true : false;
-                
-                const umbBadge = document.getElementById('badge-umbrella');
-                if(umbBadge) {
-                    umbBadge.style.display = 'block';
-                    if(isUmbrellaBlocked) { umbBadge.innerText = '미운영'; umbBadge.className = 'menu-badge badge-off'; }
-                    else { umbBadge.innerText = '운영중'; umbBadge.className = 'menu-badge badge-on'; }
-                }
-
-                if(isUmbrellaBlocked) document.getElementById('umbrella-blocked-overlay').style.display = 'flex';
-                else document.getElementById('umbrella-blocked-overlay').style.display = 'none';
-            } catch (e) { document.getElementById('umbrella-blocked-overlay').style.display = 'none'; }
-        }
-
-        // 실시간 감지 구독
-        db.channel('student-settings').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'site_settings' }, p => { checkSystemStatus(); }).subscribe();
         
-        // 💡 양심우산 + 실시간 급식실 긴급/일반 공지 모두 실시간 반영하는 채널 감지
-        db.channel('student-umb').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'announcements' }, p => { 
-            checkSystemStatus(); 
-            if(p.new.id === 1) {
-                const rN = document.getElementById('realNotice');
-                if(rN) rN.innerText = p.new.content;
-            }
-            if(p.new.id === 2) {
-                handlePopup(p.new.content);
-            }
-        }).subscribe();
+        function actionRevealPw(btn) { if(currentSelectedRes) { document.getElementById('detail-pw-text').innerText = currentSelectedRes.password; btn.style.display = 'none'; } }
+        
+        async function actionUpdateStatus(status) { 
+            const res = currentSelectedRes;
+            const confirmMsg = status === 'approved' ? '이 예약을 승인하시겠습니까?' : '이 예약 상태를 변경할까요?';
+            
+            if(confirm(confirmMsg)) { 
+                await db.from('reservations').update({ status: status }).eq('id', res.id); 
+                bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); 
+                loadReservations(); 
 
-        async function fetchCouncilEvents() {
-            const listDiv = document.getElementById('council-list');
-            listDiv.innerHTML = '<p style="text-align:center; color:#86868b;">진행 중인 행사를 불러오는 중입니다...</p>';
-            const { data, error } = await db.from('student_council_events').select('*').order('created_at', { ascending: false });
-            if (error || !data || data.length === 0) { listDiv.innerHTML = '<p style="text-align:center; color:#86868b; margin-top:30px;">현재 진행 중인 행사가 없습니다.</p>'; return; }
-            listDiv.innerHTML = data.map(ev => {
-                const posterHtml = ev.poster_url ? `<img src="${ev.poster_url}" class="event-poster" alt="행사 포스터">` : '';
-                const applyPeriodHtml = ev.apply_period ? `<p class="event-meta">📝 신청기간: ${ev.apply_period}</p>` : '';
-                const applyUrlHtml = ev.apply_url ? `<a href="${ev.apply_url}" target="_blank" class="apply-btn">신청하러 가기</a>` : '';
-                return `<div class="event-card">${posterHtml}<div class="event-info"><span class="event-dept">${ev.department}</span><h4 class="event-title">${ev.title}</h4><p class="event-meta">📅 행사기간: ${ev.event_period}</p>${applyPeriodHtml}${applyUrlHtml}</div></div>`;
+                if (status === 'approved' && res.phone) {
+                    if (confirm("예약 승인이 완료되었습니다.\n학생에게 확정 안내 문자를 발송하시겠습니까?\n(휴대폰의 메시지 앱으로 자동 연결됩니다)")) {
+                        const d = new Date(res.start_time);
+                        const d2 = new Date(res.end_time);
+                        const dateStr = `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
+                        const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} ~ ${String(d2.getHours()).padStart(2,'0')}:${String(d2.getMinutes()).padStart(2,'0')}`;
+                        
+                        const message = `[무룡고등학교 시설 예약 확정 안내]\n\n안녕하세요.\n무룡고등학교 시설 예약이 정상적으로 확정되었습니다.\n이용 전 학생회실로 방문하여 QR패스를 제출 및 키 수령하시기 바랍니다.\n\n이용 장소: ${res.room_name}\n이용 날짜: ${dateStr}\n이용 시간: ${timeStr}\n키박스 위치: 1층 보건실 옆 학생회실 입구\n※ 사용 후 반드시 키박스에 제출해 주시고, 키박스비밀번호는 예약 시 본인이 지정한 비밀번호이며, 무단 공유 시 이용이 제한될 수 있습니다.\n\n무룡고등학교 시설은 모든 학생이 함께 사용하는 공동 공간입니다.\n📌 예약 취소를 원하실 경우\nhttps://m.site.naver.com/21qL8 접속 후 → 상단 오른쪽 [내 예약 취소하기]를 선택해 주시기 바랍니다.\n\n모두가 쾌적하고 안전하게 사용할 수 있도록 적극적인 협조를 부탁드립니다.`;
+                        
+                        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                        const separator = isIOS ? '&' : '?';
+                        const phoneNumbersOnly = res.phone.replace(/[^0-9]/g, '');
+                        
+                        window.location.href = `sms:${phoneNumbersOnly}${separator}body=${encodeURIComponent(message)}`;
+                    }
+                }
+            } 
+        }
+
+        async function actionUnblock() { if(confirm("차단을 풀까요?")) { await db.from('reservations').delete().eq('id', currentSelectedRes.id); bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); loadReservations(); } }
+        function openBlockModal() { new bootstrap.Modal(document.getElementById('blockModal')).show(); }
+
+        /* --- 양심우산 리스트 로드 --- */
+        let pendingReturnData = null;
+        function formatFullDate(ds) { if(!ds) return '-'; const d = new Date(ds); return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+
+        async function fetchRentals() {
+            const list = document.getElementById('rental-list'); list.innerHTML = '로딩 중...';
+            const { data } = await db.from('umbrella_rentals').select('*').neq('status', '파손').order('rent_date', { ascending: false }).limit(30);
+            if(!data || data.length === 0) { list.innerHTML = '<p style="text-align:center; color:#86868b;">기록이 없습니다.</p>'; return; }
+            list.innerHTML = data.map(row => {
+                const isRent = row.status === '대여중';
+                const badgeCls = isRent ? 'rent' : 'return';
+                const dateObj = new Date(isRent ? row.rent_date : (row.return_date || row.rent_date)); 
+                const dateStr = `${dateObj.getMonth()+1}/${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+                
+                return `
+                <div class="rental-card" onclick='openUmbrellaModal(${JSON.stringify(row).replace(/'/g, "&#39;")})'>
+                    <div class="r-left">
+                        <span class="umb-badge ${badgeCls}">${row.status}</span>
+                        <div class="r-info">
+                            <div class="r-name">${row.student_name} <span class="r-id">${row.student_id}</span></div>
+                            <div class="r-date">${isRent?'대여':'반납'}: ${dateStr}</div>
+                        </div>
+                    </div>
+                    <div class="r-right">
+                        <div class="umb-num">${row.umbrella_number || '-'}번</div>
+                    </div>
+                </div>`;
             }).join('');
         }
 
-        /* 급식실 코드 */
-        const grades = ["배식 전", "3학년", "2학년", "1학년", "배식 종료", "미운영"];
-        let currentIdx = -1; let alertTimeout; let waitInterval = null; let popupInterval = null; let isPopupVisible = false;
-
-        function showAlert(grade) { if (grade === "배식 종료" || grade === "배식 전" || grade === "미운영") return; document.getElementById('alertGrade').innerText = grade; document.getElementById('alertOverlay').style.display = 'flex'; clearTimeout(alertTimeout); alertTimeout = setTimeout(closeAlert, 15000); }
-        function closeAlert() { document.getElementById('alertOverlay').style.display = 'none'; }
-        function togglePopupDisplay() { const popup = document.getElementById('importantPopup'); if (document.getElementById('alertOverlay').style.display === 'flex') { popup.style.opacity = '0'; setTimeout(() => { popup.style.display = 'none'; }, 500); isPopupVisible = false; return; } if (isPopupVisible) { popup.style.opacity = '0'; setTimeout(() => { popup.style.display = 'none'; }, 500); isPopupVisible = false; } else { popup.style.display = 'flex'; setTimeout(() => { popup.style.opacity = '1'; }, 10); isPopupVisible = true; } }
-        function handlePopup(text) { const textDiv = document.getElementById('importantPopupText'); if (popupInterval) clearInterval(popupInterval); if (text && text.trim() !== '') { textDiv.innerText = text; isPopupVisible = false; togglePopupDisplay(); popupInterval = setInterval(togglePopupDisplay, 5000); } else { const popup = document.getElementById('importantPopup'); popup.style.opacity = '0'; setTimeout(() => { popup.style.display = 'none'; }, 500); isPopupVisible = false; } }
-        function updateWaitTimeUI(waitMin, setAtStr) { const waitBox = document.getElementById('waitTimeBox'); if (waitInterval) clearInterval(waitInterval); if (!waitMin || waitMin <= 0 || !setAtStr) { waitBox.style.display = 'none'; return; } const setAt = new Date(setAtStr); waitInterval = setInterval(() => { const diffSec = Math.floor((new Date() - setAt) / 1000); const remainingSec = (waitMin * 60) - diffSec; if (remainingSec <= 0) { waitBox.style.display = 'none'; clearInterval(waitInterval); } else { waitBox.style.display = 'block'; const m = Math.floor(remainingSec / 60); const s = remainingSec % 60; document.getElementById('displayTime').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; } }, 1000); }
-        function updateUI(index) { const statusBox = document.getElementById('studentQueue'); const subStatus = document.getElementById('subStatus'); const banner = document.getElementById('noticeBanner'); const targetGrade = document.getElementById('targetGrade'); if (currentIdx !== -1 && currentIdx !== index && index > 0 && index < 4) { showAlert(grades[index]); } currentIdx = index; if (index === 5) { statusBox.innerText = grades[index]; statusBox.style.color = "#ef4444"; subStatus.style.display = "block"; banner.style.display = "none"; } else { subStatus.style.display = "none"; if (index === 0 || index === 4) { statusBox.innerText = grades[index]; statusBox.style.color = "#94a3b8"; banner.style.display = "none"; } else { statusBox.innerText = grades[index]; statusBox.style.color = "#3b82f6"; banner.style.display = "block"; targetGrade.innerText = grades[index]; } } }
-        
-        async function loadLunchData() { const { data } = await db.from('lunch_status').select('*').eq('id', 1).single(); if (data) { currentIdx = data.current_index; updateUI(data.current_index); updateWaitTimeUI(data.wait_minutes, data.wait_set_at); } const { data: nList } = await db.from('announcements').select('*'); if (nList) { nList.forEach(n => { if(n.id === 1) { const rN = document.getElementById('realNotice'); if(rN) rN.innerText = n.content; } if(n.id === 2) handlePopup(n.content); }); } }
-        async function fetchMenu() { const dStr = todayStr.replace(/-/g, ''); try { const res = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480070&MLSV_YMD=${dStr}`); const data = await res.json(); if (data.RESULT && data.RESULT.CODE === "INFO-200") { document.getElementById('menuContent').innerHTML = "<span style='color:#86868b; font-size:0.95rem;'>오늘은 급식 정보가 없습니다. (주말/공휴일 등)</span>"; return; } if (data.mealServiceDietInfo && data.mealServiceDietInfo[1].row) { let rawMenu = data.mealServiceDietInfo[1].row[0].DDISH_NM; let menuList = rawMenu.split(/<br\/>/); let cleanMenu = menuList.map(item => item.replace(/[0-9.\(\)]/g, '').trim()).filter(item => item !== ''); document.getElementById('menuContent').innerHTML = cleanMenu.join('<br>'); } else { document.getElementById('menuContent').innerHTML = "<span style='color:#86868b; font-size:0.95rem;'>오늘의 급식 정보가 등록되지 않았습니다.</span>"; } } catch(e) { document.getElementById('menuContent').innerText = "메뉴 로드 실패 (네트워크를 확인해주세요)"; } }
-        async function sendFeedback() { const text = document.getElementById('feedbackText').value; if (!text.trim()) return; const { error } = await db.from('feedback').insert([{ content: text }]); if (!error) { alert("소중한 의견이 전송되었습니다!"); document.getElementById('feedbackText').value = ""; } }
-        
-        db.channel('student-lunch-channel').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'lunch_status' }, p => { 
-            updateUI(p.new.current_index); 
-            updateWaitTimeUI(p.new.wait_minutes, p.new.wait_set_at); 
-        }).subscribe();
-
-        /* 양심우산 코드 */
-        let currentMode = 'rent'; let calculatedReturnStr = "";
-        function setMode(mode) { currentMode = mode; document.getElementById('tab-rent').className = mode === 'rent' ? 'tab active' : 'tab'; document.getElementById('tab-return').className = mode === 'return' ? 'tab active-return' : 'tab'; document.getElementById('phone-group').style.display = mode === 'rent' ? 'block' : 'none'; const btn = document.getElementById('generate-btn'); btn.innerText = mode === 'rent' ? '대여 패스 발급받기' : '반납 패스 발급받기'; btn.className = mode === 'return' ? 'umb-btn btn-return' : 'umb-btn'; document.getElementById('welcome-text').innerHTML = `정보를 입력하고<br><strong style="color:${mode==='rent'?'#00B4D8':'#2B9348'};">${mode==='rent'?'대여':'반납'} 패스 발급받기</strong>를 눌러주세요!`; document.getElementById('welcome-box').style.display = 'flex'; document.getElementById('qr-image').style.display = 'none'; document.getElementById('success-msg').style.display = 'none'; if (checkInterval) clearInterval(checkInterval); }
-        async function checkAndShowConsent() { const sid = document.getElementById('student_id').value; const sname = document.getElementById('student_name').value; const phone = document.getElementById('phone_number').value; if(!sid || !sname || (currentMode === 'rent' && !phone)) { alert("정보를 모두 입력해주세요."); return; } if(sid.length !== 4) { alert("학번은 정확히 4자리 숫자로 입력해주세요."); return; } if (currentMode === 'rent') { const { data, error } = await db.from('umbrella_rentals').select('id').eq('student_id', sid).eq('status', '대여중'); if (data && data.length > 0) { alert("이미 대여 중인 우산이 있습니다!\n기존 우산을 먼저 반납한 후 이용해 주세요."); return; } const tmr = new Date(); tmr.setDate(tmr.getDate() + 1); calculatedReturnStr = `내일 ${tmr.getMonth() + 1}월 ${tmr.getDate()}일 점심시간`; document.getElementById('modal-return-time').innerText = calculatedReturnStr; document.getElementById('consent-modal').style.display = 'flex'; } else { executeQRGeneration(sid, sname, phone); } }
-        function closeConsentModal() { document.getElementById('consent-modal').style.display = 'none'; }
-        function agreeAndGenerate() { closeConsentModal(); executeQRGeneration(document.getElementById('student_id').value, document.getElementById('student_name').value, document.getElementById('phone_number').value); }
-        function executeQRGeneration(sid, sname, phone) { document.getElementById('welcome-box').style.display = 'none'; const qrData = { action: currentMode, student_id: sid, student_name: sname, phone_number: phone }; const qrImg = document.getElementById('qr-image'); qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(JSON.stringify(qrData))}&color=1f2937`; qrImg.style.display = 'block'; const qrGenTime = new Date().toISOString(); checkInterval = setInterval(async () => { const checkStatus = currentMode === 'rent' ? '대여중' : '반납완료'; const { data } = await db.from('umbrella_rentals').select('*').eq('student_id', sid).eq('status', checkStatus).gte(currentMode === 'rent' ? 'rent_date' : 'return_date', qrGenTime); if (data && data.length > 0) { clearInterval(checkInterval); document.getElementById('qr-image').style.display = 'none'; document.getElementById('success-title').innerText = currentMode === 'rent' ? '대여 완료!' : '반납 완료!'; document.getElementById('success-title').style.color = currentMode === 'rent' ? '#00B4D8' : '#2B9348'; document.getElementById('success-desc').innerHTML = currentMode === 'rent' ? `잊지 말고 꼭 반납해 주세요! ☂️<br><br><span style="color:#ef4444;">반납 기한: ${calculatedReturnStr}</span>` : "양심을 지켜주셔서 감사합니다 💖"; document.getElementById('success-msg').style.display = 'block'; } }, 2000); }
-
-        /* 시설예약 코드 */
-        let termsModal; let instaModal;
-        function handlePriorityCheck(cb) { if(cb.checked) alert("우선권은 특별 승인된 대상만 선택 가능합니다.\n허위로 체크할 경우 예약 취소 및 향후 시설 이용이 제한됩니다."); }
-        function checkTermsScroll(el) { if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) { document.getElementById('agreeText').disabled = false; document.getElementById('scrollMsg').style.display = 'none'; } }
-        function populateDateSelect() { const dateSelect = document.getElementById('use_date'); if(!dateSelect) return; dateSelect.innerHTML = ''; const now = new Date(); const dayOfWeek = now.getDay(); let daysToNextMonday = (dayOfWeek === 0) ? 1 : 8 - dayOfWeek; const targetMonday = new Date(now); targetMonday.setDate(now.getDate() + daysToNextMonday); const daysKo = ['일', '월', '화', '수', '목', '금', '토']; for (let i = 0; i < 5; i++) { const targetDate = new Date(targetMonday); targetDate.setDate(targetMonday.getDate() + i); const offset = targetDate.getTimezoneOffset() * 60000; dateSelect.add(new Option(`${targetDate.getMonth() + 1}/${targetDate.getDate()} (${daysKo[targetDate.getDay()]})`, (new Date(targetDate - offset)).toISOString().split('T')[0])); } }
-        function populateTimeSelects() { const sSelect = document.getElementById('start_time'); const eSelect = document.getElementById('end_time'); if(!sSelect) return; for (let i = 7; i <= 16; i++) { let hour = i.toString().padStart(2, '0'); sSelect.add(new Option(`${hour}:00`, `${hour}:00`)); eSelect.add(new Option(`${hour}:00`, `${hour}:00`)); if (i !== 16) { sSelect.add(new Option(`${hour}:30`, `${hour}:30`)); eSelect.add(new Option(`${hour}:30`, `${hour}:30`)); } } }
-        function checkBookingWindow() { const now = new Date(); const day = now.getDay(); const hour = now.getHours(); if ((day === 0 && hour >= 18) || (day === 1 && hour < 18)) { document.getElementById('facility-content').innerHTML = `<div style="text-align:center; padding:40px 20px; background:white; border-radius:20px;"><h1 style="font-size:3rem; margin-bottom:10px;">🛠️</h1><h3 style="color:#2c3e50; font-weight:bold; margin-bottom:15px;">예약 확정 및 점검 시간</h3><p style="color:#6c757d;">현재는 접수된 예약 명단을 확정하는 시간입니다.<br>다음 주 예약은 <strong>월요일 오후 6시</strong>에 시작됩니다.</p></div>`; } else { populateDateSelect(); populateTimeSelects(); } }
-        function openTermsModal() { const name = document.getElementById('name').value; const sid = document.getElementById('sid').value; const phone = document.getElementById('phone').value; const purpose = document.getElementById('purpose').value; const password = document.getElementById('password').value; const useDate = document.getElementById('use_date').value; const startTime = document.getElementById('start_time').value; const endTime = document.getElementById('end_time').value; if (!name || sid.length !== 4 || !phone || !purpose || !password || !useDate) { alert("모든 정보를 올바르게 입력해 주세요."); return; } if (password.length !== 4) { alert("비밀번호는 숫자 4자리로 입력해 주세요."); return; } const start = new Date(`${useDate}T${startTime}`); const end = new Date(`${useDate}T${endTime}`); if (start >= end) { alert("종료 시간은 시작 시간보다 늦어야 합니다."); return; } if ((end.getTime() - start.getTime()) / (1000 * 60 * 60) > 2) { alert("1회 최대 이용 가능 시간은 2시간입니다."); return; } document.getElementById('agreeText').value = ''; document.getElementById('agreeText').disabled = true; document.getElementById('scrollMsg').style.display = 'block'; termsModal = new bootstrap.Modal(document.getElementById('termsModal')); termsModal.show(); }
-        async function submitReservation() { if (document.getElementById('agreeText').value.trim() !== "동의합니다") { alert("약관을 읽고 '동의합니다'를 정확히 입력하셔야 합니다."); return; } const start = new Date(`${document.getElementById('use_date').value}T${document.getElementById('start_time').value}`); const end = new Date(`${document.getElementById('use_date').value}T${document.getElementById('end_time').value}`); const { data: existing } = await db.from('reservations').select('*').eq('room_name', document.getElementById('room').value).in('status', ['approved', 'pending', 'blocked', 'used']).filter('start_time', 'lt', end.toISOString()).filter('end_time', 'gt', start.toISOString()); let finalStatus = 'pending'; if (existing && existing.length > 0) { if (existing.some(r => r.status === 'blocked')) { alert("해당 시간은 예약이 제한되었습니다."); termsModal.hide(); return; } if (!confirm("이미 예약이 마감되었습니다. 대기 예약하시겠습니까?")) { termsModal.hide(); return; } finalStatus = 'standby'; } const { error } = await db.from('reservations').insert([{ student_name: document.getElementById('name').value, student_id: document.getElementById('sid').value, phone: document.getElementById('phone').value, purpose: document.getElementById('purpose').value, password: document.getElementById('password').value, room_name: document.getElementById('room').value, start_time: start.toISOString(), end_time: end.toISOString(), status: finalStatus, is_priority: document.getElementById('is_priority').checked }]); if (!error) { termsModal.hide(); instaModal = new bootstrap.Modal(document.getElementById('instaModal')); instaModal.show(); } else { alert("에러: " + error.message); } }
-
-        let cancelModal; let qrPwModal; let qrModal; let currentQrId = ''; let currentQrName = ''; let qrCheckInterval;
-        async function loadStatus() { const { data } = await db.from('reservations').select('*').order('start_time', { ascending: true }); const list = document.getElementById('public-list'); list.innerHTML = ''; data.forEach(res => { let badgeClass = '', badgeText = ''; if(res.status === 'pending') { badgeClass = 'badge-pending'; badgeText = '대기 중'; } else if(res.status === 'approved') { badgeClass = 'badge-approved'; badgeText = '승인 완료'; } else if(res.status === 'standby') { badgeClass = 'badge-standby'; badgeText = '취소 대기'; } else if(res.status === 'rejected') { badgeClass = 'badge-rejected'; badgeText = '이용 불가'; } else if(res.status === 'cancelled') { badgeClass = 'badge-cancelled'; badgeText = '취소됨'; } else if(res.status === 'blocked') { badgeClass = 'badge-blocked'; badgeText = '예약 제한'; } else if(res.status === 'used') { badgeClass = 'badge-used'; badgeText = '사용 완료'; } const d1 = new Date(res.start_time); const d2 = new Date(res.end_time); const compactTime = `<strong style="font-size:0.9rem; color:#1d1d1f;">${d1.getMonth()+1}.${d1.getDate()}</strong><br><span style="font-size:0.8rem; color:#86868b;">${String(d1.getHours()).padStart(2,'0')}:${String(d1.getMinutes()).padStart(2,'0')} - ${String(d2.getHours()).padStart(2,'0')}:${String(d2.getMinutes()).padStart(2,'0')}</span>`; const priorityBadge = (res.is_priority && res.status !== 'blocked') ? `<br><span class="badge badge-priority mt-1">우선권</span>` : ''; const roomName = `<span style="font-weight:600;">${res.room_name}</span>${priorityBadge}`; let displayName = `<span style="font-weight:600;">${res.student_name.charAt(0)}*${res.student_name.charAt(res.student_name.length-1)}</span><br><span style="font-size:0.75rem; color:#86868b;">${res.student_id.toString().substring(0,2)}**</span>`; if (res.status === 'blocked') { displayName = `<span class="fw-bold" style="font-size: 0.85rem; color:#ff3b30;">시스템<br>차단</span>`; } let qrButton = ''; if(res.status === 'approved') { qrButton = `<br><button class="btn btn-dark mt-2" style="font-size: 0.7rem; padding: 4px 10px;" onclick="openQrPwModal('${res.id}', '${res.student_name}')">QR 패스</button>`; } list.innerHTML += `<tr><td>${displayName}</td><td>${roomName}</td><td>${compactTime}</td><td><span class="badge ${badgeClass}">${badgeText}</span>${qrButton}</td></tr>`; }); }
-        function openQrPwModal(id, name) { currentQrId = id; currentQrName = name; document.getElementById('qr-pw-input').value = ''; if(!qrPwModal) qrPwModal = new bootstrap.Modal(document.getElementById('qrPwModal')); qrPwModal.show(); }
-        async function verifyQrPw() { const pw = document.getElementById('qr-pw-input').value; if(!pw) return alert("비밀번호를 입력해주세요."); const { data } = await db.from('reservations').select('password').eq('id', currentQrId).single(); if(data && data.password === pw) { qrPwModal.hide(); document.getElementById('qr-student-name').innerText = `${currentQrName} 학생의 패스`; document.getElementById('qr-display-area').style.display = 'block'; document.getElementById('qr-success-msg').style.display = 'none'; document.getElementById('fac-qr-image').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${currentQrId}&margin=10`; if(!qrModal) qrModal = new bootstrap.Modal(document.getElementById('qrModal')); qrModal.show(); if(qrCheckInterval) clearInterval(qrCheckInterval); qrCheckInterval = setInterval(async () => { const { data: checkData } = await db.from('reservations').select('status').eq('id', currentQrId).single(); if(checkData && checkData.status === 'used') { clearInterval(qrCheckInterval); document.getElementById('qr-display-area').style.display = 'none'; document.getElementById('qr-success-msg').style.display = 'block'; loadStatus(); } }, 2000); } else { alert("❌ 비밀번호가 일치하지 않습니다."); } }
-        function openCancelModal() { cancelModal = new bootstrap.Modal(document.getElementById('cancelModal')); cancelModal.show(); }
-        async function processCancel() { const name = document.getElementById('c_name').value; const sid = document.getElementById('c_sid').value; const pw = document.getElementById('c_pw').value; if(!name || !sid || !pw) return alert("모든 정보를 입력해 주세요."); const { data } = await db.from('reservations').select('*').eq('student_name', name).eq('student_id', sid).eq('password', pw).in('status', ['pending', 'approved', 'standby']); if (!data || data.length === 0) return alert("일치하는 예약 정보가 없거나, 이미 취소/거절된 예약입니다."); const targetId = data[0].id; const { error } = await db.from('reservations').update({ status: 'cancelled' }).eq('id', targetId); if (!error) { alert("성공적으로 예약이 취소되었습니다."); cancelModal.hide(); loadStatus(); } else { alert("오류 발생: " + error.message); } }
-
-        /* 💡 반 일정 달력 (수정/삭제 버튼 깔끔한 버전 적용 완료) */
-        async function fetchNeisCalendar() { 
-            const listDiv = document.getElementById('neis-calendar-list'); 
-            try { 
-                const yyyy = kstDate.getFullYear(); const mm = String(kstDate.getMonth() + 1).padStart(2, '0'); const dd = String(kstDate.getDate()).padStart(2, '0');
-                const fromDate = `${yyyy}${mm}${dd}`; const toDate = `${yyyy}1231`; const todayYMD = parseInt(fromDate);
-                
-                const res = await fetch(`https://open.neis.go.kr/hub/SchoolSchedule?Type=json&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480070&AA_FROM_YMD=${fromDate}&AA_TO_YMD=${toDate}`); 
-                const data = await res.json(); 
-                
-                if(data.SchoolSchedule) { 
-                    const events = data.SchoolSchedule[1].row.filter(e => e.EVENT_NM !== '토요휴업일' && e.EVENT_NM !== '휴업일' && parseInt(e.AA_YMD) >= todayYMD); 
-                    if(events.length === 0) { listDiv.innerHTML = '<p style="color:#86868b;">다가오는 공식 일정이 없습니다.</p>'; return; } 
-                    const displayEvents = events.slice(0, 5);
-                    listDiv.innerHTML = displayEvents.map(e => `<div class="list-item"><strong style="color:#0071e3; margin-right:10px;">${e.AA_YMD.substring(4,6)}/${e.AA_YMD.substring(6,8)}</strong> ${e.EVENT_NM}</div>`).join(''); 
-                } else { listDiv.innerHTML = '<p style="color:#86868b;">일정이 없습니다.</p>'; } 
-            } catch(e) { listDiv.innerHTML = '<p style="color:#86868b;">일정을 불러오지 못했습니다.</p>'; } 
-        }
-        
-        async function loadClassCalendar() { 
-            const listDiv = document.getElementById('class-calendar-list'); 
-            listDiv.innerHTML = '불러오는 중...'; 
-            const { data } = await db.from('calendar_events').select('*').eq('target_grade', document.getElementById('cal-grade').value).eq('target_class', document.getElementById('cal-class').value).gte('event_date', todayStr).order('event_date', { ascending: true }); 
-            if (!data || !data.length) { listDiv.innerHTML = '<p style="text-align:center; color:#86868b;">다가오는 일정이 없습니다.</p>'; return; } 
-            
-            listDiv.innerHTML = data.map(ev => `
-                <div class="list-item" style="display:flex; justify-content:space-between; align-items:flex-start;">
-                    <div style="flex:1; min-width:0; margin-right:10px;">
-                        <div style="display:flex; align-items:flex-start; gap:8px;">
-                            <strong style="color:#0071e3; flex-shrink:0; margin-top:2px;">${ev.event_date.substring(5).replace('-','/')}</strong>
-                            <span style="font-weight:bold; line-height:1.4; word-break:break-word;">${ev.title}</span>
+        async function fetchBroken() {
+            const { data } = await db.from('umbrella_rentals').select('*').eq('status', '파손').order('rent_date', { ascending: false });
+            const listContainer = document.getElementById('broken-list');
+            if (!data || data.length === 0) { listContainer.innerHTML = '<p style="text-align:center; color:#64748b;">파손된 우산이 없습니다.</p>'; return; }
+            listContainer.innerHTML = data.map(row => {
+                const dateObj = new Date(row.rent_date); 
+                const dateStr = `${dateObj.getMonth()+1}/${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+                return `
+                <div class="rental-card" onclick='openBrokenDetailModal(${JSON.stringify(row).replace(/'/g, "&#39;")})'>
+                    <div class="r-left">
+                        <span class="umb-badge broken">${row.status}</span>
+                        <div class="r-info">
+                            <div class="r-name">${row.student_name} <span class="r-id text-danger">신고</span></div>
+                            <div class="r-date">신고일: ${dateStr}</div>
                         </div>
-                        <div style="font-size:0.75rem; color:#86868b; margin-top:6px;">등록자: ${ev.author}</div>
                     </div>
-                    <div style="display:flex; gap:5px; flex-shrink:0; align-items:center; margin-top:2px;">
-                        <button onclick="editCalendarEvent(${ev.id}, '${ev.title.replace(/'/g, "\\'")}')" style="padding:6px 12px; font-size:0.75rem; border-radius:8px; border:1px solid #bfdbfe; background:#eff6ff; color:#0071e3; font-weight:700; cursor:pointer; white-space:nowrap;">수정</button>
-                        <button onclick="deleteCalendarEvent(${ev.id})" style="padding:6px 12px; font-size:0.75rem; border-radius:8px; border:1px solid #fecaca; background:#fef2f2; color:#ef4444; font-weight:700; cursor:pointer; white-space:nowrap;">삭제</button>
+                    <div class="r-right">
+                        <div class="umb-num">${row.umbrella_number || '-'}번</div>
                     </div>
-                </div>`).join(''); 
-        }
-        
-        async function submitCalendar() { 
-            const date = document.getElementById('cal-reg-date').value; 
-            const period = document.getElementById('cal-reg-period').value;
-            const baseTitle = document.getElementById('cal-reg-title').value.trim(); 
-            const author = document.getElementById('cal-reg-author').value.trim(); 
-            
-            if(!date || !baseTitle || !author) return alert("항목을 모두 입력해주세요."); 
-            if(date < todayStr) return alert("과거 날짜는 등록할 수 없습니다."); 
-            
-            const finalTitle = period === "종일" ? baseTitle : `[${period}] ${baseTitle}`;
-            
-            const { error } = await db.from('calendar_events').insert([{ target_grade: document.getElementById('cal-grade').value, target_class: document.getElementById('cal-class').value, event_date: date, title: finalTitle, author: author }]); 
-            if(!error) { alert("일정이 등록되었습니다."); document.getElementById('cal-reg-title').value = ''; loadClassCalendar(); } 
+                </div>`;
+            }).join('');
         }
 
-        async function deleteCalendarEvent(id) {
-            if(!confirm("이 일정을 정말 삭제할까요?")) return;
-            const { error } = await db.from('calendar_events').delete().eq('id', id);
-            if(!error) { alert("삭제되었습니다!"); loadClassCalendar(); }
-            else { alert("삭제 중 오류가 발생했습니다."); }
+        function openPdfModal() { document.getElementById('pdfModal').style.display = 'flex'; }
+        function openBrokenModal() { document.getElementById('brokenModal').style.display = 'flex'; fetchBroken(); }
+        function closeCustomModal(e) { if(e.target.classList.contains('modal-overlay') || e.target.classList.contains('close-btn')) e.target.closest('.modal-overlay').style.display = 'none'; }
+
+        function openUmbrellaModal(row) {
+            document.getElementById('u-name-title').innerText = `${row.student_name} 상세 정보`;
+            document.getElementById('u-id').innerText = row.student_id;
+            document.getElementById('u-umbrella').innerText = `${row.umbrella_number || '-'}번`;
+            document.getElementById('u-phone').innerText = row.phone_number || '미입력';
+            document.getElementById('u-rent-date').innerText = formatFullDate(row.rent_date);
+            document.getElementById('u-return-date').innerText = formatFullDate(row.return_date);
+
+            document.getElementById('delete-umbrella-btn').onclick = async () => {
+                if(confirm("기록을 삭제할까요?")) { await db.from('umbrella_rentals').delete().eq('id', row.id); document.getElementById('umbrellaDetailModal').style.display = 'none'; fetchRentals(); }
+            };
+
+            const manualBtn = document.getElementById('manual-return-btn');
+            if (row.status === '대여중') {
+                manualBtn.style.display = 'block';
+                manualBtn.onclick = () => {
+                    pendingReturnData = row;
+                    document.getElementById('umbrellaDetailModal').style.display = 'none';
+                    document.getElementById('d-student-name').innerText = row.student_name;
+                    document.getElementById('d-umbrella-num').innerText = row.umbrella_number;
+                    document.getElementById('damageModal').style.display = 'flex';
+                };
+            } else { manualBtn.style.display = 'none'; }
+            document.getElementById('umbrellaDetailModal').style.display = 'flex';
         }
 
-        async function editCalendarEvent(id, oldTitle) {
-            const newTitle = prompt("일정 내용을 수정해주세요:", oldTitle);
-            if(newTitle === null || newTitle.trim() === '') return; 
+        function openBrokenDetailModal(row) {
+            document.getElementById('u-name-title').innerText = `파손 신고 상세 정보`;
+            document.getElementById('u-id').innerText = row.student_id;
+            document.getElementById('u-umbrella').innerText = `${row.umbrella_number || '-'}번`;
+            document.getElementById('u-rent-date').innerText = formatFullDate(row.rent_date);
             
-            const { error } = await db.from('calendar_events').update({ title: newTitle }).eq('id', id);
-            if(!error) { alert("수정되었습니다!"); loadClassCalendar(); }
-            else { alert("수정 중 오류가 발생했습니다."); }
+            document.getElementById('delete-umbrella-btn').onclick = async () => {
+                if(confirm("삭제할까요?")) { await db.from('umbrella_rentals').delete().eq('id', row.id); document.getElementById('umbrellaDetailModal').style.display = 'none'; fetchBroken(); }
+            };
+
+            const manualBtn = document.getElementById('manual-return-btn');
+            manualBtn.style.display = 'block'; manualBtn.style.background = 'var(--dark)'; manualBtn.innerHTML = '수리 완료 (파손 해제)';
+            manualBtn.onclick = async () => {
+                if(confirm("수리가 완료되었나요?")) { await db.from('umbrella_rentals').delete().eq('id', row.id); document.getElementById('umbrellaDetailModal').style.display = 'none'; fetchBroken(); }
+            };
+            document.getElementById('umbrellaDetailModal').style.display = 'flex';
         }
 
-        /* 게시판 코드 */
-        function goBoard(type, title) { 
-            currentBoardType = type; 
-            
-            const writeContainer = document.getElementById('board-write-container');
-            const listContainer = document.getElementById('board-list-container');
-            const fileArea = document.getElementById('file-upload-area');
-            const studyMetaArea = document.getElementById('study-meta-inputs');
-            
-            document.getElementById('board-author').value = '';
-            document.getElementById('board-input-title').value = ''; 
-            document.getElementById('board-content').value = '';
-            if(document.getElementById('board-subject')) document.getElementById('board-subject').value = '';
-            if(document.getElementById('board-file')) document.getElementById('board-file').value = '';
-
-            if (type === 'study') { 
-                document.getElementById('board-list-title').innerText = '📚 학습자료 목록';
-                document.getElementById('board-write-title').innerText = '📚 자료 기여하기'; 
-                document.getElementById('board-submit-btn').innerText = '자료 기여하기'; 
-                
-                document.getElementById('board-content').placeholder = "내용 (선택사항)";
-                document.getElementById('board-desc').style.display = 'none';
-                
-                listContainer.style.display = 'block'; 
-                fileArea.style.display = 'block'; 
-                studyMetaArea.style.display = 'flex'; 
-                
-            } else if (type === 'suggestion') { 
-                document.getElementById('board-write-title').innerText = '💡 새 건의사항 작성'; 
-                document.getElementById('board-submit-btn').innerText = '건의하기'; 
-                
-                document.getElementById('board-desc').innerHTML = '학교 발전을 위한 여러분의 소중한 의견을 들려주세요.<br>작성된 건의사항은 학생회만 확인할 수 있습니다.';
-                document.getElementById('board-desc').style.display = 'block';
-                document.getElementById('board-content').placeholder = "건의할 내용을 상세히 적어주세요.";
-                
-                fileArea.style.display = 'none'; 
-                studyMetaArea.style.display = 'none'; 
-                listContainer.style.display = 'none';
-            }
-            
-            goPage('board'); 
-            loadBoardData(type); 
+        async function executeReturn(isDamaged) {
+            document.getElementById('damageModal').style.display = 'none';
+            if (!pendingReturnData) return;
+            const { id, student_id, student_name, phone_number, umbrella_number } = pendingReturnData;
+            try {
+                await db.from('umbrella_rentals').update({ status: '반납완료', return_date: new Date().toISOString() }).eq('id', id);
+                if (isDamaged) {
+                    await db.from('umbrella_rentals').insert([{ student_id, student_name, phone_number, umbrella_number, status: '파손', rent_date: new Date().toISOString() }]);
+                    alert(`${umbrella_number}번 파손 처리 완료.`);
+                } else { alert('정상 반납 처리 완료.'); }
+            } catch (err) {} finally { pendingReturnData = null; fetchRentals(); }
         }
-        
-        async function loadBoardData(type) { 
-            const listDiv = document.getElementById('board-list'); 
-            if(type === 'suggestion') return; 
 
-            listDiv.innerHTML = '<p>불러오는 중...</p>'; 
-            const { data, error } = await db.from('board_posts').select('*').eq('board_type', type).order('created_at', { ascending: false }); 
-            if (error || !data.length) { listDiv.innerHTML = '<p style="text-align:center; color:#86868b;">등록된 글이 없습니다.</p>'; return; } 
-            
-            listDiv.innerHTML = data.map(post => { 
-                const d = new Date(post.created_at); 
-                const dateStr = `${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; 
-                const fileBtn = post.file_url ? `<a href="${post.file_url}" target="_blank" style="color:#0071e3; font-weight:bold; text-decoration:none; background:#e3f2fd; padding:4px 8px; border-radius:8px; font-size:0.8rem;">첨부파일 열기</a>` : ''; 
-                
-                let displayContent = post.content;
-                let tagsHtml = '';
+        async function executePDF(type) {
+            const btn = type === 'public' ? document.getElementById('btn-pdf-public') : document.getElementById('btn-pdf-admin');
+            const originalText = btn.innerHTML; btn.innerHTML = 'PDF 생성 중...'; btn.style.pointerEvents = 'none';
+            const isPublic = (type === 'public');
+            const { data } = await db.from('umbrella_rentals').select('*').eq('status', '대여중').order('rent_date', { ascending: true });
+            if (!data || data.length === 0) { alert('미반납자가 없습니다.'); btn.innerHTML = originalText; btn.style.pointerEvents = 'auto'; return; }
 
-                if (post.board_type === 'study') {
-                    try {
-                        const parsed = JSON.parse(post.content); 
-                        displayContent = parsed.text;
-                        if(parsed.grade && parsed.subject) {
-                            tagsHtml = `<span style="background:#f1f5f9; color:#475569; padding:4px 8px; border-radius:8px; font-size:0.75rem; font-weight:bold; margin-right:5px;">${parsed.grade}</span>
-                                        <span style="background:#e0e7ff; color:#4f46e5; padding:4px 8px; border-radius:8px; font-size:0.75rem; font-weight:bold; margin-right:10px;">${parsed.subject}</span>`;
-                        }
-                    } catch(e) { } 
+            const container = document.createElement('div'); container.style.padding = '30px'; container.style.fontFamily = "'Pretendard', sans-serif";
+            let tableHTML = `<h2 style="text-align:center;">양심우산 미반납자 명단</h2><table style="width:100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background-color:#f1f5f9;"><th style="border:1px solid #cbd5e1; padding:12px;">${isPublic ? '학년' : '학번'}</th><th style="border:1px solid #cbd5e1; padding:12px;">이름</th><th style="border:1px solid #cbd5e1; padding:12px;">우산번호</th></tr></thead><tbody>`;
+
+            data.forEach(row => {
+                let dName = (row.student_name || '').trim(); let dId = row.student_id;
+                if (isPublic) {
+                    if (dName.length === 2) dName = dName.charAt(0) + '*';
+                    else if (dName.length === 3) dName = dName.charAt(0) + '*' + dName.charAt(2);
+                    if (String(dId).length === 4) dId = String(dId).charAt(0) + '학년'; else dId = '비공개'; 
                 }
-                
-                const authorText = post.board_type === 'study' ? dateStr : `${post.author} | ${dateStr}`;
+                tableHTML += `<tr style="text-align:center;"><td style="border:1px solid #cbd5e1; padding:10px;">${dId}</td><td style="border:1px solid #cbd5e1; padding:10px;">${dName}</td><td style="border:1px solid #cbd5e1; padding:10px; font-weight:bold; color:#3b82f6;">${row.umbrella_number || '-'}</td></tr>`;
+            });
+            tableHTML += `</tbody></table>`;
+            container.innerHTML = tableHTML;
 
-                return `<div class="list-item">
-                            <div style="display:flex; align-items:center; margin-bottom:5px;">
-                                ${tagsHtml}
-                                <span style="font-weight:700; font-size:1.05rem;">${post.title}</span>
-                            </div>
-                            <div style="font-size:0.9rem; margin-bottom:8px;">${displayContent}</div>
-                            <div style="font-size:0.8rem; color:#86868b; display:flex; justify-content:space-between;">
-                                <span>${authorText}</span>
-                                ${fileBtn}
-                            </div>
-                        </div>`; 
-            }).join(''); 
+            html2pdf().set({ margin: 15, filename: `양심우산_${new Date().toISOString().slice(0,10)}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container).save().then(() => {
+                btn.innerHTML = originalText; btn.style.pointerEvents = 'auto'; document.getElementById('pdfModal').style.display = 'none'; 
+            });
         }
-        
-        async function submitBoard() { 
-            const author = document.getElementById('board-author').value.trim(); 
-            const title = document.getElementById('board-input-title').value.trim(); 
-            const content = document.getElementById('board-content').value.trim(); 
-            const fileInput = document.getElementById('board-file'); 
-            const submitBtn = document.getElementById('board-submit-btn');
-            
-            if(!author || !title) return alert("작성자와 제목을 입력해주세요."); 
-            if(currentBoardType !== 'study' && !content) return alert("내용을 입력해주세요.");
-            if(currentBoardType === 'study' && !document.getElementById('board-subject').value.trim()) return alert("과목을 입력해주세요.");
-            if(currentBoardType === 'study' && (!fileInput.files || fileInput.files.length === 0)) return alert("학습 자료 파일(PDF 등)을 첨부해주세요.");
-            
-            const originalBtnText = submitBtn.innerText;
-            submitBtn.innerText = "전송 중...";
-            submitBtn.disabled = true;
 
-            let uploadedFileUrl = null; 
-            if(currentBoardType === 'study' && fileInput.files.length > 0) { 
-                const file = fileInput.files[0]; 
-                const ext = file.name.split('.').pop(); 
-                const randomString = Math.random().toString(36).substring(2, 10); 
-                const safeFileName = `${Date.now()}_${randomString}.${ext}`; 
+        async function loadAdminBoard(type) {
+            const list = document.getElementById(`admin-${type}-list`); list.innerHTML = '로딩 중...';
+            const { data } = await db.from('board_posts').select('*').eq('board_type', type).order('created_at', { ascending: false });
+            if(!data || data.length === 0) { list.innerHTML = '<p style="text-align:center; color:#86868b;">글이 없습니다.</p>'; return; }
+            list.innerHTML = data.map(p => {
+                let content = p.content;
+                if (type === 'study') { try { content = JSON.parse(p.content).text; } catch(e){} }
                 
-                const { error: uploadError } = await db.storage.from('study_files').upload(safeFileName, file); 
-                if(uploadError) {
-                    submitBtn.innerText = originalBtnText; submitBtn.disabled = false;
-                    return alert("업로드 실패: " + uploadError.message); 
-                }
-                const { data } = db.storage.from('study_files').getPublicUrl(safeFileName); 
-                uploadedFileUrl = data.publicUrl; 
-            } 
-            
-            let finalContent = content;
-            if(currentBoardType === 'study') {
-                const grade = document.getElementById('board-grade').value;
-                const subject = document.getElementById('board-subject').value.trim();
-                finalContent = JSON.stringify({ text: content, grade: grade, subject: subject });
-            }
-
-            const { error } = await db.from('board_posts').insert([{ board_type: currentBoardType, title: title, content: finalContent, author: author, file_url: uploadedFileUrl }]); 
-            
-            submitBtn.innerText = originalBtnText;
-            submitBtn.disabled = false;
-
-            if(!error) { 
-                if(currentBoardType === 'suggestion') {
-                    alert("소중한 의견이 비공개로 전달되었습니다! 감사합니다.");
+                if(type === 'study') {
+                    return `<div class="list-item-row"><div class="info-col"><h4>${p.title}</h4><p>${content}</p></div><div class="action-btns"><button class="btn-action btn-danger-soft" onclick="deletePost(${p.id}, '${type}')">삭제</button></div></div>`;
                 } else {
-                    alert("등록이 완료되었습니다."); 
+                    const author = p.author_name || p.author || p.student_name || p.student_id || '익명(정보없음)';
+                    const dateObj = new Date(p.created_at);
+                    const dateStr = `${dateObj.getMonth()+1}/${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+                    
+                    return `<div class="list-item">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px;">
+                            <h4 style="margin:0;">${p.title}</h4>
+                            <span style="font-size:0.75rem; background:#f1f5f9; color:#475569; padding:4px 8px; border-radius:8px; font-weight:bold;">${author}</span>
+                        </div>
+                        <p style="margin:0 0 5px 0;">${content}</p>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:0.75rem; color:#94a3b8;">${dateStr}</span>
+                            <div class="action-btns" style="border:none; padding:0; margin:0;"><button class="btn-action btn-danger-soft" onclick="deletePost(${p.id}, '${type}')">삭제</button></div>
+                        </div>
+                    </div>`;
                 }
-                
-                document.getElementById('board-author').value = '';
-                document.getElementById('board-input-title').value = ''; 
-                document.getElementById('board-content').value = ''; 
-                if(document.getElementById('board-subject')) document.getElementById('board-subject').value = '';
-                if(fileInput) fileInput.value = ''; 
-                
-                if(currentBoardType === 'study') loadBoardData(currentBoardType); 
-            } else {
-                alert("등록 중 오류가 발생했습니다.");
+            }).join('');
+        }
+        async function deletePost(id, type) { if(confirm("영구 삭제할까요?")) { await db.from('board_posts').delete().eq('id', id); loadAdminBoard(type); } }
+
+        async function loadAdminCouncilEvents() {
+            const list = document.getElementById('admin-council-list'); list.innerHTML = '로딩 중...';
+            const { data } = await db.from('student_council_events').select('*').order('created_at', { ascending: false });
+            if(!data || data.length === 0) { list.innerHTML = '<p style="text-align:center; color:#86868b;">행사가 없습니다.</p>'; return; }
+            list.innerHTML = data.map(ev => `<div class="list-item"><h4>${ev.title}</h4><p>${ev.event_period}</p><div class="action-btns"><button class="btn-action btn-danger-soft" onclick="deleteCouncilEvent(${ev.id})">종료(삭제)</button></div></div>`).join('');
+        }
+        async function deleteCouncilEvent(id) { if(confirm("종료할까요?")) { await db.from('student_council_events').delete().eq('id', id); loadAdminCouncilEvents(); } }
+
+        async function submitCouncilEvent() {
+            const title = document.getElementById('ev-title').value;
+            const dept = document.getElementById('ev-dept').value;
+            const period = document.getElementById('ev-period').value;
+            const applyPeriod = document.getElementById('ev-apply-period').value;
+            const applyUrl = document.getElementById('ev-apply-url').value;
+            const fileInput = document.getElementById('ev-poster');
+
+            if(!title || !dept || !period) return alert("행사 이름, 주최 부서, 행사 기간은 필수 입력 사항입니다.");
+
+            const btn = document.getElementById('btn-submit-council');
+            const originalText = btn.innerText;
+            btn.innerText = "업로드중...";
+            btn.disabled = true;
+
+            let posterUrl = null;
+            if(fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const fileName = `${Date.now()}_${file.name}`;
+                const { error: uploadError } = await db.storage.from('event_posters').upload(fileName, file);
+                if(uploadError) {
+                    btn.innerText = originalText; btn.disabled = false;
+                    return alert("업로드 실패: " + uploadError.message);
+                }
+                const { data } = db.storage.from('event_posters').getPublicUrl(fileName);
+                posterUrl = data.publicUrl;
+            }
+
+            const { error } = await db.from('student_council_events').insert([{ title: title, department: dept, event_period: period, apply_period: applyPeriod, apply_url: applyUrl, poster_url: posterUrl }]);
+            btn.innerText = originalText; btn.disabled = false;
+            
+            if(!error) {
+                alert("행사 등록 성공!");
+                document.getElementById('ev-title').value = ''; document.getElementById('ev-dept').value = '';
+                document.getElementById('ev-period').value = ''; document.getElementById('ev-apply-period').value = '';
+                document.getElementById('ev-apply-url').value = ''; fileInput.value = '';
+                loadAdminCouncilEvents();
             }
         }
 
-        /* 분실물 센터 코드 */
-        let imgModal;
-        function openImageModal(url) {
-            document.getElementById('enlarged-img').src = url;
-            if(!imgModal) imgModal = new bootstrap.Modal(document.getElementById('imageModal'));
-            imgModal.show();
+        async function loadAdminLost() {
+            const list = document.getElementById('admin-lost-list'); list.innerHTML = '로딩 중...';
+            const { data } = await db.from('lost_and_found').select('*').order('created_at', { ascending: false });
+            if(!data || data.length === 0) { list.innerHTML = '<p style="text-align:center; color:#86868b;">분실물이 없습니다.</p>'; return; }
+            list.innerHTML = data.map(item => `<div class="list-item-row"><div class="info-col"><h4>${item.item_name}</h4><p>발견: ${item.found_location}</p></div><div class="action-btns"><button class="btn-action btn-success-soft" onclick="deleteLost(${item.id})">주인 찾음</button></div></div>`).join('');
+        }
+        async function deleteLost(id) { if(confirm("전달 완료하셨나요?")) { await db.from('lost_and_found').delete().eq('id', id); loadAdminLost(); } }
+
+        async function submitLostItem() {
+            const name = document.getElementById('lf-name').value;
+            const found = document.getElementById('lf-found').value;
+            const pickup = document.getElementById('lf-pickup').value;
+            const fileInput = document.getElementById('lf-photo');
+
+            if(!name || !found || !pickup) return alert("이름, 발견장소, 찾는곳을 모두 입력해주세요.");
+
+            const btn = document.getElementById('btn-submit-lost');
+            const originalText = btn.innerText;
+            btn.innerText = "업로드중...";
+            btn.disabled = true;
+
+            let photoUrl = null;
+            if(fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const fileName = `${Date.now()}_${file.name}`;
+                const { error: uploadError } = await db.storage.from('lost_found_photos').upload(fileName, file);
+                if(uploadError) {
+                    btn.innerText = originalText; btn.disabled = false;
+                    return alert("사진 업로드 실패: " + uploadError.message);
+                }
+                const { data } = db.storage.from('lost_found_photos').getPublicUrl(fileName);
+                photoUrl = data.publicUrl;
+            }
+
+            const { error } = await db.from('lost_and_found').insert([{ item_name: name, photo_url: photoUrl, found_location: found, pickup_location: pickup }]);
+            btn.innerText = originalText; btn.disabled = false;
+
+            if(!error) {
+                alert("분실물 등록 성공!");
+                document.getElementById('lf-name').value = ''; document.getElementById('lf-found').value = '';
+                document.getElementById('lf-pickup').value = ''; fileInput.value = '';
+                loadAdminLost();
+            }
         }
 
-        async function fetchLostItems() { 
-            const listDiv = document.getElementById('lost-list'); 
-            listDiv.innerHTML = '<p>불러오는 중...</p>'; 
-            const { data, error } = await db.from('lost_and_found').select('*').order('created_at', { ascending: false }); 
-            if (error || !data.length) { listDiv.innerHTML = '<p style="text-align:center; color:#86868b;">현재 등록된 분실물이 없습니다.</p>'; return; } 
-            
-            listDiv.innerHTML = data.map(item => { 
-                const dateObj = new Date(item.created_at);
-                const dateStr = `${dateObj.getFullYear()}.${dateObj.getMonth()+1}.${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
-                
-                const imgHtml = item.photo_url 
-                    ? `<img src="${item.photo_url}" class="lost-img" onclick="openImageModal(this.src)" title="클릭해서 크게 보기">` 
-                    : `<div class="lost-img" style="display:flex; align-items:center; justify-content:center; font-size:0.75rem; line-height:1.3; text-align:center; padding:5px; color:#fff; background:#c7c7cc; cursor:default;">등록된 이미지가<br>없습니다</div>`; 
-                
-                return `<div class="lost-card">
-                            ${imgHtml}
-                            <div class="lost-info">
-                                <h4>${item.item_name}</h4>
-                                <p>📍 발견장소: <strong style="color:#1d1d1f; margin-left:4px;">${item.found_location}</strong></p>
-                                <p>🏃‍♂️ 찾아가는 곳: <strong style="color:#0071e3; margin-left:4px;">${item.pickup_location}</strong></p>
-                                <p style="font-size:0.8rem; color:#86868b; margin-top:6px;">🕒 등록 일시: ${dateStr}</p>
-                            </div>
-                        </div>`; 
-            }).join(''); 
-        }
-
-        initHome();
-        checkBookingWindow();
+        loadSettings();
     </script>
 </body>
 </html>
