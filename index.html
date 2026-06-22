@@ -810,7 +810,7 @@
             if(currentBoardType === 'study' && (!fileInput.files || fileInput.files.length === 0)) return alert("학습 자료 파일(PDF 등)을 첨부해주세요.");
             
             const originalBtnText = submitBtn.innerText;
-            submitBtn.innerText = "⏳ 파일 업로드 중...";
+            submitBtn.innerText = currentBoardType === 'study' ? "⏳ 파일 업로드 중..." : "전송 중...";
             submitBtn.disabled = true;
 
             let uploadedFileUrl = null; 
