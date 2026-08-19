@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>무룡고등학교 TV 현황판</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* === TV 전용 기본 스타일 === */
+        body { font-family: 'Pretendard', sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 0; overflow: hidden; width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+        
+        /* 상단 헤더 (시계 및 타이틀) */
+        .header { padding: 30px 50px; display: flex; justify-content: space-between; align-items: center; background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px); border-bottom: 2px solid #334155; z-index: 100; }
+        .header-title { font-size: 2.5rem; font-weight: 900; color: #38bdf8; display: flex; align-items: center; gap: 15px; }
+        .header-clock { font-size: 2.5rem; font-weight: 800; color: #f8fafc; text-align: right; }
+        .header-date { font-size: 1.2rem; color: #94a3b8; font-weight: 600; margin-bottom: 5px; }
+
+        /* 화면 전환 컨테이너 */
+        .slide-container { flex: 1; position: relative; width: 100%; height: 100%; }
+        .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 50px; box-sizing: border-box; display: flex; flex-direction: column; opacity: 0; transition: opacity 1s ease-in-out; pointer-events: none; }
+        .slide.active { opacity: 1; pointer-events: auto; }
+
+        /* 공통 제목 */
+        .slide-title { font-size: 4.5rem; font-weight: 900; text-align: center; margin-bottom: 50px; color: #ffffff; text-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+
+        /* 1. 양심우산 */
+        .umb-status-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .umb-icon { font-size: 12rem; margin-bottom: 30px; }
+        .umb-text { font-size: 5rem; font-weight: 900; padding: 20px 60px; border-radius: 30px; }
+        .umb-on { background: #16a34a; color: white; box-shadow: 0 0 40px rgba(22, 163, 74, 0.5); }
+        .umb-off { background: #dc2626; color: white; box-shadow: 0 0 40px rgba(220, 38, 38, 0.5); }
+
+        /* 2. 시설예약현황 */
+        .facility-table { width: 100%; max-width: 1200px; margin: 0 auto; border-collapse: collapse; background: rgba(30, 41, 59, 0.9); border-radius: 20px; overflow: hidden; }
+        .facility-table th { background: #334155; color: #94a3b8; font-size: 1.8rem; padding: 25px; text-align: center; font-weight: 700; }
+        .facility-table td { font-size: 2rem; padding: 25px; text-align: center; border-bottom: 1px solid #334155; font-weight: 600; color: #f8fafc; }
+        .badge { padding: 10px 20px; border-radius: 15px; font-size: 1.5rem; font-weight: 800; }
+        .badge-approved { background: #dcfce7; color: #166534; }
+        
+        /* 3 & 4. 가로 스크롤(행사, 분실물) 카드 */
+        .marquee-wrapper { width: 100%; overflow: hidden; flex: 1; display: flex; align-items: center; position: relative; }
+        .marquee-content { display: flex; gap: 40px; white-space: nowrap; animation: scrollLeft 25s linear infinite; padding-left: 100%; }
+        .card { width: 450px; height: 600px; background: white; border-radius: 30px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.4); flex-shrink: 0; white-space: normal; }
+        .card-img { width: 100%; height: 400px; object-fit: cover; border-radius: 20px; background: #f1f5f9; margin-bottom: 20px; }
+        .card-title { font-size: 2.2rem; font-weight: 800; color: #0f172a; margin: 0 0 10px 0; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+        .card-info { font-size: 1.4rem; color: #475569; font-weight: 600; line-height: 1.4; }
+        
+        /* 5. 학사일정 */
+        .calendar-list { max-width: 1000px; margin: 0 auto; width: 100%; }
+        .cal-item { display: flex; align-items: center; background: rgba(30, 41, 59, 0.9); margin-bottom: 20px; padding: 30px 40px; border-radius: 20px; border-left: 10px solid #38bdf8; }
+        .cal-date { font-size: 2.5rem; font-weight: 900; color: #38bdf8; width: 250px; }
+        .cal-name { font-size: 2.5rem; font-weight: 700; color: white; }
+
+        /* 6. QR코드 건의함 */
+        .qr-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .qr-image { width: 400px; height: 400px; background: white; padding: 20px; border-radius: 30px; margin-bottom: 40px; box-shadow: 0 0 50px rgba(255,255,255,0.2); }
+        .qr-desc { font-size: 2.5rem; color: #cbd5e1; font-weight: 600; text-align: center; line-height: 1.5; }
+
+        @keyframes scrollLeft { 
+            0% { transform: translateX(0); } 
+            100% { transform: translateX(-100%); } 
+        }
+
+        /* 프로그레스 바 (다음 화면까지 남은 시간) */
+        .progress-bar { position: absolute; bottom: 0; left: 0; height: 8px; background: #38bdf8; width: 0%; z-index: 1000; transition: width linear; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-title">🎓 무룡고등학교 학생 통합 포털</div>
+        <div>
+            <div class="header-date" id="current-date">로딩중...</div>
+            <div class="header-clock" id="current-time">00:00:00</div>
+        </div>
+    </div>
+
+    <div class="slide-container">
+        <!-- 1. 양심우산 -->
+        <div class="slide" id="slide-1">
+            <div class="slide-title">☔️ 양심우산 운영 현황</div>
+            <div class="umb-status-box">
+                <div class="umb-icon">☂️</div>
+                <div id="umb-display" class="umb-text umb-on">데이터 확인 중...</div>
+            </div>
+        </div>
+
+        <!-- 2. 시설예약현황 -->
+        <div class="slide" id="slide-2">
+            <div class="slide-title">🏟️ 오늘의 시설 예약 현황</div>
+            <table class="facility-table">
+                <thead><tr><th>예약자</th><th>장소</th><th>이용 시간</th><th>상태</th></tr></thead>
+                <tbody id="fac-list"></tbody>
+            </table>
+        </div>
+
+        <!-- 3. 학생회 행사 -->
+        <div class="slide" id="slide-3">
+            <div class="slide-title">🎉 학생회 행사 안내</div>
+            <div class="marquee-wrapper">
+                <div class="marquee-content" id="council-list"></div>
+            </div>
+        </div>
+
+        <!-- 4. 학사일정 -->
+        <div class="slide" id="slide-4">
+            <div class="slide-title">📅 다가오는 학사 일정</div>
+            <div class="calendar-list" id="calendar-list"></div>
+        </div>
+
+        <!-- 5. 분실물 -->
+        <div class="slide" id="slide-5">
+            <div class="slide-title">🔍 주인 잃은 물건을 찾습니다</div>
+            <div class="marquee-wrapper">
+                <div class="marquee-content" id="lost-list"></div>
+            </div>
+        </div>
+
+        <!-- 6. 건의함 QR -->
+        <div class="slide" id="slide-6">
+            <div class="slide-title">💡 학생회 건의함</div>
+            <div class="qr-box">
+                <!-- 스마트폰으로 포털 주소를 찍을 수 있게 생성 -->
+                <img class="qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https://무룡고포털주소.com" alt="건의함 QR">
+                <div class="qr-desc">스마트폰 카메라로 QR코드를 스캔하여<br><strong style="color:white; font-size:3rem;">무룡고 통합 포털</strong>에 접속 후 의견을 남겨주세요!</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="progress-bar" id="progress"></div>
+
+    <script>
+        // Supabase 초기화
+        const DB_URL = 'https://vfftkdnzjemeipuhlzfv.supabase.co';
+        const DB_KEY = 'sb_publishable_9Q7vn7So6HvUSMPu5BhyDA_9qz928H-';
+        const db = window.supabase.createClient(DB_URL, DB_KEY);
+
+        // KST 기준 오늘 날짜 문자열
+        const curr = new Date();
+        const utc = curr.getTime() + (curr.getTimezoneOffset() * 60 * 1000);
+        const kstDate = new Date(utc + (9 * 60 * 60 * 1000));
+        const todayStr = kstDate.toISOString().split('T')[0];
+
+        // 슬라이드 설정
+        const slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+        const slideInterval = 12000; // 각 화면별 12초 대기
+        
+        // 상단 시계 업데이트
+        function updateClock() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const date = String(now.getDate()).padStart(2, '0');
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            const day = days[now.getDay()];
+            
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('current-date').innerText = `${year}년 ${month}월 ${date}일 (${day}요일)`;
+            document.getElementById('current-time').innerText = `${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 데이터 Fetch 함수들
+        async function fetchUmbrellaStatus() {
+            try {
+                const { data } = await db.from('announcements').select('content').eq('id', 4).single();
+                const umbEl = document.getElementById('umb-display');
+                if (data && data.content === 'CLOSED') {
+                    umbEl.innerText = "현재 운영 중단";
+                    umbEl.className = "umb-text umb-off";
+                } else {
+                    umbEl.innerText = "현재 대여 가능";
+                    umbEl.className = "umb-text umb-on";
+                }
+            } catch(e) {}
+        }
+
+        async function fetchFacilityStatus() {
+            try {
+                // 승인된 오늘~미래의 예약 데이터 가져오기
+                const { data } = await db.from('reservations').select('*')
+                    .eq('status', 'approved')
+                    .gte('start_time', todayStr)
+                    .order('start_time', { ascending: true })
+                    .limit(5);
+
+                const list = document.getElementById('fac-list');
+                if (!data || data.length === 0) {
+                    list.innerHTML = '<tr><td colspan="4" style="padding: 50px;">오늘 확정된 예약이 없습니다.</td></tr>';
+                    return;
+                }
+                
+                list.innerHTML = data.map(res => {
+                    const d1 = new Date(res.start_time);
+                    const d2 = new Date(res.end_time);
+                    const timeStr = `${String(d1.getHours()).padStart(2,'0')}:${String(d1.getMinutes()).padStart(2,'0')} ~ ${String(d2.getHours()).padStart(2,'0')}:${String(d2.getMinutes()).padStart(2,'0')}`;
+                    const nameStr = `${res.student_name.charAt(0)}*${res.student_name.charAt(res.student_name.length-1)}`;
+                    
+                    return `<tr>
+                        <td>${nameStr} <span style="font-size:1.2rem; color:#94a3b8;">(${res.student_id.toString().substring(0,2)}**)</span></td>
+                        <td>${res.room_name}</td>
+                        <td>${timeStr}</td>
+                        <td><span class="badge badge-approved">승인완료</span></td>
+                    </tr>`;
+                }).join('');
+            } catch(e) {}
+        }
+
+        async function fetchCouncilEvents() {
+            const listDiv = document.getElementById('council-list');
+            const { data } = await db.from('student_council_events').select('*').order('created_at', { ascending: false }).limit(5);
+            
+            if (!data || data.length === 0) {
+                listDiv.innerHTML = '<div style="font-size:3rem; padding: 50px; color:#94a3b8;">진행 중인 행사가 없습니다.</div>';
+                return;
+            }
+
+            const cardsHtml = data.map(ev => {
+                const img = ev.poster_url ? ev.poster_url : 'https://via.placeholder.com/400x300/334155/f8fafc?text=No+Image';
+                return `
+                    <div class="card">
+                        <img src="${img}" class="card-img" alt="행사">
+                        <div class="card-title">${ev.title}</div>
+                        <div class="card-info">📅 기간: ${ev.event_period}<br>🏢 주관: ${ev.department}</div>
+                    </div>`;
+            }).join('');
+            
+            // 자연스러운 무한 롤링을 위해 2번 복제하여 이어붙임
+            listDiv.innerHTML = cardsHtml + cardsHtml; 
+        }
+
+        async function fetchLostItems() {
+            const listDiv = document.getElementById('lost-list');
+            const { data } = await db.from('lost_and_found').select('*').order('created_at', { ascending: false }).limit(5);
+            
+            if (!data || data.length === 0) {
+                listDiv.innerHTML = '<div style="font-size:3rem; padding: 50px; color:#94a3b8;">등록된 분실물이 없습니다.</div>';
+                return;
+            }
+
+            const cardsHtml = data.map(item => {
+                const img = item.photo_url ? item.photo_url : 'https://via.placeholder.com/400x300/334155/f8fafc?text=No+Image';
+                return `
+                    <div class="card">
+                        <img src="${img}" class="card-img" style="object-fit: contain;" alt="분실물">
+                        <div class="card-title">${item.item_name}</div>
+                        <div class="card-info">📍 발견: ${item.found_location}<br>🏃‍♂️ 수령: ${item.pickup_location}</div>
+                    </div>`;
+            }).join('');
+            
+            listDiv.innerHTML = cardsHtml + cardsHtml;
+        }
+
+        async function fetchNeisCalendar() { 
+            const listDiv = document.getElementById('calendar-list'); 
+            try { 
+                const yyyy = kstDate.getFullYear(); 
+                const mm = String(kstDate.getMonth() + 1).padStart(2, '0'); 
+                const dd = String(kstDate.getDate()).padStart(2, '0');
+                const fromDate = `${yyyy}${mm}${dd}`; 
+                const toDate = `${yyyy}1231`; 
+                const todayYMD = parseInt(fromDate);
+                
+                const res = await fetch(`https://open.neis.go.kr/hub/SchoolSchedule?Type=json&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480070&AA_FROM_YMD=${fromDate}&AA_TO_YMD=${toDate}`); 
+                const data = await res.json(); 
+                
+                if(data.SchoolSchedule) { 
+                    const events = data.SchoolSchedule[1].row.filter(e => e.EVENT_NM !== '토요휴업일' && e.EVENT_NM !== '휴업일' && parseInt(e.AA_YMD) >= todayYMD); 
+                    if(events.length === 0) { listDiv.innerHTML = '<div style="font-size:2rem; text-align:center; color:#94a3b8;">예정된 학사일정이 없습니다.</div>'; return; } 
+                    
+                    const displayEvents = events.slice(0, 5);
+                    listDiv.innerHTML = displayEvents.map(e => `
+                        <div class="cal-item">
+                            <div class="cal-date">${e.AA_YMD.substring(4,6)}월 ${e.AA_YMD.substring(6,8)}일</div>
+                            <div class="cal-name">${e.EVENT_NM}</div>
+                        </div>
+                    `).join(''); 
+                } else { listDiv.innerHTML = '<div style="font-size:2rem; text-align:center; color:#94a3b8;">일정이 없습니다.</div>'; } 
+            } catch(e) { listDiv.innerHTML = '<div style="font-size:2rem; text-align:center; color:#94a3b8;">일정을 불러오지 못했습니다.</div>'; } 
+        }
+
+        // 초기 데이터 로딩
+        function loadAllData() {
+            fetchUmbrellaStatus();
+            fetchFacilityStatus();
+            fetchCouncilEvents();
+            fetchLostItems();
+            fetchNeisCalendar();
+        }
+
+        // 슬라이드 애니메이션 제어
+        function showNextSlide() {
+            // 현재 슬라이드 끄기
+            slides[currentSlide].classList.remove('active');
+            
+            // 다음 슬라이드 인덱스 계산
+            currentSlide = (currentSlide + 1) % slides.length;
+            
+            // 만약 다시 처음(양심우산)으로 돌아왔다면 백그라운드에서 데이터를 최신화
+            if(currentSlide === 0) {
+                loadAllData();
+            }
+
+            // 다음 슬라이드 켜기
+            slides[currentSlide].classList.add('active');
+
+            // 하단 프로그레스 바 리셋 및 재시작
+            const progressBar = document.getElementById('progress');
+            progressBar.style.transition = 'none';
+            progressBar.style.width = '0%';
+            
+            setTimeout(() => {
+                progressBar.style.transition = `width ${slideInterval}ms linear`;
+                progressBar.style.width = '100%';
+            }, 50);
+        }
+
+        // 시스템 시작
+        loadAllData();
+        slides[0].classList.add('active');
+        
+        // 첫 시작 시 프로그레스 바 실행
+        setTimeout(() => {
+            const progressBar = document.getElementById('progress');
+            progressBar.style.transition = `width ${slideInterval}ms linear`;
+            progressBar.style.width = '100%';
+        }, 50);
+
+        setInterval(showNextSlide, slideInterval);
+
+    </script>
+</body>
+</html>
