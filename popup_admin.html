@@ -2,208 +2,338 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TV 팝업 관리자</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>무룡고등학교 TV 현황판</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    
+    <!-- Supabase 및 유튜브 자동재생을 위한 API 로드 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
     
     <style>
-        /* 모바일 최적화 애플 스타일 */
-        body { font-family: 'Pretendard', sans-serif; background: #f5f5f7; margin: 0; padding: 0; color: #1d1d1f; -webkit-font-smoothing: antialiased; }
-        
-        .header { background: rgba(255, 255, 255, 0.8); backdrop-filter: saturate(180%) blur(20px); padding: 15px 20px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(0,0,0,0.05); text-align: center; }
-        .header h1 { margin: 0; font-size: 1.2rem; font-weight: 800; }
+        /* === 전체 배경 (16:9 캔버스) === */
+        body { background: #000000; margin: 0; padding: 0; overflow: hidden; width: 100vw; height: 100vh; position: relative; }
 
-        .container { padding: 20px; max-width: 600px; margin: 0 auto; padding-bottom: 50px; }
+        /* === 1920x1080 고정 캔버스 === */
+        .tv-screen { position: absolute; top: 50%; left: 50%; width: 1920px; height: 1080px; margin-left: -960px; margin-top: -540px; background: #f5f5f7; transform-origin: center center; overflow: hidden; display: flex; flex-direction: column; font-family: 'Pretendard', sans-serif; color: #1d1d1f; letter-spacing: -0.5px; }
         
-        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); }
-        .card h2 { margin: 0 0 15px 0; font-size: 1.1rem; font-weight: 800; color: #1d1d1f; }
+        /* 상단 헤더 */
+        .header { height: 130px; padding: 0 80px; display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.7); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid rgba(0, 0, 0, 0.05); z-index: 100; flex-shrink: 0; }
+        .header-title { font-size: 36px; font-weight: 800; color: #1d1d1f; letter-spacing: -1px; }
+        
+        /* 날짜 및 시간 */
+        .header-right { display: flex; flex-direction: column; justify-content: center; align-items: flex-end; }
+        .header-date { font-size: 20px; color: #86868b; font-weight: 600; margin-bottom: 8px; line-height: 1; }
+        .header-clock { font-size: 42px; font-weight: 900; color: #1d1d1f; line-height: 1; }
 
-        /* 입력 폼 스타일 */
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 0.9rem; font-weight: 700; color: #86868b; margin-bottom: 5px; }
-        .form-control { width: 100%; padding: 14px; box-sizing: border-box; border: 1.5px solid #e5e5ea; border-radius: 12px; font-size: 1rem; font-family: inherit; background: #fbfbfd; transition: border-color 0.2s; }
-        .form-control:focus { outline: none; border-color: #0071e3; background: white; }
-        textarea.form-control { resize: none; height: 100px; }
+        /* 화면 전환 컨테이너 */
+        .slide-container { flex: 1; position: relative; width: 100%; height: 950px; }
+        .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 60px 100px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; opacity: 0; transition: opacity 0.8s ease-in-out; pointer-events: none; z-index: 1; }
+        .slide[data-type="popup"] { padding: 40px 60px 60px 60px; }
+        .slide.active { opacity: 1; pointer-events: auto; z-index: 10; }
+        .slide-title { font-size: 64px; font-weight: 800; text-align: center; margin-bottom: 50px; color: #1d1d1f; letter-spacing: -1.5px; width: 100%; flex-shrink: 0; }
+
+        /* 0. 팝업 전용 레이아웃 */
+        .popup-content { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .popup-image { width: 100%; height: 100%; object-fit: contain; border-radius: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.15); display: block; }
+        .popup-video { width: 100%; height: 100%; object-fit: contain; border-radius: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); border: none; background: #000; display: block; }
+        .popup-text { font-size: 60px; font-weight: 700; color: #1d1d1f; text-align: center; line-height: 1.6; word-break: keep-all; padding: 0 50px; }
+
+        /* 1. 양심우산 */
+        .umb-status-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; margin-top: -50px; }
+        .umb-text { font-size: 80px; font-weight: 800; padding: 40px 120px; border-radius: 60px; box-shadow: 0 15px 40px rgba(0,0,0,0.08); transition: all 0.3s; }
+        .umb-on { background: #34c759; color: white; }
+        .umb-off { background: #ff3b30; color: white; }
+        .umb-location { font-size: 36px; font-weight: 700; color: #86868b; margin-top: 40px; display: none; }
+
+        /* 2. 시설예약현황 */
+        .facility-table { width: 100%; max-width: 1400px; margin: 0 auto; border-collapse: separate; border-spacing: 0; background: #ffffff; border-radius: 30px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #e5e5ea; }
+        .facility-table th { background: #fbfbfd; color: #86868b; font-size: 26px; padding: 25px; text-align: center; font-weight: 700; border-bottom: 1px solid #e5e5ea; }
+        .facility-table td { font-size: 32px; padding: 30px 25px; text-align: center; border-bottom: 1px solid #f5f5f7; font-weight: 600; color: #1d1d1f; }
+        .facility-table tr:last-child td { border-bottom: none; }
+        .badge { padding: 14px 28px; border-radius: 20px; font-size: 22px; font-weight: 800; display: inline-block; }
+        .badge-approved { background: #e3f5eb; color: #196a3e; }
         
-        .btn { width: 100%; padding: 16px; border: none; border-radius: 14px; font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
-        .btn-primary { background: #0071e3; color: white; }
-        .btn-primary:active { background: #005bb5; transform: scale(0.98); }
+        /* 3 & 4. 가로 스크롤 카드 */
+        .marquee-wrapper { width: 100%; flex: 1; overflow: hidden; position: relative; display: flex; align-items: center; padding: 10px 0; }
+        .marquee-content { display: flex; gap: 50px; position: absolute; width: max-content; align-items: stretch; }
+        .card { width: 440px; min-height: 560px; background: #ffffff; border-radius: 30px; padding: 30px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.06); border: 1px solid #e5e5ea; flex-shrink: 0; box-sizing: border-box; }
+        .card-img { width: 100%; height: 320px; flex-shrink: 0; object-fit: contain; background: #f5f5f7; border-radius: 18px; margin-bottom: 25px; display: flex; justify-content: center; align-items: center; }
+        .no-image-text { font-size: 22px; font-weight: 700; color: #86868b; text-align: center; line-height: 1.4; }
+        .card-content { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; }
+        .card-title { font-size: 32px; font-weight: 800; color: #1d1d1f; margin: 0 0 15px 0; line-height: 1.4; word-break: keep-all; }
+        .card-info { font-size: 22px; color: #86868b; font-weight: 600; line-height: 1.55; word-break: keep-all; }
+        .card-info strong { color: #1d1d1f; margin-right: 5px; }
         
-        /* 목록 아이템 스타일 */
-        .list-item { border-bottom: 1px solid #f5f5f7; padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
-        .list-item:last-child { border-bottom: none; }
-        .item-info { flex: 1; min-width: 0; padding-right: 15px; }
-        .item-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .item-meta { font-size: 0.8rem; color: #86868b; }
-        
-        /* 토글 스위치 */
-        .toggle-btn { padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; border: none; cursor: pointer; white-space: nowrap; }
-        .toggle-on { background: #34c759; color: white; }
-        .toggle-off { background: #e5e5ea; color: #86868b; }
-        .delete-btn { background: none; border: none; color: #ff3b30; font-size: 0.8rem; font-weight: 700; padding: 5px; margin-top: 5px; cursor: pointer; }
+        /* 5. 학사일정 */
+        .calendar-list { max-width: 1200px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; justify-content: center; flex: 1; }
+        .cal-item { display: flex; align-items: center; background: #ffffff; margin-bottom: 25px; padding: 40px 60px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid #e5e5ea; }
+        .cal-date { font-size: 38px; font-weight: 800; color: #0071e3; width: 300px; letter-spacing: -1px; }
+        .cal-name { font-size: 38px; font-weight: 700; color: #1d1d1f; }
+
+        /* 6. QR코드 */
+        .qr-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; margin-top: -40px; }
+        .qr-image { width: 400px; height: 400px; background: white; padding: 30px; border-radius: 40px; margin-bottom: 50px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); border: 1px solid #e5e5ea; }
+        .qr-desc { font-size: 36px; color: #1d1d1f; font-weight: 700; text-align: center; line-height: 1.6; word-break: keep-all; }
+        .empty-msg { font-size: 38px; color: #86868b; text-align: center; width: 100%; font-weight: 600; padding: 50px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>📺 TV 팝업 관리자</h1>
-    </div>
-
-    <div class="container">
-        <!-- 새 팝업 등록 폼 -->
-        <div class="card">
-            <h2>새로운 팝업 등록</h2>
-            
-            <div class="form-group">
-                <label>팝업 제목 (화면 상단에 표시)</label>
-                <input type="text" id="title" class="form-control" placeholder="예: 학생회장 선거 유세 영상">
+    <!-- 중앙에 완벽히 고정되는 16:9 캔버스 -->
+    <div class="tv-screen" id="tv-screen">
+        
+        <div class="header">
+            <div class="header-title">무룡고등학교 학생 통합 포털</div>
+            <div class="header-right">
+                <div class="header-date" id="current-date">로딩중...</div>
+                <div class="header-clock" id="current-time">00:00:00</div>
             </div>
-            
-            <div class="form-group">
-                <label>종류 선택</label>
-                <select id="media_type" class="form-control" onchange="toggleInputs()">
-                    <option value="youtube">유튜브 영상</option>
-                    <option value="image">포스터 / 사진</option>
-                    <option value="text">텍스트 (글 공지)</option>
-                </select>
-            </div>
-            
-            <div class="form-group" id="url_group">
-                <label>링크 (URL)</label>
-                <input type="text" id="media_url" class="form-control" placeholder="유튜브 링크 또는 이미지 주소 붙여넣기">
-            </div>
-            
-            <div class="form-group" id="text_group" style="display: none;">
-                <label>공지 내용</label>
-                <textarea id="message" class="form-control" placeholder="화면에 띄울 내용을 적어주세요"></textarea>
-            </div>
-            
-            <button class="btn btn-primary" onclick="submitPopup()">바로 화면에 띄우기</button>
         </div>
 
-        <!-- 등록된 팝업 목록 -->
-        <div class="card">
-            <h2>팝업 목록 관리</h2>
-            <p style="font-size: 0.85rem; color: #86868b; margin-top: -5px; margin-bottom: 15px;">
-                💡 '켜짐' 상태인 팝업 중 가장 최근 1개만 화면에 표시됩니다.<br>
-                화면에서 내리려면 버튼을 눌러 '꺼짐'으로 변경하세요.
-            </p>
-            <div id="popup-list">목록을 불러오는 중...</div>
+        <div class="slide-container">
+            <!-- 0. 특별 공지 (팝업) -->
+            <div class="slide" id="slide-0" data-type="popup">
+                <!-- 팝업 화면은 제목 없이 콘텐츠로 꽉 채웁니다 -->
+                <div class="popup-content" id="popup-media-container">
+                    <!-- 영상, 사진, 텍스트가 차례대로 동적으로 채워집니다. -->
+                </div>
+            </div>
+
+            <!-- 1. 양심우산 ~ 6. 포털 안내 QR -->
+            <div class="slide" id="slide-1" data-type="static"><div class="slide-title">양심우산 운영 현황</div><div class="umb-status-box"><div id="umb-display" class="umb-text umb-on">데이터 확인 중...</div><div id="umb-location" class="umb-location">대여 장소: 1층 본관 입구</div></div></div>
+            <div class="slide" id="slide-2" data-type="static"><div class="slide-title">오늘의 시설 예약 현황</div><div style="width: 100%; flex: 1; display: flex; align-items: center; justify-content: center;"><table class="facility-table"><thead><tr><th>예약자</th><th>장소</th><th>이용 시간</th><th>상태</th></tr></thead><tbody id="fac-list"></tbody></table></div></div>
+            <div class="slide" id="slide-3" data-type="scroll"><div class="slide-title">학생회 행사 안내</div><div class="marquee-wrapper"><div class="marquee-content" id="council-list"></div></div></div>
+            <div class="slide" id="slide-4" data-type="static"><div class="slide-title">다가오는 학사 일정</div><div class="calendar-list" id="calendar-list"></div></div>
+            <div class="slide" id="slide-5" data-type="scroll"><div class="slide-title">분실물 등록 현황</div><div class="marquee-wrapper"><div class="marquee-content" id="lost-list"></div></div></div>
+            <div class="slide" id="slide-6" data-type="static"><div class="slide-title">모바일 통합 포털 접속</div><div class="qr-box"><img class="qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://muryonghs.github.io/muryonghs-mr-student/&margin=10" alt="포털 QR"><div class="qr-desc">QR코드를 스캔해 스마트폰에서 더 많은 정보를 확인하고<br>학교생활에 대한 건의사항도 편리하게 작성해 주세요.</div></div></div>
         </div>
     </div>
 
     <script>
+        // === 해상도 강제 스케일링 로직 ===
+        function resizeScreen() {
+            const screen = document.getElementById('tv-screen');
+            const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+            screen.style.transform = `scale(${scale})`;
+        }
+        window.addEventListener('resize', resizeScreen);
+        resizeScreen();
+
         // Supabase 초기화
         const DB_URL = 'https://vfftkdnzjemeipuhlzfv.supabase.co';
         const DB_KEY = 'sb_publishable_9Q7vn7So6HvUSMPu5BhyDA_9qz928H-';
         const db = window.supabase.createClient(DB_URL, DB_KEY);
+        const todayStr = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-        // 입력 폼 동적 변경 (종류 선택에 따라)
-        function toggleInputs() {
-            const type = document.getElementById('media_type').value;
-            if (type === 'text') {
-                document.getElementById('url_group').style.display = 'none';
-                document.getElementById('text_group').style.display = 'block';
-            } else {
-                document.getElementById('url_group').style.display = 'block';
-                document.getElementById('text_group').style.display = 'none';
+        // 슬라이드 타이머 및 팝업 상태 설정
+        const slides = document.querySelectorAll('.slide');
+        let currentSlideIndex = 0;
+        const staticSlideDuration = 10000; 
+        const popupImageDuration = 15000; // 사진/글 팝업은 15초 표시
+        const scrollSpeed = 200; 
+        
+        // ⭐ 다중 팝업 관리를 위한 배열 및 인덱스
+        let activePopups = []; 
+        let currentPopupIndex = 0;
+        let ytPlayer = null; 
+
+        // 시계 업데이트
+        function updateClock() {
+            const now = new Date();
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            document.getElementById('current-date').innerText = `${now.getFullYear()}년 ${String(now.getMonth() + 1).padStart(2, '0')}월 ${String(now.getDate()).padStart(2, '0')}일 (${days[now.getDay()]}요일)`;
+            document.getElementById('current-time').innerText = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        function extractYouTubeId(url) {
+            const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        // ⭐ 활성화된 '모든' 팝업 가져오기
+        async function fetchPopups() {
+            try {
+                // is_active가 true인 모든 팝업을 등록 역순(최신순)으로 가져옵니다.
+                const { data } = await db.from('tv_popups').select('*').eq('is_active', true).order('created_at', { ascending: false });
+                activePopups = (data && data.length > 0) ? data : [];
+            } catch(e) {
+                activePopups = [];
             }
         }
 
-        // 팝업 목록 불러오기
-        async function loadPopups() {
-            const listDiv = document.getElementById('popup-list');
-            const { data, error } = await db.from('tv_popups').select('*').order('created_at', { ascending: false }).limit(10);
+        // 기타 데이터 패치 함수들
+        async function fetchUmbrellaStatus() {
+            try {
+                const { data } = await db.from('announcements').select('content').eq('id', 4).single();
+                const el = document.getElementById('umb-display'), loc = document.getElementById('umb-location');
+                if (data && data.content === 'CLOSED') { el.innerText = "현재 운영 중단"; el.className = "umb-text umb-off"; loc.style.display = "none"; } 
+                else { el.innerText = "현재 대여 가능"; el.className = "umb-text umb-on"; loc.style.display = "block"; }
+            } catch(e) {}
+        }
+        async function fetchFacilityStatus() {
+            try {
+                const { data } = await db.from('reservations').select('*').eq('status', 'approved').gte('start_time', todayStr).order('start_time', { ascending: true }).limit(5);
+                const list = document.getElementById('fac-list');
+                if (!data || data.length === 0) return list.innerHTML = '<tr><td colspan="4" style="padding: 60px; color:#86868b;">오늘 확정된 예약이 없습니다.</td></tr>';
+                list.innerHTML = data.map(r => `<tr><td>${r.student_name.charAt(0)}*${r.student_name.charAt(r.student_name.length-1)} <span style="font-size:22px; color:#86868b; margin-left:10px;">(${r.student_id.toString().substring(0,2)}**)</span></td><td><strong>${r.room_name}</strong></td><td>${new Date(r.start_time).getHours().toString().padStart(2,'0')}:${new Date(r.start_time).getMinutes().toString().padStart(2,'0')} ~ ${new Date(r.end_time).getHours().toString().padStart(2,'0')}:${new Date(r.end_time).getMinutes().toString().padStart(2,'0')}</td><td><span class="badge badge-approved">승인완료</span></td></tr>`).join('');
+            } catch(e) {}
+        }
+        async function fetchCouncilEvents() {
+            const listDiv = document.getElementById('council-list');
+            const { data } = await db.from('student_council_events').select('*').order('created_at', { ascending: false });
+            if (!data || data.length === 0) return listDiv.innerHTML = '<div class="empty-msg">진행 중인 행사가 없습니다.</div>';
+            listDiv.innerHTML = data.map(ev => `<div class="card">${ev.poster_url ? `<img src="${ev.poster_url}" class="card-img">` : `<div class="card-img"><span class="no-image-text">사진 없음</span></div>`}<div class="card-content"><div class="card-title">${ev.title}</div><div class="card-info"><strong>기간:</strong> ${ev.event_period}<br><strong>주관:</strong> ${ev.department}</div></div></div>`).join('');
+        }
+        async function fetchLostItems() {
+            const listDiv = document.getElementById('lost-list');
+            const { data } = await db.from('lost_and_found').select('*').order('created_at', { ascending: false });
+            if (!data || data.length === 0) return listDiv.innerHTML = '<div class="empty-msg">등록된 분실물이 없습니다.</div>';
+            listDiv.innerHTML = data.map(item => `<div class="card">${item.photo_url ? `<img src="${item.photo_url}" class="card-img">` : `<div class="card-img"><span class="no-image-text">사진 없음</span></div>`}<div class="card-content"><div class="card-title">${item.item_name}</div><div class="card-info"><strong>발견:</strong> ${item.found_location}<br><strong>수령:</strong> ${item.pickup_location}</div></div></div>`).join('');
+        }
+        async function fetchNeisCalendar() { 
+            const listDiv = document.getElementById('calendar-list'); 
+            try { 
+                const yyyy = new Date().getFullYear(), mm = String(new Date().getMonth() + 1).padStart(2, '0'), dd = String(new Date().getDate()).padStart(2, '0');
+                const res = await fetch(`https://open.neis.go.kr/hub/SchoolSchedule?Type=json&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480070&AA_FROM_YMD=${yyyy}${mm}${dd}&AA_TO_YMD=${yyyy}1231`); 
+                const data = await res.json(); 
+                if(data.SchoolSchedule) { 
+                    const events = data.SchoolSchedule[1].row.filter(e => e.EVENT_NM !== '토요휴업일' && e.EVENT_NM !== '휴업일' && parseInt(e.AA_YMD) >= parseInt(`${yyyy}${mm}${dd}`)).slice(0, 5); 
+                    if(events.length === 0) return listDiv.innerHTML = '<div class="empty-msg">예정된 학사일정이 없습니다.</div>';
+                    listDiv.innerHTML = events.map(e => `<div class="cal-item"><div class="cal-date">${e.AA_YMD.substring(4,6)}월 ${e.AA_YMD.substring(6,8)}일</div><div class="cal-name">${e.EVENT_NM}</div></div>`).join(''); 
+                } else listDiv.innerHTML = '<div class="empty-msg">일정이 없습니다.</div>'; 
+            } catch(e) { listDiv.innerHTML = '<div class="empty-msg">일정을 불러오지 못했습니다.</div>'; } 
+        }
+
+        async function loadAllData() {
+            await Promise.all([ fetchPopups(), fetchUmbrellaStatus(), fetchFacilityStatus(), fetchCouncilEvents(), fetchLostItems(), fetchNeisCalendar() ]);
+        }
+
+        // --- 다중 팝업 순차 재생 로직 ---
+        function playPopupSequence() {
+            const popup = activePopups[currentPopupIndex];
+            const container = document.getElementById('popup-media-container');
             
-            if (error || !data || data.length === 0) {
-                listDiv.innerHTML = '<p style="text-align:center; color:#86868b;">등록된 팝업이 없습니다.</p>';
+            // 이전 플레이어 초기화
+            if (ytPlayer && typeof ytPlayer.destroy === 'function') {
+                ytPlayer.destroy();
+                ytPlayer = null;
+            }
+            container.innerHTML = '';
+
+            // 다음 팝업으로 넘어가거나, 모든 팝업이 끝나면 다음 슬라이드(양심우산)로 넘어가는 함수
+            const proceedToNext = () => {
+                currentPopupIndex++;
+                if (currentPopupIndex >= activePopups.length) {
+                    currentPopupIndex = 0; // 초기화
+                    playNextSlide(); // 일반 슬라이드로 이동
+                } else {
+                    playPopupSequence(); // 다음 팝업 재생
+                }
+            };
+
+            if (popup.media_type === 'youtube') {
+                const videoId = extractYouTubeId(popup.media_url);
+                container.innerHTML = `<div id="yt-player" class="popup-video"></div>`;
+                
+                const initYT = () => {
+                    if (window.YT && window.YT.Player) {
+                        ytPlayer = new YT.Player('yt-player', {
+                            videoId: videoId,
+                            playerVars: { 'autoplay': 1, 'mute': 1, 'controls': 0, 'rel': 0 },
+                            events: {
+                                'onStateChange': function(event) {
+                                    if (event.data === YT.PlayerState.ENDED) {
+                                        proceedToNext(); // 영상 끝나면 다음 팝업으로
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        setTimeout(initYT, 100);
+                    }
+                };
+                initYT();
+            } else if (popup.media_type === 'image') {
+                container.innerHTML = `<img src="${popup.media_url}" class="popup-image">`;
+                setTimeout(proceedToNext, popupImageDuration);
+            } else if (popup.media_type === 'video') {
+                container.innerHTML = `<video id="html5-video" class="popup-video" src="${popup.media_url}" autoplay muted></video>`;
+                const vid = document.getElementById('html5-video');
+                vid.onended = proceedToNext; // 영상 끝나면 다음 팝업으로
+                vid.onerror = () => setTimeout(proceedToNext, popupImageDuration);
+            } else {
+                container.innerHTML = `<div class="popup-text">${popup.message.replace(/\n/g, '<br>')}</div>`;
+                setTimeout(proceedToNext, popupImageDuration);
+            }
+        }
+
+        // --- 메인 슬라이드 전환 로직 --- //
+        async function playNextSlide() {
+            // 현재 슬라이드가 팝업 슬라이드였다면 재생 멈춤
+            if (slides[currentSlideIndex].getAttribute('data-type') === 'popup') {
+                if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
+                const vid = document.getElementById('html5-video');
+                if (vid) vid.pause();
+            }
+
+            slides[currentSlideIndex].classList.remove('active');
+            currentSlideIndex = (currentSlideIndex + 1) % slides.length;
+            
+            // 첫 화면(팝업 화면)으로 돌아오면 최신 데이터 새로고침
+            if(currentSlideIndex === 0) {
+                await loadAllData(); 
+            }
+            showCurrentSlide();
+        }
+
+        function showCurrentSlide() {
+            const slide = slides[currentSlideIndex];
+            const slideType = slide.getAttribute('data-type');
+            
+            // 팝업 화면인데 켜져있는 팝업이 하나도 없으면 즉시 스킵
+            if (slideType === 'popup' && activePopups.length === 0) {
+                playNextSlide();
                 return;
             }
 
-            listDiv.innerHTML = data.map(p => {
-                const typeName = p.media_type === 'youtube' ? '유튜브' : (p.media_type === 'image' ? '사진' : '텍스트');
-                const btnClass = p.is_active ? 'toggle-btn toggle-on' : 'toggle-btn toggle-off';
-                const btnText = p.is_active ? '화면에 켜짐' : '꺼짐';
-                
-                return `
-                    <div class="list-item">
-                        <div class="item-info">
-                            <div class="item-title">${p.title}</div>
-                            <div class="item-meta">종류: ${typeName}</div>
-                            <button class="delete-btn" onclick="deletePopup(${p.id})">삭제</button>
-                        </div>
-                        <div>
-                            <button class="${btnClass}" onclick="toggleStatus(${p.id}, ${p.is_active})">${btnText}</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
+            slide.classList.add('active');
 
-        // 새 팝업 등록하기 (자동으로 화면에 켜짐)
-        async function submitPopup() {
-            const title = document.getElementById('title').value.trim();
-            const mediaType = document.getElementById('media_type').value;
-            const mediaUrl = document.getElementById('media_url').value.trim();
-            const message = document.getElementById('message').value.trim();
-
-            if (!title) return alert('제목을 입력해주세요.');
-            if (mediaType !== 'text' && !mediaUrl) return alert('링크(URL)를 입력해주세요.');
-            if (mediaType === 'text' && !message) return alert('공지 내용을 입력해주세요.');
-
-            const btn = document.querySelector('.btn-primary');
-            btn.innerText = "전송 중...";
-            btn.disabled = true;
-
-            const { error } = await db.from('tv_popups').insert([{
-                title: title,
-                media_type: mediaType,
-                media_url: mediaType !== 'text' ? mediaUrl : null,
-                message: mediaType === 'text' ? message : null,
-                is_active: true // 등록하자마자 바로 켜짐
-            }]);
-
-            btn.innerText = "바로 화면에 띄우기";
-            btn.disabled = false;
-
-            if (error) {
-                alert('등록 중 오류가 발생했습니다.');
-            } else {
-                alert('성공적으로 화면에 팝업을 띄웠습니다!');
-                document.getElementById('title').value = '';
-                document.getElementById('media_url').value = '';
-                document.getElementById('message').value = '';
-                loadPopups();
+            if (slideType === 'popup') {
+                currentPopupIndex = 0; 
+                playPopupSequence(); // 팝업 순차 재생 시작!
+            }
+            else if (slideType === 'scroll') {
+                const marqueeContent = slide.querySelector('.marquee-content');
+                if (marqueeContent.children.length === 0 || marqueeContent.innerHTML.includes('empty-msg')) {
+                    setTimeout(playNextSlide, staticSlideDuration);
+                } else {
+                    marqueeContent.style.transition = 'none';
+                    marqueeContent.style.transform = `translateX(1920px)`;
+                    setTimeout(() => {
+                        const contentWidth = marqueeContent.scrollWidth;
+                        const distance = 1920 + contentWidth; 
+                        const duration = (distance / scrollSpeed) * 1000;
+                        marqueeContent.style.transition = `transform ${duration}ms linear`;
+                        marqueeContent.style.transform = `translateX(-${contentWidth}px)`;
+                        setTimeout(playNextSlide, duration);
+                    }, 100);
+                }
+            } 
+            else {
+                setTimeout(playNextSlide, staticSlideDuration);
             }
         }
 
-        // 켜기/끄기 토글
-        async function toggleStatus(id, currentStatus) {
-            const newStatus = !currentStatus;
-            const { error } = await db.from('tv_popups').update({ is_active: newStatus }).eq('id', id);
-            
-            if (!error) {
-                loadPopups();
-            } else {
-                alert('상태 변경에 실패했습니다.');
-            }
-        }
+        // 시스템 시작
+        (async function initSystem() {
+            await loadAllData();
+            showCurrentSlide();
+        })();
 
-        // 팝업 삭제
-        async function deletePopup(id) {
-            if (!confirm('이 팝업 기록을 완전히 삭제하시겠습니까?')) return;
-            
-            const { error } = await db.from('tv_popups').delete().eq('id', id);
-            if (!error) {
-                loadPopups();
-            } else {
-                alert('삭제에 실패했습니다.');
-            }
-        }
-
-        // 초기 실행
-        loadPopups();
     </script>
 </body>
 </html>
+
