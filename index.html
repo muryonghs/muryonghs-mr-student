@@ -89,7 +89,7 @@
         #page-facility { background-color: #f0f2f5; max-width: 100%; padding-bottom: 50px;}
         #page-facility .reservation-card { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
         #page-facility .btn-primary { background-color: #004a99; border: none; padding: 12px; font-weight: bold; border-radius: 10px; }
-        #page-facility .notice-box { background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px; }
+        #page-facility .notice-box { background-color: #fff3cd; color: #856404; padding: 12px; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px; line-height: 1.5; }
         #page-facility .btn-main { width: 100%; background: #0071e3; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: 0.2s; margin-top: 10px; }
         #page-facility .btn-main:active { transform: scale(0.98); }
         #page-facility .btn-main:disabled { background: #86868b; cursor: not-allowed; }
@@ -255,7 +255,10 @@
                 </div>
 
                 <h2 style="color: #2c3e50; font-weight: 900; text-align: center; margin-bottom: 25px;">무룡고등학교 시설 예약</h2>
-                <div style="background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px;">🔔 안내: [내일부터 7일간] 일정 예약 진행 중</div>
+                <div class="notice-box">
+                    🔔 안내: [내일부터 7일간] 일정 예약 진행 중<br>
+                    <span style="color: #e11d48; font-size: 0.85rem;">※ 시설 예약 사실을 반드시 학생회 인스타그램으로 알려야 승인 가능합니다.</span>
+                </div>
                 
                 <div class="mb-3"><label class="form-label" style="font-weight: bold;">이름</label><input type="text" id="name" class="form-control"></div>
                 <div class="mb-3">
@@ -268,11 +271,11 @@
                 <div class="mb-4 mt-2 px-2"><div class="form-check"><input type="checkbox" class="form-check-input" id="is_priority" onchange="handlePriorityCheck(this)"><label class="form-check-label fw-bold text-secondary" for="is_priority">우선권 사용</label></div></div>
                 <div class="mb-3"><label class="form-label" style="font-weight: bold;">이용 일자</label><select id="use_date" class="form-select"></select></div>
                 
-                <div class="row">
-                    <div class="col-12 mb-1 text-end"><span class="text-danger small fw-bold">※ 1회 최대 이용 가능 시간은 2시간입니다.</span></div>
-                    <div class="col-6 mb-3"><label class="form-label" style="font-weight: bold;">시작 시간</label><select id="start_time" class="form-select"></select></div>
-                    <div class="col-6 mb-3"><label class="form-label" style="font-weight: bold;">종료 시간</label><select id="end_time" class="form-select"></select></div>
+                <div class="row mb-1">
+                    <div class="col-6 mb-2"><label class="form-label" style="font-weight: bold;">시작 시간</label><select id="start_time" class="form-select"></select></div>
+                    <div class="col-6 mb-2"><label class="form-label" style="font-weight: bold;">종료 시간</label><select id="end_time" class="form-select"></select></div>
                 </div>
+                <div class="mb-3 px-1"><span class="text-danger small fw-bold" style="font-size: 0.85rem;">※ 1회 최대 이용 가능 시간은 2시간입니다.</span></div>
                 
                 <div class="mb-4 p-3 border rounded bg-light">
                     <label class="form-label text-danger" style="font-weight: bold;">🔒 예약 비밀번호 (숫자 4자리)</label>
