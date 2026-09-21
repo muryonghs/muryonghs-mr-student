@@ -89,14 +89,13 @@
         #page-facility { background-color: #f0f2f5; max-width: 100%; padding-bottom: 50px;}
         #page-facility .reservation-card { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
         #page-facility .btn-primary { background-color: #004a99; border: none; padding: 12px; font-weight: bold; border-radius: 10px; }
-        #page-facility .notice-box { background-color: #fff3cd; color: #856404; padding: 12px; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px; line-height: 1.5; }
+        #page-facility .notice-box { background-color: #f8f9fa; border: 1px solid #dee2e6; color: #495057; padding: 12px; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px; line-height: 1.5; }
         #page-facility .btn-main { width: 100%; background: #0071e3; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: 0.2s; margin-top: 10px; }
         #page-facility .btn-main:active { transform: scale(0.98); }
         #page-facility .btn-main:disabled { background: #86868b; cursor: not-allowed; }
 
-        /* 운영 중단/예약 차단 시 덮어버리는 오버레이 (z-index 상향) */
+        /* 💡 운영 중단/예약 차단 시 덮어버리는 오버레이 (z-index 상향) */
         .blocked-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); text-align: center; }
-        .blocked-icon { font-size: 3.5rem; margin-bottom: 15px; }
         .blocked-text { font-size: 1.3rem; font-weight: 900; color: #1d1d1f; margin-bottom: 8px; }
         .blocked-desc { font-size: 0.95rem; color: #ef4444; font-weight: 700; line-height: 1.5; padding: 0 20px; }
 
@@ -141,7 +140,7 @@
 <body>
 
     <div id="page-home" class="page active">
-        <div class="weather-badge" id="weather">🌤 날씨 로딩중...</div>
+        <div class="weather-badge" id="weather">날씨 로딩중...</div>
         <h1 class="greeting" id="greeting">무룡고 학생 여러분,<br><span>오늘도 즐거운 하루 보내세요!</span></h1>
         
         <div class="menu-grid">
@@ -208,7 +207,6 @@
         <div class="umb-card">
             
             <div id="umbrella-blocked-overlay" class="blocked-overlay">
-                <div class="blocked-icon">🌧️</div>
                 <div class="blocked-text">현재 양심우산 운영 중단</div>
                 <div class="blocked-desc">지금은 양심우산을 대여하거나<br>반납할 수 없는 시간입니다.<br>나중에 다시 시도해 주세요.</div>
             </div>
@@ -222,20 +220,20 @@
                 <button class="umb-btn" id="generate-btn" onclick="checkAndShowConsent()">대여 패스 발급받기</button>
             </div>
             <div id="qr-container">
-                <div id="welcome-box"><p class="emoji" style="font-size: 45px; margin: 0 0 10px 0;">☔️</p><p id="welcome-text" style="margin: 0; color: #64748b; font-size: 14px; font-weight: 600;">정보를 입력하고<br><strong style="color: #00B4D8;">대여 패스 발급받기</strong>를 눌러주세요!</p></div>
+                <div id="welcome-box"><p id="welcome-text" style="margin: 0; color: #64748b; font-size: 14px; font-weight: 600;">정보를 입력하고<br><strong style="color: #00B4D8;">대여 패스 발급받기</strong>를 눌러주세요!</p></div>
                 <img id="qr-image" src="" alt="QR">
-                <div id="success-msg"><p class="checkmark" style="font-size: 65px; margin: 0;">✅</p><p class="success-text" id="success-title" style="color: #00B4D8; font-size: 22px; font-weight: 800; margin: 15px 0;">대여 완료!</p><div class="success-sub" id="success-desc" style="background: #f0f9ff; padding: 15px; border-radius: 12px; color: #0369a1; font-weight: bold;">우산을 수령해 주세요.</div></div>
+                <div id="success-msg"><p class="success-text" id="success-title" style="color: #00B4D8; font-size: 22px; font-weight: 800; margin: 15px 0;">대여 완료!</p><div class="success-sub" id="success-desc" style="background: #f0f9ff; padding: 15px; border-radius: 12px; color: #0369a1; font-weight: bold;">우산을 수령해 주세요.</div></div>
             </div>
         </div>
         <div id="consent-modal" class="modal-overlay">
             <div class="modal-content">
-                <h3 style="margin-top: 0; color: #0f172a; font-size: 1.3rem; margin-bottom: 15px; font-weight:900;">⚠️ 필수 확인 수칙</h3>
+                <h3 style="margin-top: 0; color: #0f172a; font-size: 1.3rem; margin-bottom: 15px; font-weight:900;">필수 확인 수칙</h3>
                 <div style="background: #fff5f5; border: 1px solid #fed7d7; padding: 18px; border-radius: 14px; margin-bottom: 20px;">
                     <p style="margin: 0 0 10px 0; font-size: 14px; color: #334155; line-height: 1.5; font-weight:700;">1. 대여한 우산은 지정된 기한 내에 학생회실로 반드시 반납해야 합니다.</p>
                     <p style="margin: 0 0 10px 0; font-size: 14px; color: #334155; line-height: 1.5; font-weight:700;">2. 우산을 분실하거나 고의 파손 시 <span style="color: #ef4444; font-weight:900;">변상금(5,000원)</span>이 청구됩니다.</p>
                     <p style="margin: 0 0 15px 0; font-size: 14px; color: #334155; line-height: 1.5; font-weight:700;">3. 기한을 어길 경우 향후 우산 및 시설 이용에 제한을 받을 수 있습니다.</p>
                     <hr style="border:0; border-top:1px dashed #fca5a5; margin-bottom:12px;">
-                    <p style="margin: 0; font-size: 15px; color: #1e293b; line-height: 1.5; font-weight:900;">⏰ 반납 기한: <br><span style="color: #00B4D8;" id="modal-return-time">계산중...</span></p>
+                    <p style="margin: 0; font-size: 15px; color: #1e293b; line-height: 1.5; font-weight:900;">반납 기한: <br><span style="color: #00B4D8;" id="modal-return-time">계산중...</span></p>
                 </div>
                 <div style="display: flex; gap: 10px;"><button class="umb-btn" style="background: #f1f5f9; color: #64748b; flex: 1; margin-top: 0;" onclick="closeConsentModal()">취소</button><button class="umb-btn" style="background: #00B4D8; color: white; flex: 2; margin-top: 0;" onclick="agreeAndGenerate()">동의하고 대여</button></div>
             </div>
@@ -249,14 +247,13 @@
             <div class="reservation-card">
                 
                 <div id="facility-blocked-overlay" class="blocked-overlay">
-                    <div class="blocked-icon">🔒</div>
                     <div class="blocked-text">현재 예약 불가 시간입니다</div>
                     <div class="blocked-desc">관리자가 시설 예약을 마감했거나,<br>예약 명단을 확인하고 있는 중입니다.<br>자세한 사항은 공지를 확인해주세요.</div>
                 </div>
 
                 <h2 style="color: #2c3e50; font-weight: 900; text-align: center; margin-bottom: 25px;">무룡고등학교 시설 예약</h2>
                 <div class="notice-box">
-                    🔔 안내: [내일부터 7일간] 일정 예약 진행 중<br>
+                    안내: 평일 기준 5일간 일정 예약 진행 중<br>
                     <span style="color: #e11d48; font-size: 0.85rem;">※ 시설 예약 사실을 반드시 학생회 인스타그램으로 알려야 승인 가능합니다.</span>
                 </div>
                 
@@ -278,13 +275,13 @@
                 <div class="mb-3 px-1"><span class="text-danger small fw-bold" style="font-size: 0.85rem;">※ 1회 최대 이용 가능 시간은 2시간입니다.</span></div>
                 
                 <div class="mb-4 p-3 border rounded bg-light">
-                    <label class="form-label text-danger" style="font-weight: bold;">🔒 예약 비밀번호 (숫자 4자리)</label>
+                    <label class="form-label text-danger" style="font-weight: bold;">예약 비밀번호 (숫자 4자리)</label>
                     <p class="text-secondary mb-2" style="font-size: 0.85rem; font-weight: 600; line-height: 1.4;">※ 예약 취소 및 시설 이용(QR 인증) 시 사용할 비밀번호를 설정해 주세요.</p>
                     <input type="password" id="password" class="form-control" maxlength="4" placeholder="예: 1234">
                 </div>
                 
                 <button onclick="openTermsModal()" class="btn-main">예약 신청하기</button>
-                <div class="text-center mt-3"><a href="#" onclick="goPage('status'); return false;" class="text-secondary small" style="text-decoration: none;">📅 실시간 예약 현황 및 취소</a></div>
+                <div class="text-center mt-3"><a href="#" onclick="goPage('status'); return false;" class="text-secondary small" style="text-decoration: none;">실시간 예약 현황 및 취소</a></div>
             </div>
         </div>
         <div class="modal fade" id="termsModal" tabindex="-1">
@@ -292,7 +289,7 @@
               <div class="modal-content"><div class="modal-header"><h5 class="modal-title fw-bold">이용 약관 및 수칙</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
               <div class="modal-body">
                   <div class="text-muted small mb-3" style="max-height: 250px; overflow-y: auto; background: #f8f9fa; padding: 18px; border-radius: 12px; border: 1px solid #dee2e6; line-height: 1.6;" onscroll="checkTermsScroll(this)">
-                      <h6 class="fw-bold text-dark mb-3" style="font-size: 1rem;">📌 무룡고등학교 시설 이용 수칙</h6>
+                      <h6 class="fw-bold text-dark mb-3" style="font-size: 1rem;">무룡고등학교 시설 이용 수칙</h6>
                       <p><strong>1. 정리정돈 및 청결 유지</strong><br>사용 후 발생한 쓰레기는 반드시 스스로 치우고, 시설물을 원래 상태로 깨끗하게 정리해야 합니다.</p>
                       <p><strong>2. 시간 엄수</strong><br>예약한 시간에만 이용할 수 있으며, 다음 사용자를 위해 종료 시간을 정확히 지켜야 합니다.</p>
                       <p><strong>3. 시설물 보호 및 변상</strong><br>고의 또는 과실로 시설 및 비품을 파손할 경우 원상복구 및 변상 책임이 따릅니다. 파손 발견 즉시 학생회나 교무실에 알립니다.</p>
@@ -300,7 +297,7 @@
                       <p><strong>5. 이용 제한 규정</strong><br>위 수칙을 위반하거나 예약 후 무단 노쇼(No-Show)를 할 경우, 즉시 퇴장 조치되며 향후 예약 및 이용이 전면 제한될 수 있습니다.</p>
                       <br><p class="text-danger fw-bold text-center mb-0" style="font-size: 0.95rem;">스크롤을 끝까지 내리면 아래 입력창이 활성화됩니다.</p>
                   </div>
-                  <div class="border-top pt-3"><p id="scrollMsg" class="text-danger small fw-bold mb-2">🚨 끝까지 스크롤해야 동의를 입력할 수 있습니다.</p><div class="input-group"><span class="input-group-text bg-light fw-bold" style="font-size: 0.9rem;">동의 입력</span><input type="text" id="agreeText" class="form-control" placeholder="'동의합니다' 입력" disabled></div></div>
+                  <div class="border-top pt-3"><p id="scrollMsg" class="text-danger small fw-bold mb-2">주의: 끝까지 스크롤해야 동의를 입력할 수 있습니다.</p><div class="input-group"><span class="input-group-text bg-light fw-bold" style="font-size: 0.9rem;">동의 입력</span><input type="text" id="agreeText" class="form-control" placeholder="'동의합니다' 입력" disabled></div></div>
               </div>
               <div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-secondary fw-bold" style="border-radius:10px;" data-bs-dismiss="modal">취소</button><button type="button" class="btn btn-primary fw-bold" style="background-color: #0071e3; border: none; border-radius:10px;" onclick="submitReservation()">최종 신청</button></div></div>
             </div>
@@ -313,7 +310,7 @@
         <div class="top-nav"><button class="back-btn" onclick="goPage('facility')">❮ 뒤로</button></div>
         <div class="new-card">
             <h3 style="margin-top:0; font-size:1.2rem; font-weight: 800; text-align: center; margin-bottom: 15px;">시설 예약 현황</h3>
-            <div style="background-color: #fbfbfd; border: 1px solid #e5e5ea; padding: 15px; border-radius: 14px; text-align: center; font-size: 0.85rem; line-height: 1.5; color: #86868b; margin-bottom: 20px;">💡 <strong style="color:#0071e3;">승인된 예약</strong>만 시설 이용이 가능하며,<br>승인된 예약은 <strong>QR 패스</strong>로 본인 확인이 진행됩니다.</div>
+            <div style="background-color: #fbfbfd; border: 1px solid #e5e5ea; padding: 15px; border-radius: 14px; text-align: center; font-size: 0.85rem; line-height: 1.5; color: #86868b; margin-bottom: 20px;">안내: <strong style="color:#0071e3;">승인된 예약</strong>만 시설 이용이 가능하며,<br>승인된 예약은 <strong>QR 패스</strong>로 본인 확인이 진행됩니다.</div>
             <div style="overflow-x: auto;">
                 <table class="status-table">
                     <thead><tr><th>이름</th><th>장소</th><th>시간</th><th>상태</th></tr></thead>
@@ -326,8 +323,8 @@
             </div>
         </div>
         <div class="footer-info">무룡고등학교 학생회<br>문의: <a href="http://pf.kakao.com/_IJphX" target="_blank">카카오톡 채널</a> | <a href="https://www.instagram.com/muryonghs_official" target="_blank">인스타그램</a></div>
-        <div class="modal fade" id="qrPwModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content" style="border-radius: 20px; border: none;"><div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">🔒 패스 인증</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center pt-2"><p class="small text-muted mb-3">설정하신 <strong>숫자 4자리</strong>를 입력해주세요.</p><input type="password" id="qr-pw-input" class="form-control text-center mb-3 bg-light border-0 py-2" placeholder="비밀번호" maxlength="4" style="border-radius: 12px; font-weight: bold; letter-spacing: 2px;"><button class="btn btn-dark w-100" style="padding:12px; border-radius:12px; font-weight:bold;" onclick="verifyQrPw()">QR코드 열기</button></div></div></div></div>
-        <div class="modal fade" id="qrModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden;"><div class="modal-header bg-dark text-white border-0"><h5 class="modal-title fw-bold">📱 모바일 패스</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body text-center py-5"><h5 id="qr-student-name" class="fw-bold mb-3"></h5><div id="qr-display-area"><p class="text-muted small mb-4">관리자에게 아래 QR코드를 보여주세요.</p><img id="fac-qr-image" src="" style="width: 200px; height: 200px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 15px;"></div><div id="qr-success-msg" style="display: none;"><h1 style="font-size: 4rem;">✅</h1><h4 class="fw-bold mt-3" style="color: #0071e3;">인증이 완료되었습니다</h4></div></div></div></div></div>
+        <div class="modal fade" id="qrPwModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-sm"><div class="modal-content" style="border-radius: 20px; border: none;"><div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">패스 인증</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center pt-2"><p class="small text-muted mb-3">설정하신 <strong>숫자 4자리</strong>를 입력해주세요.</p><input type="password" id="qr-pw-input" class="form-control text-center mb-3 bg-light border-0 py-2" placeholder="비밀번호" maxlength="4" style="border-radius: 12px; font-weight: bold; letter-spacing: 2px;"><button class="btn btn-dark w-100" style="padding:12px; border-radius:12px; font-weight:bold;" onclick="verifyQrPw()">QR코드 열기</button></div></div></div></div>
+        <div class="modal fade" id="qrModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden;"><div class="modal-header bg-dark text-white border-0"><h5 class="modal-title fw-bold">모바일 패스</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body text-center py-5"><h5 id="qr-student-name" class="fw-bold mb-3"></h5><div id="qr-display-area"><p class="text-muted small mb-4">관리자에게 아래 QR코드를 보여주세요.</p><img id="fac-qr-image" src="" style="width: 200px; height: 200px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 15px;"></div><div id="qr-success-msg" style="display: none;"><h1 style="font-size: 2rem; color: #0071e3; margin-bottom: 10px;">완료</h1><h4 class="fw-bold mt-3" style="color: #0071e3;">인증이 완료되었습니다</h4></div></div></div></div></div>
         <div class="modal fade" id="cancelModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content" style="border-radius: 20px; border: none;"><div class="modal-header border-0"><h5 class="modal-title fw-bold" style="color: #ff3b30;">내 예약 취소하기</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body pt-1"><input type="text" id="c_name" class="form-control mb-2 bg-light border-0 py-2" placeholder="이름" style="border-radius: 10px;"><input type="number" id="c_sid" class="form-control mb-2 bg-light border-0 py-2" placeholder="학번 4자리" style="border-radius: 10px;"><input type="password" id="c_pw" class="form-control mb-3 bg-light border-0 py-2" placeholder="비밀번호 (숫자 4자리)" maxlength="4" style="border-radius: 10px;"></div><div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background-color: #f2f2f7; color: #1d1d1f; border: none;">닫기</button><button type="button" class="btn btn-danger px-4" onclick="processCancel()">예약 취소</button></div></div></div></div>
     </div>
 
@@ -446,7 +443,7 @@
         let currentBoardType = '';
         let checkInterval; 
 
-        // 페이지 접속 원천 차단을 위한 전역 변수
+        // 💡 페이지 접속 원천 차단을 위한 전역 변수
         let isFacilityBlocked = false;
         let isUmbrellaBlocked = false;
 
@@ -481,7 +478,7 @@
             try {
                 const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=35.5384&longitude=129.3114&current_weather=true&hourly=precipitation_probability,weathercode&timezone=Asia/Seoul');
                 const data = await res.json();
-                document.getElementById('weather').innerText = `🌤 현재 울산 기온 : ${Math.round(data.current_weather.temperature)}℃`;
+                document.getElementById('weather').innerText = `날씨 현황 : ${Math.round(data.current_weather.temperature)}℃`;
                 
                 if (data.hourly && data.hourly.time) {
                     for (let i = 0; i < data.hourly.time.length; i++) {
@@ -497,15 +494,15 @@
                         }
                     }
                 }
-            } catch (e) { document.getElementById('weather').innerText = `🌤 날씨 로딩 실패`; }
+            } catch (e) { document.getElementById('weather').innerText = `날씨 로딩 실패`; }
             
             if (willRain) {
-                dynamicGreeting = "오늘 비가 와요☔ 우산챙기세요!";
+                dynamicGreeting = "오늘 비가 옵니다. 우산을 챙기세요.";
             } else {
-                if (currentHour >= 6 && currentHour < 11) dynamicGreeting = "상쾌한 아침! 오늘도 파이팅! ☀️";
-                else if (currentHour >= 11 && currentHour < 14) dynamicGreeting = "급식이 기대되는 시간이네요! 🍱";
-                else if (currentHour >= 14 && currentHour < 18) dynamicGreeting = "나른한 오후, 조금만 더 힘내요! 💪";
-                else dynamicGreeting = "오늘 하루도 정말 수고 많았어요 🌙";
+                if (currentHour >= 6 && currentHour < 11) dynamicGreeting = "상쾌한 아침입니다. 오늘도 파이팅!";
+                else if (currentHour >= 11 && currentHour < 14) dynamicGreeting = "맛있는 점심 시간입니다.";
+                else if (currentHour >= 14 && currentHour < 18) dynamicGreeting = "오후 수업도 힘내세요.";
+                else dynamicGreeting = "오늘 하루도 수고 많으셨습니다.";
             }
             
             document.getElementById('greeting').innerHTML = `무룡고 학생 여러분,<br><span>${dynamicGreeting}</span>`;
@@ -536,7 +533,7 @@
             } catch(e) {}
         }
 
-        // 통합 시스템 상태 감지 로직 (예약 차단, 우산 차단 변수 업데이트)
+        // 💡 통합 시스템 상태 감지 로직 (예약 차단, 우산 차단 변수 업데이트)
         async function checkSystemStatus() {
             try {
                 const { data: set } = await db.from('site_settings').select('is_booking_blocked').eq('id', 1).single();
@@ -623,14 +620,14 @@
         async function checkAndShowConsent() { const sid = document.getElementById('student_id').value; const sname = document.getElementById('student_name').value; const phone = document.getElementById('phone_number').value; if(!sid || !sname || (currentMode === 'rent' && !phone)) { alert("정보를 모두 입력해주세요."); return; } if(sid.length !== 4) { alert("학번은 정확히 4자리 숫자로 입력해주세요."); return; } if (currentMode === 'rent') { const { data, error } = await db.from('umbrella_rentals').select('id').eq('student_id', sid).eq('status', '대여중'); if (data && data.length > 0) { alert("이미 대여 중인 우산이 있습니다!\n기존 우산을 먼저 반납한 후 이용해 주세요."); return; } const tmr = new Date(); tmr.setDate(tmr.getDate() + 1); calculatedReturnStr = `내일 ${tmr.getMonth() + 1}월 ${tmr.getDate()}일 점심시간`; document.getElementById('modal-return-time').innerText = calculatedReturnStr; document.getElementById('consent-modal').style.display = 'flex'; } else { executeQRGeneration(sid, sname, phone); } }
         function closeConsentModal() { document.getElementById('consent-modal').style.display = 'none'; }
         function agreeAndGenerate() { closeConsentModal(); executeQRGeneration(document.getElementById('student_id').value, document.getElementById('student_name').value, document.getElementById('phone_number').value); }
-        function executeQRGeneration(sid, sname, phone) { document.getElementById('welcome-box').style.display = 'none'; const qrData = { action: currentMode, student_id: sid, student_name: sname, phone_number: phone }; const qrImg = document.getElementById('qr-image'); qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(JSON.stringify(qrData))}&color=1f2937`; qrImg.style.display = 'block'; const qrGenTime = new Date().toISOString(); checkInterval = setInterval(async () => { const checkStatus = currentMode === 'rent' ? '대여중' : '반납완료'; const { data } = await db.from('umbrella_rentals').select('*').eq('student_id', sid).eq('status', checkStatus).gte(currentMode === 'rent' ? 'rent_date' : 'return_date', qrGenTime); if (data && data.length > 0) { clearInterval(checkInterval); document.getElementById('qr-image').style.display = 'none'; document.getElementById('success-title').innerText = currentMode === 'rent' ? '대여 완료!' : '반납 완료!'; document.getElementById('success-title').style.color = currentMode === 'rent' ? '#00B4D8' : '#2B9348'; document.getElementById('success-desc').innerHTML = currentMode === 'rent' ? `잊지 말고 꼭 반납해 주세요! ☂️<br><br><span style="color:#ef4444;">반납 기한: ${calculatedReturnStr}</span>` : "양심을 지켜주셔서 감사합니다 💖"; document.getElementById('success-msg').style.display = 'block'; } }, 2000); }
+        function executeQRGeneration(sid, sname, phone) { document.getElementById('welcome-box').style.display = 'none'; const qrData = { action: currentMode, student_id: sid, student_name: sname, phone_number: phone }; const qrImg = document.getElementById('qr-image'); qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(JSON.stringify(qrData))}&color=1f2937`; qrImg.style.display = 'block'; const qrGenTime = new Date().toISOString(); checkInterval = setInterval(async () => { const checkStatus = currentMode === 'rent' ? '대여중' : '반납완료'; const { data } = await db.from('umbrella_rentals').select('*').eq('student_id', sid).eq('status', checkStatus).gte(currentMode === 'rent' ? 'rent_date' : 'return_date', qrGenTime); if (data && data.length > 0) { clearInterval(checkInterval); document.getElementById('qr-image').style.display = 'none'; document.getElementById('success-title').innerText = currentMode === 'rent' ? '대여 완료!' : '반납 완료!'; document.getElementById('success-title').style.color = currentMode === 'rent' ? '#00B4D8' : '#2B9348'; document.getElementById('success-desc').innerHTML = currentMode === 'rent' ? `잊지 말고 꼭 반납해 주세요.<br><br><span style="color:#ef4444;">반납 기한: ${calculatedReturnStr}</span>` : "반납이 완료되었습니다."; document.getElementById('success-msg').style.display = 'block'; } }, 2000); }
 
         /* 시설예약 코드 */
         let termsModal; let instaModal;
         function handlePriorityCheck(cb) { if(cb.checked) alert("우선권은 특별 승인된 대상만 선택 가능합니다.\n허위로 체크할 경우 예약 취소 및 향후 시설 이용이 제한됩니다."); }
         function checkTermsScroll(el) { if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) { document.getElementById('agreeText').disabled = false; document.getElementById('scrollMsg').style.display = 'none'; } }
         
-        // 다음날부터 7일 범위로 날짜 옵션 생성
+        // 💡 주말 제외 평일 기준 5일치 날짜 생성
         function populateDateSelect() { 
             const dateSelect = document.getElementById('use_date'); 
             if(!dateSelect) return; 
@@ -638,17 +635,25 @@
             const now = new Date(); 
             const daysKo = ['일', '월', '화', '수', '목', '금', '토']; 
             
-            for (let i = 1; i <= 7; i++) { 
+            let added = 0;
+            let offsetDays = 1;
+            while(added < 5) { 
                 const targetDate = new Date(now); 
-                targetDate.setDate(targetDate.getDate() + i); 
-                const offset = targetDate.getTimezoneOffset() * 60000; 
-                dateSelect.add(new Option(`${targetDate.getMonth() + 1}/${targetDate.getDate()} (${daysKo[targetDate.getDay()]})`, (new Date(targetDate - offset)).toISOString().split('T')[0])); 
-            } 
+                targetDate.setDate(targetDate.getDate() + offsetDays); 
+                const dayOfWeek = targetDate.getDay();
+                
+                // 주말(토, 일) 제외
+                if(dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    const offset = targetDate.getTimezoneOffset() * 60000; 
+                    dateSelect.add(new Option(`${targetDate.getMonth() + 1}/${targetDate.getDate()} (${daysKo[dayOfWeek]})`, (new Date(targetDate - offset)).toISOString().split('T')[0])); 
+                    added++;
+                }
+                offsetDays++;
+            }
         }
         
         function populateTimeSelects() { const sSelect = document.getElementById('start_time'); const eSelect = document.getElementById('end_time'); if(!sSelect) return; for (let i = 7; i <= 16; i++) { let hour = i.toString().padStart(2, '0'); sSelect.add(new Option(`${hour}:00`, `${hour}:00`)); eSelect.add(new Option(`${hour}:00`, `${hour}:00`)); if (i !== 16) { sSelect.add(new Option(`${hour}:30`, `${hour}:30`)); eSelect.add(new Option(`${hour}:30`, `${hour}:30`)); } } }
         
-        // 특정 요일 제한 없이 기본 7일 상시 오픈
         function checkBookingWindow() { 
             populateDateSelect(); 
             populateTimeSelects(); 
@@ -660,9 +665,9 @@
         let cancelModal; let qrPwModal; let qrModal; let currentQrId = ''; let currentQrName = ''; let qrCheckInterval;
         async function loadStatus() { const { data } = await db.from('reservations').select('*').order('start_time', { ascending: true }); const list = document.getElementById('public-list'); list.innerHTML = ''; data.forEach(res => { let badgeClass = '', badgeText = ''; if(res.status === 'pending') { badgeClass = 'badge-pending'; badgeText = '대기 중'; } else if(res.status === 'approved') { badgeClass = 'badge-approved'; badgeText = '승인 완료'; } else if(res.status === 'standby') { badgeClass = 'badge-standby'; badgeText = '취소 대기'; } else if(res.status === 'rejected') { badgeClass = 'badge-rejected'; badgeText = '이용 불가'; } else if(res.status === 'cancelled') { badgeClass = 'badge-cancelled'; badgeText = '취소됨'; } else if(res.status === 'blocked') { badgeClass = 'badge-blocked'; badgeText = '예약 제한'; } else if(res.status === 'used') { badgeClass = 'badge-used'; badgeText = '사용 완료'; } const d1 = new Date(res.start_time); const d2 = new Date(res.end_time); const compactTime = `<strong style="font-size:0.9rem; color:#1d1d1f;">${d1.getMonth()+1}.${d1.getDate()}</strong><br><span style="font-size:0.8rem; color:#86868b;">${String(d1.getHours()).padStart(2,'0')}:${String(d1.getMinutes()).padStart(2,'0')} - ${String(d2.getHours()).padStart(2,'0')}:${String(d2.getMinutes()).padStart(2,'0')}</span>`; const priorityBadge = (res.is_priority && res.status !== 'blocked') ? `<br><span class="badge badge-priority mt-1">우선권</span>` : ''; const roomName = `<span style="font-weight:600;">${res.room_name}</span>${priorityBadge}`; let displayName = `<span style="font-weight:600;">${res.student_name.charAt(0)}*${res.student_name.charAt(res.student_name.length-1)}</span><br><span style="font-size:0.75rem; color:#86868b;">${res.student_id.toString().substring(0,2)}**</span>`; if (res.status === 'blocked') { displayName = `<span class="fw-bold" style="font-size: 0.85rem; color:#ff3b30;">시스템<br>차단</span>`; } let qrButton = ''; if(res.status === 'approved') { qrButton = `<br><button class="btn btn-dark mt-2" style="font-size: 0.7rem; padding: 4px 10px;" onclick="openQrPwModal('${res.id}', '${res.student_name}')">QR 패스</button>`; } list.innerHTML += `<tr><td>${displayName}</td><td>${roomName}</td><td>${compactTime}</td><td><span class="badge ${badgeClass}">${badgeText}</span>${qrButton}</td></tr>`; }); }
         function openQrPwModal(id, name) { currentQrId = id; currentQrName = name; document.getElementById('qr-pw-input').value = ''; if(!qrPwModal) qrPwModal = new bootstrap.Modal(document.getElementById('qrPwModal')); qrPwModal.show(); }
-        async function verifyQrPw() { const pw = document.getElementById('qr-pw-input').value; if(!pw) return alert("비밀번호를 입력해주세요."); const { data } = await db.from('reservations').select('password').eq('id', currentQrId).single(); if(data && data.password === pw) { qrPwModal.hide(); document.getElementById('qr-student-name').innerText = `${currentQrName} 학생의 패스`; document.getElementById('qr-display-area').style.display = 'block'; document.getElementById('qr-success-msg').style.display = 'none'; document.getElementById('fac-qr-image').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${currentQrId}&margin=10`; if(!qrModal) qrModal = new bootstrap.Modal(document.getElementById('qrModal')); qrModal.show(); if(qrCheckInterval) clearInterval(qrCheckInterval); qrCheckInterval = setInterval(async () => { const { data: checkData } = await db.from('reservations').select('status').eq('id', currentQrId).single(); if(checkData && checkData.status === 'used') { clearInterval(qrCheckInterval); document.getElementById('qr-display-area').style.display = 'none'; document.getElementById('qr-success-msg').style.display = 'block'; loadStatus(); } }, 2000); } else { alert("❌ 비밀번호가 일치하지 않습니다."); } }
+        async function verifyQrPw() { const pw = document.getElementById('qr-pw-input').value; if(!pw) return alert("비밀번호를 입력해주세요."); const { data } = await db.from('reservations').select('password').eq('id', currentQrId).single(); if(data && data.password === pw) { qrPwModal.hide(); document.getElementById('qr-student-name').innerText = `${currentQrName} 학생의 패스`; document.getElementById('qr-display-area').style.display = 'block'; document.getElementById('qr-success-msg').style.display = 'none'; document.getElementById('fac-qr-image').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${currentQrId}&margin=10`; if(!qrModal) qrModal = new bootstrap.Modal(document.getElementById('qrModal')); qrModal.show(); if(qrCheckInterval) clearInterval(qrCheckInterval); qrCheckInterval = setInterval(async () => { const { data: checkData } = await db.from('reservations').select('status').eq('id', currentQrId).single(); if(checkData && checkData.status === 'used') { clearInterval(qrCheckInterval); document.getElementById('qr-display-area').style.display = 'none'; document.getElementById('qr-success-msg').style.display = 'block'; loadStatus(); } }, 2000); } else { alert("비밀번호가 일치하지 않습니다."); } }
         function openCancelModal() { cancelModal = new bootstrap.Modal(document.getElementById('cancelModal')); cancelModal.show(); }
-        async function processCancel() { const name = document.getElementById('c_name').value; const sid = document.getElementById('c_sid').value; const pw = document.getElementById('c_pw').value; if(!name || !sid || !pw) return alert("모든 정보를 입력해 주세요."); const { data } = await db.from('reservations').select('*').eq('student_name', name).eq('student_id', sid).eq('password', pw).in('status', ['pending', 'approved', 'standby']); if (!data || data.length === 0) return alert("일치하는 예약 정보가 없거나, 이미 취소/거절된 예약입니다."); const targetId = data[0].id; const { error } = await db.from('reservations').update({ status: 'cancelled' }).eq('id', targetId); if (!error) { alert("성공적으로 예약이 취소되었습니다."); cancelModal.hide(); loadStatus(); } else { alert("오류 발생: " + error.message); } }
+        async function processCancel() { const name = document.getElementById('c_name').value; const sid = document.getElementById('c_sid').value; const pw = document.getElementById('c_pw').value; if(!name || !sid || !pw) return alert("모든 정보를 입력해 주세요."); const { data } = await db.from('reservations').select('*').eq('student_name', name).eq('student_id', sid).eq('password', pw).in('status', ['pending', 'approved', 'standby']); if (!data || data.length === 0) return alert("일치하는 예약 정보가 없거나, 이미 취소/거절된 예약입니다."); const targetId = data[0].id; const { error } = await db.from('reservations').update({ status: 'cancelled' }).eq('id', targetId); if (!error) { alert("예약이 취소되었습니다."); cancelModal.hide(); loadStatus(); } else { alert("오류 발생: " + error.message); } }
 
         /* 반 일정 달력 */
         async function fetchNeisCalendar() { 
@@ -723,7 +728,7 @@
         async function deleteCalendarEvent(id) {
             if(!confirm("이 일정을 정말 삭제할까요?")) return;
             const { error } = await db.from('calendar_events').delete().eq('id', id);
-            if(!error) { alert("삭제되었습니다!"); loadClassCalendar(); }
+            if(!error) { alert("삭제되었습니다."); loadClassCalendar(); }
             else { alert("삭제 중 오류가 발생했습니다."); }
         }
 
@@ -732,7 +737,7 @@
             if(newTitle === null || newTitle.trim() === '') return; 
             
             const { error } = await db.from('calendar_events').update({ title: newTitle }).eq('id', id);
-            if(!error) { alert("수정되었습니다!"); loadClassCalendar(); }
+            if(!error) { alert("수정되었습니다."); loadClassCalendar(); }
             else { alert("수정 중 오류가 발생했습니다."); }
         }
 
@@ -752,8 +757,8 @@
             if(document.getElementById('board-file')) document.getElementById('board-file').value = '';
 
             if (type === 'study') { 
-                document.getElementById('board-list-title').innerText = '📚 학습자료 목록';
-                document.getElementById('board-write-title').innerText = '📚 자료 기여하기'; 
+                document.getElementById('board-list-title').innerText = '학습자료 목록';
+                document.getElementById('board-write-title').innerText = '자료 기여하기'; 
                 document.getElementById('board-submit-btn').innerText = '자료 기여하기'; 
                 
                 document.getElementById('board-content').placeholder = "내용 (선택사항)";
@@ -764,7 +769,7 @@
                 studyMetaArea.style.display = 'flex'; 
                 
             } else if (type === 'suggestion') { 
-                document.getElementById('board-write-title').innerText = '💡 새 건의사항 작성'; 
+                document.getElementById('board-write-title').innerText = '새 건의사항 작성'; 
                 document.getElementById('board-submit-btn').innerText = '건의하기'; 
                 
                 document.getElementById('board-desc').innerHTML = '학교 발전을 위한 여러분의 소중한 의견을 들려주세요.<br>작성된 건의사항은 학생회만 확인할 수 있습니다.';
@@ -869,7 +874,7 @@
 
             if(!error) { 
                 if(currentBoardType === 'suggestion') {
-                    alert("소중한 의견이 비공개로 전달되었습니다! 감사합니다.");
+                    alert("소견이 비공개로 전달되었습니다.");
                 } else {
                     alert("등록이 완료되었습니다."); 
                 }
@@ -912,9 +917,9 @@
                             ${imgHtml}
                             <div class="lost-info">
                                 <h4>${item.item_name}</h4>
-                                <p>📍 발견장소: <strong style="color:#1d1d1f; margin-left:4px;">${item.found_location}</strong></p>
-                                <p>🏃‍♂️ 찾아가는 곳: <strong style="color:#0071e3; margin-left:4px;">${item.pickup_location}</strong></p>
-                                <p style="font-size:0.8rem; color:#86868b; margin-top:6px;">🕒 등록 일시: ${dateStr}</p>
+                                <p>발견장소: <strong style="color:#1d1d1f; margin-left:4px;">${item.found_location}</strong></p>
+                                <p>찾아가는 곳: <strong style="color:#0071e3; margin-left:4px;">${item.pickup_location}</strong></p>
+                                <p style="font-size:0.8rem; color:#86868b; margin-top:6px;">등록 일시: ${dateStr}</p>
                             </div>
                         </div>`; 
             }).join(''); 
