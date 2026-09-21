@@ -255,7 +255,7 @@
                 </div>
 
                 <h2 style="color: #2c3e50; font-weight: 900; text-align: center; margin-bottom: 25px;">무룡고등학교 시설 예약</h2>
-                <div style="background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px;">🔔 안내: [다음 주 월~금] 일정 예약 진행 중</div>
+                <div style="background-color: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: bold; margin-bottom: 20px;">🔔 안내: [내일부터 7일간] 일정 예약 진행 중</div>
                 
                 <div class="mb-3"><label class="form-label" style="font-weight: bold;">이름</label><input type="text" id="name" class="form-control"></div>
                 <div class="mb-3">
@@ -267,8 +267,18 @@
                 <div class="mb-3"><label class="form-label" style="font-weight: bold;">시설 선택</label><select id="room" class="form-select"><option value="더하우스">더하우스</option><option value="풋살장">풋살장</option><option value="소회의실">소회의실</option></select></div>
                 <div class="mb-4 mt-2 px-2"><div class="form-check"><input type="checkbox" class="form-check-input" id="is_priority" onchange="handlePriorityCheck(this)"><label class="form-check-label fw-bold text-secondary" for="is_priority">우선권 사용</label></div></div>
                 <div class="mb-3"><label class="form-label" style="font-weight: bold;">이용 일자</label><select id="use_date" class="form-select"></select></div>
-                <div class="row"><div class="col-6 mb-3"><label class="form-label" style="font-weight: bold;">시작 시간</label><select id="start_time" class="form-select"></select></div><div class="col-6 mb-3"><label class="form-label" style="font-weight: bold;">종료 시간</label><select id="end_time" class="form-select"></select></div></div>
-                <div class="mb-4 p-3 border rounded bg-light"><label class="form-label text-danger" style="font-weight: bold;">🔒 예약 비밀번호 (숫자 4자리)</label><input type="password" id="password" class="form-control" maxlength="4"></div>
+                
+                <div class="row">
+                    <div class="col-12 mb-1 text-end"><span class="text-danger small fw-bold">※ 1회 최대 이용 가능 시간은 2시간입니다.</span></div>
+                    <div class="col-6 mb-3"><label class="form-label" style="font-weight: bold;">시작 시간</label><select id="start_time" class="form-select"></select></div>
+                    <div class="col-6 mb-3"><label class="form-label" style="font-weight: bold;">종료 시간</label><select id="end_time" class="form-select"></select></div>
+                </div>
+                
+                <div class="mb-4 p-3 border rounded bg-light">
+                    <label class="form-label text-danger" style="font-weight: bold;">🔒 예약 비밀번호 (숫자 4자리)</label>
+                    <p class="text-secondary mb-2" style="font-size: 0.85rem; font-weight: 600; line-height: 1.4;">※ 예약 취소 및 시설 이용(QR 인증) 시 사용할 비밀번호를 설정해 주세요.</p>
+                    <input type="password" id="password" class="form-control" maxlength="4" placeholder="예: 1234">
+                </div>
                 
                 <button onclick="openTermsModal()" class="btn-main">예약 신청하기</button>
                 <div class="text-center mt-3"><a href="#" onclick="goPage('status'); return false;" class="text-secondary small" style="text-decoration: none;">📅 실시간 예약 현황 및 취소</a></div>
@@ -281,7 +291,7 @@
                   <div class="text-muted small mb-3" style="max-height: 250px; overflow-y: auto; background: #f8f9fa; padding: 18px; border-radius: 12px; border: 1px solid #dee2e6; line-height: 1.6;" onscroll="checkTermsScroll(this)">
                       <h6 class="fw-bold text-dark mb-3" style="font-size: 1rem;">📌 무룡고등학교 시설 이용 수칙</h6>
                       <p><strong>1. 정리정돈 및 청결 유지</strong><br>사용 후 발생한 쓰레기는 반드시 스스로 치우고, 시설물을 원래 상태로 깨끗하게 정리해야 합니다.</p>
-                      <p><strong>2. 시간 엄수</strong><br>예약한 시간에만 이용할 수 정며, 다음 사용자를 위해 종료 시간을 정확히 지켜야 합니다.</p>
+                      <p><strong>2. 시간 엄수</strong><br>예약한 시간에만 이용할 수 있으며, 다음 사용자를 위해 종료 시간을 정확히 지켜야 합니다.</p>
                       <p><strong>3. 시설물 보호 및 변상</strong><br>고의 또는 과실로 시설 및 비품을 파손할 경우 원상복구 및 변상 책임이 따릅니다. 파손 발견 즉시 학생회나 교무실에 알립니다.</p>
                       <p><strong>4. 안전 및 에티켓</strong><br>시설 내에서는 안전에 유의하며, 타인에게 방해가 되는 지나친 소란 행위를 금지합니다.</p>
                       <p><strong>5. 이용 제한 규정</strong><br>위 수칙을 위반하거나 예약 후 무단 노쇼(No-Show)를 할 경우, 즉시 퇴장 조치되며 향후 예약 및 이용이 전면 제한될 수 있습니다.</p>
@@ -438,30 +448,14 @@
         let isUmbrellaBlocked = false;
 
         async function goPage(pageId) {
-            // 💡 관리자가 막았을 경우 알림 띄우고 진입 완벽 차단
-            if (pageId === 'facility') {
-                const now = new Date();
-                const day = now.getDay();
-                const hour = now.getHours();
-                let isTimeBlocked = ((day === 0 && hour >= 18) || (day === 1 && hour < 18));
-                try {
-                    const { data: set } = await db.from('site_settings').select('is_booking_blocked').eq('id', 1).single();
-                    if (set && set.is_booking_blocked) isTimeBlocked = true;
-                } catch(e) {}
-                
-                if (isTimeBlocked) {
-                    alert("현재 예약 불가 시간입니다.\n관리자가 시설 예약을 마감했거나 확인 중입니다.");
-                    return;
-                }
+            // 💡 중복 API 호출 제거, 글로벌 변수 확인만으로 즉각 차단하여 충돌 해결
+            if (pageId === 'facility' && isFacilityBlocked) {
+                alert("현재 시설 예약이 중단되었습니다.\n관리자가 시설 예약을 마감했거나 확인 중입니다.");
+                return;
             }
-            if (pageId === 'umbrella') {
-                try {
-                    const { data: umb } = await db.from('announcements').select('content').eq('id', 4).single();
-                    if (umb && umb.content === 'CLOSED') {
-                        alert("현재 양심우산 운영이 중단되었습니다.\n나중에 다시 시도해 주세요.");
-                        return;
-                    }
-                } catch(e) {}
+            if (pageId === 'umbrella' && isUmbrellaBlocked) {
+                alert("현재 양심우산 운영이 중단되었습니다.\n나중에 다시 시도해 주세요.");
+                return;
             }
 
             document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); });
@@ -545,16 +539,10 @@
                 const { data: set } = await db.from('site_settings').select('is_booking_blocked').eq('id', 1).single();
                 isFacilityBlocked = (set && set.is_booking_blocked) ? true : false;
                 
-                const now = new Date();
-                const day = now.getDay();
-                const hour = now.getHours();
-                let isTimeBlocked = ((day === 0 && hour >= 18) || (day === 1 && hour < 18));
-                let finalFacBlocked = isFacilityBlocked || isTimeBlocked;
-
                 const facBadge = document.getElementById('badge-facility');
                 if(facBadge) {
                     facBadge.style.display = 'block';
-                    if(finalFacBlocked) { facBadge.innerText = '예약불가'; facBadge.className = 'menu-badge badge-off'; }
+                    if(isFacilityBlocked) { facBadge.innerText = '예약불가'; facBadge.className = 'menu-badge badge-off'; }
                     else { facBadge.innerText = '예약가능'; facBadge.className = 'menu-badge badge-on'; }
                 }
 
@@ -581,7 +569,7 @@
         // 실시간 감지 구독
         db.channel('student-settings').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'site_settings' }, p => { checkSystemStatus(); }).subscribe();
         
-        // 💡 양심우산 + 실시간 급식실 긴급/일반 공지 모두 실시간 반영하는 채널 감지
+        // 양심우산 + 실시간 급식실 긴급/일반 공지 모두 실시간 반영하는 채널 감지
         db.channel('student-umb').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'announcements' }, p => { 
             checkSystemStatus(); 
             if(p.new.id === 1) {
@@ -638,9 +626,31 @@
         let termsModal; let instaModal;
         function handlePriorityCheck(cb) { if(cb.checked) alert("우선권은 특별 승인된 대상만 선택 가능합니다.\n허위로 체크할 경우 예약 취소 및 향후 시설 이용이 제한됩니다."); }
         function checkTermsScroll(el) { if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) { document.getElementById('agreeText').disabled = false; document.getElementById('scrollMsg').style.display = 'none'; } }
-        function populateDateSelect() { const dateSelect = document.getElementById('use_date'); if(!dateSelect) return; dateSelect.innerHTML = ''; const now = new Date(); const dayOfWeek = now.getDay(); let daysToNextMonday = (dayOfWeek === 0) ? 1 : 8 - dayOfWeek; const targetMonday = new Date(now); targetMonday.setDate(now.getDate() + daysToNextMonday); const daysKo = ['일', '월', '화', '수', '목', '금', '토']; for (let i = 0; i < 5; i++) { const targetDate = new Date(targetMonday); targetDate.setDate(targetMonday.getDate() + i); const offset = targetDate.getTimezoneOffset() * 60000; dateSelect.add(new Option(`${targetDate.getMonth() + 1}/${targetDate.getDate()} (${daysKo[targetDate.getDay()]})`, (new Date(targetDate - offset)).toISOString().split('T')[0])); } }
+        
+        // 💡 다음날부터 7일 범위로 날짜 옵션 생성
+        function populateDateSelect() { 
+            const dateSelect = document.getElementById('use_date'); 
+            if(!dateSelect) return; 
+            dateSelect.innerHTML = ''; 
+            const now = new Date(); 
+            const daysKo = ['일', '월', '화', '수', '목', '금', '토']; 
+            
+            for (let i = 1; i <= 7; i++) { 
+                const targetDate = new Date(now); 
+                targetDate.setDate(targetDate.getDate() + i); 
+                const offset = targetDate.getTimezoneOffset() * 60000; 
+                dateSelect.add(new Option(`${targetDate.getMonth() + 1}/${targetDate.getDate()} (${daysKo[targetDate.getDay()]})`, (new Date(targetDate - offset)).toISOString().split('T')[0])); 
+            } 
+        }
+        
         function populateTimeSelects() { const sSelect = document.getElementById('start_time'); const eSelect = document.getElementById('end_time'); if(!sSelect) return; for (let i = 7; i <= 16; i++) { let hour = i.toString().padStart(2, '0'); sSelect.add(new Option(`${hour}:00`, `${hour}:00`)); eSelect.add(new Option(`${hour}:00`, `${hour}:00`)); if (i !== 16) { sSelect.add(new Option(`${hour}:30`, `${hour}:30`)); eSelect.add(new Option(`${hour}:30`, `${hour}:30`)); } } }
-        function checkBookingWindow() { const now = new Date(); const day = now.getDay(); const hour = now.getHours(); if ((day === 0 && hour >= 18) || (day === 1 && hour < 18)) { document.getElementById('facility-content').innerHTML = `<div style="text-align:center; padding:40px 20px; background:white; border-radius:20px;"><h1 style="font-size:3rem; margin-bottom:10px;">🛠️</h1><h3 style="color:#2c3e50; font-weight:bold; margin-bottom:15px;">예약 확정 및 점검 시간</h3><p style="color:#6c757d;">현재는 접수된 예약 명단을 확정하는 시간입니다.<br>다음 주 예약은 <strong>월요일 오후 6시</strong>에 시작됩니다.</p></div>`; } else { populateDateSelect(); populateTimeSelects(); } }
+        
+        // 💡 특정 요일 제한 없이 기본 7일 상시 오픈
+        function checkBookingWindow() { 
+            populateDateSelect(); 
+            populateTimeSelects(); 
+        }
+
         function openTermsModal() { const name = document.getElementById('name').value; const sid = document.getElementById('sid').value; const phone = document.getElementById('phone').value; const purpose = document.getElementById('purpose').value; const password = document.getElementById('password').value; const useDate = document.getElementById('use_date').value; const startTime = document.getElementById('start_time').value; const endTime = document.getElementById('end_time').value; if (!name || sid.length !== 4 || !phone || !purpose || !password || !useDate) { alert("모든 정보를 올바르게 입력해 주세요."); return; } if (password.length !== 4) { alert("비밀번호는 숫자 4자리로 입력해 주세요."); return; } const start = new Date(`${useDate}T${startTime}`); const end = new Date(`${useDate}T${endTime}`); if (start >= end) { alert("종료 시간은 시작 시간보다 늦어야 합니다."); return; } if ((end.getTime() - start.getTime()) / (1000 * 60 * 60) > 2) { alert("1회 최대 이용 가능 시간은 2시간입니다."); return; } document.getElementById('agreeText').value = ''; document.getElementById('agreeText').disabled = true; document.getElementById('scrollMsg').style.display = 'block'; termsModal = new bootstrap.Modal(document.getElementById('termsModal')); termsModal.show(); }
         async function submitReservation() { if (document.getElementById('agreeText').value.trim() !== "동의합니다") { alert("약관을 읽고 '동의합니다'를 정확히 입력하셔야 합니다."); return; } const start = new Date(`${document.getElementById('use_date').value}T${document.getElementById('start_time').value}`); const end = new Date(`${document.getElementById('use_date').value}T${document.getElementById('end_time').value}`); const { data: existing } = await db.from('reservations').select('*').eq('room_name', document.getElementById('room').value).in('status', ['approved', 'pending', 'blocked', 'used']).filter('start_time', 'lt', end.toISOString()).filter('end_time', 'gt', start.toISOString()); let finalStatus = 'pending'; if (existing && existing.length > 0) { if (existing.some(r => r.status === 'blocked')) { alert("해당 시간은 예약이 제한되었습니다."); termsModal.hide(); return; } if (!confirm("이미 예약이 마감되었습니다. 대기 예약하시겠습니까?")) { termsModal.hide(); return; } finalStatus = 'standby'; } const { error } = await db.from('reservations').insert([{ student_name: document.getElementById('name').value, student_id: document.getElementById('sid').value, phone: document.getElementById('phone').value, purpose: document.getElementById('purpose').value, password: document.getElementById('password').value, room_name: document.getElementById('room').value, start_time: start.toISOString(), end_time: end.toISOString(), status: finalStatus, is_priority: document.getElementById('is_priority').checked }]); if (!error) { termsModal.hide(); instaModal = new bootstrap.Modal(document.getElementById('instaModal')); instaModal.show(); } else { alert("에러: " + error.message); } }
 
@@ -651,7 +661,7 @@
         function openCancelModal() { cancelModal = new bootstrap.Modal(document.getElementById('cancelModal')); cancelModal.show(); }
         async function processCancel() { const name = document.getElementById('c_name').value; const sid = document.getElementById('c_sid').value; const pw = document.getElementById('c_pw').value; if(!name || !sid || !pw) return alert("모든 정보를 입력해 주세요."); const { data } = await db.from('reservations').select('*').eq('student_name', name).eq('student_id', sid).eq('password', pw).in('status', ['pending', 'approved', 'standby']); if (!data || data.length === 0) return alert("일치하는 예약 정보가 없거나, 이미 취소/거절된 예약입니다."); const targetId = data[0].id; const { error } = await db.from('reservations').update({ status: 'cancelled' }).eq('id', targetId); if (!error) { alert("성공적으로 예약이 취소되었습니다."); cancelModal.hide(); loadStatus(); } else { alert("오류 발생: " + error.message); } }
 
-        /* 💡 반 일정 달력 (수정/삭제 버튼 깔끔한 버전 적용 완료) */
+        /* 반 일정 달력 */
         async function fetchNeisCalendar() { 
             const listDiv = document.getElementById('neis-calendar-list'); 
             try { 
