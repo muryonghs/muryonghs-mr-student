@@ -94,7 +94,7 @@
         #page-facility .btn-main:active { transform: scale(0.98); }
         #page-facility .btn-main:disabled { background: #86868b; cursor: not-allowed; }
 
-        /* 💡 운영 중단/예약 차단 시 덮어버리는 오버레이 (z-index 상향) */
+        /* 운영 중단/예약 차단 시 덮어버리는 오버레이 (z-index 상향) */
         .blocked-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); text-align: center; }
         .blocked-icon { font-size: 3.5rem; margin-bottom: 15px; }
         .blocked-text { font-size: 1.3rem; font-weight: 900; color: #1d1d1f; margin-bottom: 8px; }
@@ -446,12 +446,12 @@
         let currentBoardType = '';
         let checkInterval; 
 
-        // 💡 페이지 접속 원천 차단을 위한 전역 변수
+        // 페이지 접속 원천 차단을 위한 전역 변수
         let isFacilityBlocked = false;
         let isUmbrellaBlocked = false;
 
         async function goPage(pageId) {
-            // 💡 중복 API 호출 제거, 글로벌 변수 확인만으로 즉각 차단하여 충돌 해결
+            // 중복 API 호출 제거, 글로벌 변수 확인만으로 즉각 차단하여 충돌 해결
             if (pageId === 'facility' && isFacilityBlocked) {
                 alert("현재 시설 예약이 중단되었습니다.\n관리자가 시설 예약을 마감했거나 확인 중입니다.");
                 return;
@@ -536,7 +536,7 @@
             } catch(e) {}
         }
 
-        // 💡 통합 시스템 상태 감지 로직 (예약 차단, 우산 차단 변수 업데이트)
+        // 통합 시스템 상태 감지 로직 (예약 차단, 우산 차단 변수 업데이트)
         async function checkSystemStatus() {
             try {
                 const { data: set } = await db.from('site_settings').select('is_booking_blocked').eq('id', 1).single();
@@ -630,7 +630,7 @@
         function handlePriorityCheck(cb) { if(cb.checked) alert("우선권은 특별 승인된 대상만 선택 가능합니다.\n허위로 체크할 경우 예약 취소 및 향후 시설 이용이 제한됩니다."); }
         function checkTermsScroll(el) { if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) { document.getElementById('agreeText').disabled = false; document.getElementById('scrollMsg').style.display = 'none'; } }
         
-        // 💡 다음날부터 7일 범위로 날짜 옵션 생성
+        // 다음날부터 7일 범위로 날짜 옵션 생성
         function populateDateSelect() { 
             const dateSelect = document.getElementById('use_date'); 
             if(!dateSelect) return; 
@@ -648,7 +648,7 @@
         
         function populateTimeSelects() { const sSelect = document.getElementById('start_time'); const eSelect = document.getElementById('end_time'); if(!sSelect) return; for (let i = 7; i <= 16; i++) { let hour = i.toString().padStart(2, '0'); sSelect.add(new Option(`${hour}:00`, `${hour}:00`)); eSelect.add(new Option(`${hour}:00`, `${hour}:00`)); if (i !== 16) { sSelect.add(new Option(`${hour}:30`, `${hour}:30`)); eSelect.add(new Option(`${hour}:30`, `${hour}:30`)); } } }
         
-        // 💡 특정 요일 제한 없이 기본 7일 상시 오픈
+        // 특정 요일 제한 없이 기본 7일 상시 오픈
         function checkBookingWindow() { 
             populateDateSelect(); 
             populateTimeSelects(); 
