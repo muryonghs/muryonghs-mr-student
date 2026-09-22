@@ -12,7 +12,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* === 공통 및 모바일 최적화 (어떤 기기든 동일하게) === */
         * { box-sizing: border-box; }
         :root { --bg: #f5f5f7; --text-main: #1d1d1f; --card: #ffffff; --primary: #0071e3; --danger: #ff3b30; --success: #34c759; --purple: #8b5cf6; --dark: #334155; }
         
@@ -239,13 +238,13 @@
             <button class="btn-main btn-dark" id="btn-submit-council" onclick="submitCouncilEvent()">행사 등록하기</button>
         </div>
 
-        <div class="list-header mt-4"><h3>🎉 진행중인 행사 목록</h3></div>
+        <div class="list-header mt-4"><h3>진행 중인 행사 목록</h3></div>
         <div id="admin-council-list">불러오는 중...</div>
     </div>
 
     <div id="page-study" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
-        <div class="list-header"><h3>📚 학습자료실 관리</h3></div>
+        <div class="list-header"><h3>학습자료실 관리</h3></div>
         <div id="admin-study-list">불러오는 중...</div>
     </div>
 
@@ -262,13 +261,13 @@
             <button class="btn-main btn-blue" id="btn-submit-lost" onclick="submitLostItem()">분실물 등록하기</button>
         </div>
 
-        <div class="list-header mt-4"><h3>🔍 등록된 분실물</h3></div>
+        <div class="list-header mt-4"><h3>등록된 분실물</h3></div>
         <div id="admin-lost-list">불러오는 중...</div>
     </div>
 
     <div id="page-suggestion" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
-        <div class="list-header"><h3>💡 학생 건의사항 열람</h3></div>
+        <div class="list-header"><h3>학생 건의사항 열람</h3></div>
         <p class="text-muted" style="font-size:0.85rem; margin-top:-10px;">건의사항 내용과 작성자를 확인할 수 있습니다.</p>
         <div id="admin-suggestion-list">불러오는 중...</div>
     </div>
@@ -497,7 +496,6 @@
             else { alert("오류 발생: " + error.message); }
         }
 
-        /* --- 1. 급식 제어 --- */
         const grades = ["배식 전", "3학년", "2학년", "1학년", "배식 종료", "미운영"];
         let currentIdx = -1; let tempWaitTime = 0; let adminWaitInterval = null; let liveWaitMin = 0; let liveSetAt = null;
 
@@ -587,19 +585,18 @@
             const val = document.getElementById('noticeInput').value;
             const { error } = await db.from('announcements').upsert({ id: 1, content: val }); 
             if(error) alert("오류 발생: " + error.message);
-            else alert("알림판이 성공적으로 업데이트되었습니다!"); 
+            else alert("알림판이 성공적으로 업데이트되었습니다."); 
         }
         
         async function sendPopup(val) { 
             const { error } = await db.from('announcements').upsert({ id: 2, content: val }); 
             if(error) alert("오류 발생: " + error.message);
             else {
-                alert(val === '' ? "긴급 팝업이 화면에서 내려갔습니다." : "긴급 팝업이 적용되었습니다!");
+                alert(val === '' ? "긴급 팝업이 화면에서 내려갔습니다." : "긴급 팝업이 적용되었습니다.");
                 if(val === '') document.getElementById('popupInput').value = '';
             }
         }
 
-        /* --- 스캐너 로직 --- */
         let html5QrCode; let isProcessing = false;
         function startScanner() { bootstrap.Modal.getOrCreateInstance(document.getElementById('scannerModal')).show(); setTimeout(() => { html5QrCode = new Html5Qrcode("reader"); html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, ()=>{}).catch(e=>{alert("카메라 오류"); stopScanner();}); }, 500); }
         function stopScanner() { if (html5QrCode) html5QrCode.stop().then(() => { bootstrap.Modal.getInstance(document.getElementById('scannerModal'))?.hide(); }).catch(e=>{}); }
@@ -632,7 +629,7 @@
                     let sId = dataObj.student_id ? dataObj.student_id : (dataObj.id ? dataObj.id : dataObj);
                     let sName = dataObj.student_name || "알수없음";
                     let sPhone = dataObj.phone_number || "";
-                    let passType = dataObj.type || "auto"; // 'rent' or 'return'
+                    let passType = dataObj.type || "auto"; /* 대여 또는 반납 구분 */
                     
                     const { data: activeRentals } = await db.from('umbrella_rentals')
                         .select('*')
@@ -643,15 +640,15 @@
                         const active = activeRentals[0];
                         
                         if (passType === 'rent') {
-                            alert(`⚠️ 이미 우산(${active.umbrella_number}번)을 대여 중입니다. 반납을 먼저 진행해주세요.`);
+                            alert(`이미 우산(${active.umbrella_number}번)을 대여 중입니다. 반납을 먼저 진행해주세요.`);
                             return;
                         }
 
                         if (active.student_name !== sName && sName !== "알수없음") {
-                            alert(`⚠️ 주의: QR코드의 이름(${sName})과 대여 기록의 이름(${active.student_name})이 일치하지 않습니다.`);
+                            alert(`주의: QR코드의 이름(${sName})과 대여 기록의 이름(${active.student_name})이 일치하지 않습니다.`);
                         }
 
-                        // 반납 패스 스캔 시 파손 처리 모달 바로 연결
+                        /* 반납 패스 스캔 시 파손 처리 모달 연결 */
                         pendingReturnData = active;
                         document.getElementById('d-student-name').innerText = active.student_name;
                         document.getElementById('d-umbrella-num').innerText = active.umbrella_number;
@@ -659,20 +656,20 @@
 
                     } else {
                         if (passType === 'return') {
-                            alert(`⚠️ 대여 중인 우산이 없습니다. 대여 패스를 이용해주세요.`);
+                            alert(`대여 중인 우산이 없습니다. 대여 패스를 이용해주세요.`);
                             return;
                         }
 
                         let uNum = prompt(`[${sName} - ${sId}] 학생에게 대여할 우산 번호를 입력하세요.`);
                         if (uNum) {
-                            // 중복 번호 검사
+                            /* 우산 번호 중복 확인 */
                             const { data: dupCheck } = await db.from('umbrella_rentals')
                                 .select('id')
                                 .eq('umbrella_number', uNum)
                                 .eq('status', '대여중');
 
                             if (dupCheck && dupCheck.length > 0) {
-                                alert(`⚠️ ${uNum}번 우산은 현재 다른 학생이 대여 중입니다.`);
+                                alert(`${uNum}번 우산은 현재 다른 학생이 대여 중입니다.`);
                                 return;
                             }
 
@@ -696,7 +693,6 @@
             }
         }
 
-        /* --- 시설예약 로직 --- */
         function updateBlockButtonUI() {
             const btn = document.getElementById('block-btn');
             if (!btn) return;
@@ -715,10 +711,10 @@
         }
 
         async function openSuperAdmin() {
-            if (confirm("⚠️ 예약 명단 전체 초기화를 진행하시겠습니까?")) {
+            if (confirm("예약 명단 전체 초기화를 진행하시겠습니까?")) {
                 if (prompt("진행하려면 '초기화진행' 이라고 입력해주세요.") === '초기화진행') {
                     const { error } = await db.from('reservations').delete().neq('id', 0);
-                    if (!error) { alert("완벽하게 초기화되었습니다."); loadReservations(); } 
+                    if (!error) { alert("초기화가 완료되었습니다."); loadReservations(); } 
                 }
             }
         }
@@ -783,7 +779,7 @@
             }]);
 
             if (!error) {
-                alert("해당 시간 차단이 등록되었습니다!");
+                alert("해당 시간 차단이 등록되었습니다.");
                 bootstrap.Modal.getInstance(document.getElementById('blockModal')).hide();
                 loadReservations();
             } else {
@@ -846,7 +842,6 @@
         async function actionUnblock() { if(confirm("차단을 풀까요?")) { await db.from('reservations').delete().eq('id', currentSelectedRes.id); bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); loadReservations(); } }
         function openBlockModal() { new bootstrap.Modal(document.getElementById('blockModal')).show(); }
 
-        /* --- 양심우산 리스트 로드 --- */
         let pendingReturnData = null;
         function formatFullDate(ds) { if(!ds) return '-'; const d = new Date(ds); return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
 
