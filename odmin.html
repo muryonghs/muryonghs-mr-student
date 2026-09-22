@@ -12,6 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
+        /* === 공통 및 모바일 최적화 (어떤 기기든 동일하게) === */
         * { box-sizing: border-box; }
         :root { --bg: #f5f5f7; --text-main: #1d1d1f; --card: #ffffff; --primary: #0071e3; --danger: #ff3b30; --success: #34c759; --purple: #8b5cf6; --dark: #334155; }
         
@@ -238,13 +239,13 @@
             <button class="btn-main btn-dark" id="btn-submit-council" onclick="submitCouncilEvent()">행사 등록하기</button>
         </div>
 
-        <div class="list-header mt-4"><h3>진행 중인 행사 목록</h3></div>
+        <div class="list-header mt-4"><h3>🎉 진행중인 행사 목록</h3></div>
         <div id="admin-council-list">불러오는 중...</div>
     </div>
 
     <div id="page-study" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
-        <div class="list-header"><h3>학습자료실 관리</h3></div>
+        <div class="list-header"><h3>📚 학습자료실 관리</h3></div>
         <div id="admin-study-list">불러오는 중...</div>
     </div>
 
@@ -261,13 +262,13 @@
             <button class="btn-main btn-blue" id="btn-submit-lost" onclick="submitLostItem()">분실물 등록하기</button>
         </div>
 
-        <div class="list-header mt-4"><h3>등록된 분실물</h3></div>
+        <div class="list-header mt-4"><h3>🔍 등록된 분실물</h3></div>
         <div id="admin-lost-list">불러오는 중...</div>
     </div>
 
     <div id="page-suggestion" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
-        <div class="list-header"><h3>학생 건의사항 열람</h3></div>
+        <div class="list-header"><h3>💡 학생 건의사항 열람</h3></div>
         <p class="text-muted" style="font-size:0.85rem; margin-top:-10px;">건의사항 내용과 작성자를 확인할 수 있습니다.</p>
         <div id="admin-suggestion-list">불러오는 중...</div>
     </div>
@@ -496,6 +497,7 @@
             else { alert("오류 발생: " + error.message); }
         }
 
+        /* --- 1. 급식 제어 --- */
         const grades = ["배식 전", "3학년", "2학년", "1학년", "배식 종료", "미운영"];
         let currentIdx = -1; let tempWaitTime = 0; let adminWaitInterval = null; let liveWaitMin = 0; let liveSetAt = null;
 
@@ -585,18 +587,19 @@
             const val = document.getElementById('noticeInput').value;
             const { error } = await db.from('announcements').upsert({ id: 1, content: val }); 
             if(error) alert("오류 발생: " + error.message);
-            else alert("알림판이 성공적으로 업데이트되었습니다."); 
+            else alert("알림판이 성공적으로 업데이트되었습니다!"); 
         }
         
         async function sendPopup(val) { 
             const { error } = await db.from('announcements').upsert({ id: 2, content: val }); 
             if(error) alert("오류 발생: " + error.message);
             else {
-                alert(val === '' ? "긴급 팝업이 화면에서 내려갔습니다." : "긴급 팝업이 적용되었습니다.");
+                alert(val === '' ? "긴급 팝업이 화면에서 내려갔습니다." : "긴급 팝업이 적용되었습니다!");
                 if(val === '') document.getElementById('popupInput').value = '';
             }
         }
 
+        /* --- 스캐너 로직 --- */
         let html5QrCode; let isProcessing = false;
         function startScanner() { bootstrap.Modal.getOrCreateInstance(document.getElementById('scannerModal')).show(); setTimeout(() => { html5QrCode = new Html5Qrcode("reader"); html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, ()=>{}).catch(e=>{alert("카메라 오류"); stopScanner();}); }, 500); }
         function stopScanner() { if (html5QrCode) html5QrCode.stop().then(() => { bootstrap.Modal.getInstance(document.getElementById('scannerModal'))?.hide(); }).catch(e=>{}); }
@@ -629,7 +632,7 @@
                     let sId = dataObj.student_id ? dataObj.student_id : (dataObj.id ? dataObj.id : dataObj);
                     let sName = dataObj.student_name || "알수없음";
                     let sPhone = dataObj.phone_number || "";
-                    let passType = dataObj.type || "auto"; /* 대여 또는 반납 구분 */
+                    let passType = dataObj.type || "auto"; // 'rent' or 'return'
                     
                     const { data: activeRentals } = await db.from('umbrella_rentals')
                         .select('*')
@@ -648,7 +651,7 @@
                             alert(`주의: QR코드의 이름(${sName})과 대여 기록의 이름(${active.student_name})이 일치하지 않습니다.`);
                         }
 
-                        /* 반납 패스 스캔 시 파손 처리 모달 연결 */
+                        // 반납 패스 스캔 시 파손 처리 모달 바로 연결
                         pendingReturnData = active;
                         document.getElementById('d-student-name').innerText = active.student_name;
                         document.getElementById('d-umbrella-num').innerText = active.umbrella_number;
@@ -662,7 +665,7 @@
 
                         let uNum = prompt(`[${sName} - ${sId}] 학생에게 대여할 우산 번호를 입력하세요.`);
                         if (uNum) {
-                            /* 우산 번호 중복 확인 */
+                            // 중복 번호 검사
                             const { data: dupCheck } = await db.from('umbrella_rentals')
                                 .select('id')
                                 .eq('umbrella_number', uNum)
@@ -693,6 +696,7 @@
             }
         }
 
+        /* --- 시설예약 로직 --- */
         function updateBlockButtonUI() {
             const btn = document.getElementById('block-btn');
             if (!btn) return;
@@ -714,7 +718,7 @@
             if (confirm("예약 명단 전체 초기화를 진행하시겠습니까?")) {
                 if (prompt("진행하려면 '초기화진행' 이라고 입력해주세요.") === '초기화진행') {
                     const { error } = await db.from('reservations').delete().neq('id', 0);
-                    if (!error) { alert("초기화가 완료되었습니다."); loadReservations(); } 
+                    if (!error) { alert("완벽하게 초기화되었습니다."); loadReservations(); } 
                 }
             }
         }
@@ -803,7 +807,12 @@
             const actionArea = document.getElementById('detail-action-area');
             if (res.status === 'blocked') actionArea.innerHTML = `<button class="btn-main btn-gray" onclick="actionUnblock()">차단 풀기</button>`;
             else if (res.status === 'pending' || res.status === 'standby') actionArea.innerHTML = `<button class="btn-main btn-blue" onclick="actionUpdateStatus('approved')">승인 완료</button><button class="btn-main btn-outline-danger mt-2" onclick="actionUpdateStatus('rejected')">예약 거절</button>`;
-            else if (res.status === 'approved') actionArea.innerHTML = `<div style="display:flex; gap:10px;"><button class="btn-main btn-gray" style="flex:1;" onclick="actionUpdateStatus('used')">수동 사용완료</button><button class="btn-main btn-outline-danger" style="flex:1;" onclick="actionUpdateStatus('cancelled')">강제 취소</button></div>`;
+            else if (res.status === 'approved') actionArea.innerHTML = `
+                <button class="btn-main" style="background-color: var(--purple); margin-bottom: 10px;" onclick="sendApprovalSMS()">승인 문자 보내기</button>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-main btn-gray" style="flex:1;" onclick="actionUpdateStatus('used')">수동 사용완료</button>
+                    <button class="btn-main btn-outline-danger" style="flex:1;" onclick="actionUpdateStatus('cancelled')">강제 취소</button>
+                </div>`;
             else actionArea.innerHTML = `<button class="btn-main btn-gray" disabled>처리 완료</button>`;
 
             bootstrap.Modal.getOrCreateInstance(document.getElementById('detailModal')).show();
@@ -811,6 +820,24 @@
         
         function actionRevealPw(btn) { if(currentSelectedRes) { document.getElementById('detail-pw-text').innerText = currentSelectedRes.password; btn.style.display = 'none'; } }
         
+        function sendApprovalSMS() {
+            const res = currentSelectedRes;
+            if(!res || !res.phone) return alert("연락처 정보가 없습니다.");
+            
+            const d = new Date(res.start_time);
+            const d2 = new Date(res.end_time);
+            const dateStr = `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
+            const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} ~ ${String(d2.getHours()).padStart(2,'0')}:${String(d2.getMinutes()).padStart(2,'0')}`;
+            
+            const message = `[무룡고등학교 시설 예약 확정 안내]\n\n안녕하세요.\n무룡고등학교 시설 예약이 정상적으로 확정되었습니다.\n이용 전 학생회실로 방문하여 QR패스를 제출 및 키 수령하시기 바랍니다.\n\n이용 장소: ${res.room_name}\n이용 날짜: ${dateStr}\n이용 시간: ${timeStr}\n\n무룡고등학교 시설은 모든 학생이 함께 사용하는 공동 공간입니다. 아래 링크에 접속하여 반드시 확인 및 준수해 주시기 바랍니다.\nhttps://m.site.naver.com/21qLr\n📌 예약 취소를 원하실 경우\nhttps://m.site.naver.com/2aZH3 접속 후 → 시설예약 → 예약 신청 하단 [실시간 예약 현황 및 취소]를 선택해 주시기 바랍니다.\n\n모두가 쾌적하고 안전하게 사용할 수 있도록 적극적인 협조를 부탁드립니다.`;
+            
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const separator = isIOS ? '&' : '?';
+            const phoneNumbersOnly = res.phone.replace(/[^0-9]/g, '');
+            
+            window.location.href = `sms:${phoneNumbersOnly}${separator}body=${encodeURIComponent(message)}`;
+        }
+
         async function actionUpdateStatus(status) { 
             const res = currentSelectedRes;
             const confirmMsg = status === 'approved' ? '이 예약을 승인하시겠습니까?' : '이 예약 상태를 변경할까요?';
@@ -822,18 +849,7 @@
 
                 if (status === 'approved' && res.phone) {
                     if (confirm("예약 승인이 완료되었습니다.\n학생에게 확정 안내 문자를 발송하시겠습니까?\n(휴대폰의 메시지 앱으로 자동 연결됩니다)")) {
-                        const d = new Date(res.start_time);
-                        const d2 = new Date(res.end_time);
-                        const dateStr = `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
-                        const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} ~ ${String(d2.getHours()).padStart(2,'0')}:${String(d2.getMinutes()).padStart(2,'0')}`;
-                        
-                        const message = `[무룡고등학교 시설 예약 확정 안내]\n\n안녕하세요.\n무룡고등학교 시설 예약이 정상적으로 확정되었습니다.\n이용 전 학생회실로 방문하여 QR패스를 제출 및 키 수령하시기 바랍니다.\n\n이용 장소: ${res.room_name}\n이용 날짜: ${dateStr}\n이용 시간: ${timeStr}\n키박스 위치: 1층 보건실 옆 학생회실 입구\n※ 사용 후 반드시 키박스에 제출해 주시고, 키박스비밀번호는 예약 시 본인이 지정한 비밀번호이며, 무단 공유 시 이용이 제한될 수 있습니다.\n\n무룡고등학교 시설은 모든 학생이 함께 사용하는 공동 공간입니다.\n📌 예약 취소를 원하실 경우\nhttps://m.site.naver.com/21qL8 접속 후 → 상단 오른쪽 [내 예약 취소하기]를 선택해 주시기 바랍니다.\n\n모두가 쾌적하고 안전하게 사용할 수 있도록 적극적인 협조를 부탁드립니다.`;
-                        
-                        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-                        const separator = isIOS ? '&' : '?';
-                        const phoneNumbersOnly = res.phone.replace(/[^0-9]/g, '');
-                        
-                        window.location.href = `sms:${phoneNumbersOnly}${separator}body=${encodeURIComponent(message)}`;
+                        sendApprovalSMS();
                     }
                 }
             } 
@@ -842,6 +858,7 @@
         async function actionUnblock() { if(confirm("차단을 풀까요?")) { await db.from('reservations').delete().eq('id', currentSelectedRes.id); bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide(); loadReservations(); } }
         function openBlockModal() { new bootstrap.Modal(document.getElementById('blockModal')).show(); }
 
+        /* --- 양심우산 리스트 로드 --- */
         let pendingReturnData = null;
         function formatFullDate(ds) { if(!ds) return '-'; const d = new Date(ds); return `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
 
