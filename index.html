@@ -182,14 +182,19 @@
 
     <div id="page-lunch" class="page">
         <div class="top-nav"><button class="back-btn" onclick="goPage('home')">❮ 홈으로</button></div>
+        
+        <!-- ✨ 알림 오버레이 문구 수정 -->
         <div id="alertOverlay" onclick="closeAlert()">
-            <div class="alert-title">지금 즉시 급식실로 내려오세요!</div>
-            <div id="alertGrade" class="alert-msg">O학년</div>
+            <div class="alert-title">입장을 준비해 주세요!</div>
+            <div id="alertGrade" class="alert-msg">O학년 급식 순번</div>
             <div class="alert-hint">터치하면 닫힙니다</div>
         </div>
+        
         <div id="importantPopup"><div class="important-content"><h2 style="margin: 0 0 15px 0; color: #e11d48; font-size: 1.3rem; font-weight: 900;">🚨 중요 공지사항</h2><div id="importantPopupText"></div></div></div>
         
-        <div id="noticeBanner" class="notice-banner"><span id="targetGrade">O학년</span> 학생들은<br>지금 즉시 급식실로 내려오세요!</div>
+        <!-- ✨ 배너 알림 문구 수정 -->
+        <div id="noticeBanner" class="notice-banner"><span id="targetGrade">O학년 급식 순번</span> 학생들은<br>입장을 준비해 주세요!</div>
+        
         <div class="lunch-card notice-card"><div class="notice-title">📢 알림판</div><div id="realNotice" class="notice-content">불러오는 중...</div></div>
         <div class="lunch-card">
             <span class="status-header" style="font-size: 0.95rem; color: #64748b; font-weight: 600; margin-bottom: 10px; display: block; text-align: center;">현재 배식 중인 학년</span>
@@ -450,7 +455,7 @@
         async function goPage(pageId) {
             // 중복 API 호출 제거, 글로벌 변수 확인만으로 즉각 차단하여 충돌 해결
             if (pageId === 'facility' && isFacilityBlocked) {
-                alert("현재 시설 예약이 중단되었습니다.\n관리자가 시설 예약을 마감했거나 확인 중입니다.");
+                alert("현재 시설 예약이 중단되었습니다.\n관리자가 시설 예약을 마마감했거나 확인 중입니다.");
                 return;
             }
             if (pageId === 'umbrella' && isUmbrellaBlocked) {
@@ -595,23 +600,50 @@
         }
 
         /* 급식실 코드 */
-        const grades = ["배식 전", "3학년", "2학년", "1학년", "배식 종료", "미운영"];
+        // ✨ 학년명 변경
+        const grades = ["배식 전", "3학년 급식 순번", "2학년 급식 순번", "1학년 급식 순번", "배식 종료", "미운영"];
         let currentIdx = -1; let alertTimeout; let waitInterval = null; let popupInterval = null; let isPopupVisible = false;
 
         function showAlert(grade) { if (grade === "배식 종료" || grade === "배식 전" || grade === "미운영") return; document.getElementById('alertGrade').innerText = grade; document.getElementById('alertOverlay').style.display = 'flex'; clearTimeout(alertTimeout); alertTimeout = setTimeout(closeAlert, 15000); }
         function closeAlert() { document.getElementById('alertOverlay').style.display = 'none'; }
         function togglePopupDisplay() { const popup = document.getElementById('importantPopup'); if (document.getElementById('alertOverlay').style.display === 'flex') { popup.style.opacity = '0'; setTimeout(() => { popup.style.display = 'none'; }, 500); isPopupVisible = false; return; } if (isPopupVisible) { popup.style.opacity = '0'; setTimeout(() => { popup.style.display = 'none'; }, 500); isPopupVisible = false; } else { popup.style.display = 'flex'; setTimeout(() => { popup.style.opacity = '1'; }, 10); isPopupVisible = true; } }
         function handlePopup(text) { const textDiv = document.getElementById('importantPopupText'); if (popupInterval) clearInterval(popupInterval); if (text && text.trim() !== '') { textDiv.innerText = text; isPopupVisible = false; togglePopupDisplay(); popupInterval = setInterval(togglePopupDisplay, 5000); } else { const popup = document.getElementById('importantPopup'); popup.style.opacity = '0'; setTimeout(() => { popup.style.display = 'none'; }, 500); isPopupVisible = false; } }
-        function updateWaitTimeUI(waitMin, setAtStr) { const waitBox = document.getElementById('waitTimeBox'); if (waitInterval) clearInterval(waitInterval); if (!waitMin || waitMin <= 0 || !setAtStr) { waitBox.style.display = 'none'; return; } const setAt = new Date(setAtStr); waitInterval = setInterval(() => { const diffSec = Math.floor((new Date() - setAt) / 1000); const remainingSec = (waitMin * 60) - diffSec; if (remainingSec <= 0) { waitBox.style.display = 'none'; clearInterval(waitInterval); } else { waitBox.style.display = 'block'; const m = Math.floor(remainingSec / 60); const s = remainingSec % 60; document.getElementById('displayTime').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; } }, 1000); }
+        
+        // ✨ 수동 연동 제거하고 자동 시간표 타이머로 대체하기 위해 비워둠
+        function updateWaitTimeUI(waitMin, setAtStr) {}
+
+        // ✨ 실시간 자동 스케줄 및 카운트다운 타이머
+        setInterval(() => {
+            if(!document.getElementById('page-lunch').classList.contains('active')) return;
+            const now = new Date();
+            const timeInSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+            const t1 = 12 * 3600 + 30 * 60; // 12:30
+            const t2 = 12 * 3600 + 40 * 60; // 12:40
+            const t3 = 12 * 3600 + 50 * 60; // 12:50
+            
+            let targetSec = 0;
+            if (timeInSec < t1) targetSec = t1;
+            else if (timeInSec < t2) targetSec = t2;
+            else if (timeInSec < t3) targetSec = t3;
+
+            const waitBox = document.getElementById('waitTimeBox');
+            if (targetSec > 0 && currentIdx !== 5 && currentIdx !== 4) {
+                waitBox.style.display = 'block';
+                const diff = targetSec - timeInSec;
+                document.getElementById('displayTime').innerText = `${String(Math.floor(diff / 60)).padStart(2, '0')}:${String(diff % 60).padStart(2, '0')}`;
+            } else {
+                waitBox.style.display = 'none';
+            }
+        }, 1000);
+
         function updateUI(index) { const statusBox = document.getElementById('studentQueue'); const subStatus = document.getElementById('subStatus'); const banner = document.getElementById('noticeBanner'); const targetGrade = document.getElementById('targetGrade'); if (currentIdx !== -1 && currentIdx !== index && index > 0 && index < 4) { showAlert(grades[index]); } currentIdx = index; if (index === 5) { statusBox.innerText = grades[index]; statusBox.style.color = "#ef4444"; subStatus.style.display = "block"; banner.style.display = "none"; } else { subStatus.style.display = "none"; if (index === 0 || index === 4) { statusBox.innerText = grades[index]; statusBox.style.color = "#94a3b8"; banner.style.display = "none"; } else { statusBox.innerText = grades[index]; statusBox.style.color = "#3b82f6"; banner.style.display = "block"; targetGrade.innerText = grades[index]; } } }
         
-        async function loadLunchData() { const { data } = await db.from('lunch_status').select('*').eq('id', 1).single(); if (data) { currentIdx = data.current_index; updateUI(data.current_index); updateWaitTimeUI(data.wait_minutes, data.wait_set_at); } const { data: nList } = await db.from('announcements').select('*'); if (nList) { nList.forEach(n => { if(n.id === 1) { const rN = document.getElementById('realNotice'); if(rN) rN.innerText = n.content; } if(n.id === 2) handlePopup(n.content); }); } }
+        async function loadLunchData() { const { data } = await db.from('lunch_status').select('*').eq('id', 1).single(); if (data) { currentIdx = data.current_index; updateUI(data.current_index); } const { data: nList } = await db.from('announcements').select('*'); if (nList) { nList.forEach(n => { if(n.id === 1) { const rN = document.getElementById('realNotice'); if(rN) rN.innerText = n.content; } if(n.id === 2) handlePopup(n.content); }); } }
         async function fetchMenu() { const dStr = todayStr.replace(/-/g, ''); try { const res = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480070&MLSV_YMD=${dStr}`); const data = await res.json(); if (data.RESULT && data.RESULT.CODE === "INFO-200") { document.getElementById('menuContent').innerHTML = "<span style='color:#86868b; font-size:0.95rem;'>오늘은 급식 정보가 없습니다. (주말/공휴일 등)</span>"; return; } if (data.mealServiceDietInfo && data.mealServiceDietInfo[1].row) { let rawMenu = data.mealServiceDietInfo[1].row[0].DDISH_NM; let menuList = rawMenu.split(/<br\/>/); let cleanMenu = menuList.map(item => item.replace(/[0-9.\(\)]/g, '').trim()).filter(item => item !== ''); document.getElementById('menuContent').innerHTML = cleanMenu.join('<br>'); } else { document.getElementById('menuContent').innerHTML = "<span style='color:#86868b; font-size:0.95rem;'>오늘의 급식 정보가 등록되지 않았습니다.</span>"; } } catch(e) { document.getElementById('menuContent').innerText = "메뉴 로드 실패 (네트워크를 확인해주세요)"; } }
         async function sendFeedback() { const text = document.getElementById('feedbackText').value; if (!text.trim()) return; const { error } = await db.from('feedback').insert([{ content: text }]); if (!error) { alert("소중한 의견이 전송되었습니다!"); document.getElementById('feedbackText').value = ""; } }
         
         db.channel('student-lunch-channel').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'lunch_status' }, p => { 
             updateUI(p.new.current_index); 
-            updateWaitTimeUI(p.new.wait_minutes, p.new.wait_set_at); 
         }).subscribe();
 
         /* 양심우산 코드 */
