@@ -39,7 +39,6 @@
         .alert-msg { font-size: 11rem; font-weight: 900; animation: bounce 0.6s infinite alternate; }
         @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.1); } }
 
-        /* ✨ 5초마다 나타났다 사라질 TV 팝업 */
         #importantPopup { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(15, 23, 42, 0.95); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; 
@@ -63,7 +62,7 @@
 </head>
 <body onmousemove="resetTimer()">
 
-<div id="alertOverlay"><div class="alert-title">지금 즉시 급식실 입장하세요!</div><div id="alertGrade" class="alert-msg">O학년</div></div>
+<div id="alertOverlay"><div class="alert-title">입장을 준비해 주세요!</div><div id="alertGrade" class="alert-msg">O학년 급식 순번</div></div>
 
 <div id="importantPopup">
     <div class="important-content">
@@ -73,8 +72,8 @@
 </div>
 
 <div id="qrPopup">
-    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://muryonghs.github.io/muryonghs-mr-student/" class="qr-img" alt="QR Code">
-    <div class="qr-text">스마트폰으로 스캔하여<br>학생용 페이지에서 간편하게 확인하세요</div>
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://muryonghs.github.io/muryong-lunch/" class="qr-img" alt="QR Code">
+    <div class="qr-text">QR 코드를 스캔해<br>스마트폰으로 간단하게 이용해 보세요</div>
 </div>
 
 <header>
@@ -89,8 +88,8 @@
         <div id="subStatus" style="font-size: 3rem; color: #ef4444; font-weight: 800; text-align: center; margin-top: -10px; margin-bottom: 20px; display: none;">오늘은 급식 호출을 진행하지 않습니다</div>
 
         <div id="waitTimeBox" class="wait-box">
-            <div class="wait-time-text">⏳ 예상 남은 시간 <span id="displayTime">00:00</span></div>
-            <div class="wait-notice">※ 위 시간은 실제 호출 시간과 다를 수 있습니다.</div>
+            <div class="wait-time-text"><span id="waitLabel">⏳ 다음 호출까지</span> <span id="displayTime">00:00</span></div>
+            <div class="wait-notice">※ 시간이 되면 자동으로 학년이 변경됩니다.</div>
         </div>
     </div>
     <div class="side-content">
@@ -105,11 +104,12 @@
 </div>
 
 <script>
-    const SUPABASE_URL = 'https://vfftkdnzjemeipuhlzfv.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_9Q7vn7So6HvUSMPu5BhyDA_9qz928H-';
+    const SUPABASE_URL = 'https://aaszccrhporceolrnroz.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_LMeSKJzTDv8L-boma9QIFA_b8iJ89e9';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
-    const grades = ["배식 전", "3학년", "2학년", "1학년", "배식 종료", "미운영"];
+    // ✨ 학년명 변경
+    const grades = ["배식 전", "3학년 급식 순번", "2학년 급식 순번", "1학년 급식 순번", "배식 종료", "미운영"];
     
     const dingDong = new Audio('https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3');
     let hideTimer;
@@ -168,7 +168,7 @@
             setTimeout(() => { popup.style.display = 'none'; }, 500);
             isPopupVisible = false;
         } else {
-            document.getElementById('qrPopup').style.display = 'none'; 
+            document.getElementById('qrPopup').style.display = 'none';
             popup.style.display = 'flex';
             setTimeout(() => { popup.style.opacity = '1'; }, 10);
             isPopupVisible = true;
@@ -182,8 +182,8 @@
         if (text && text.trim() !== '') {
             textDiv.innerText = text;
             isPopupVisible = false;
-            togglePopupDisplay(); 
-            popupInterval = setInterval(togglePopupDisplay, 5000); 
+            togglePopupDisplay();
+            popupInterval = setInterval(togglePopupDisplay, 5000);
         } else {
             const popup = document.getElementById('importantPopup');
             popup.style.opacity = '0';
@@ -192,31 +192,44 @@
         }
     }
 
-    function updateWaitTimeUI(waitMin, setAtStr) {
-        const waitBox = document.getElementById('waitTimeBox');
-        if (waitInterval) clearInterval(waitInterval);
+    // ✨ 자동 로직으로 대체되어 빈 함수로 변경 (DB 변경 감지 시 에러 방지용)
+    function updateWaitTimeUI(waitMin, setAtStr) {}
 
-        if (!waitMin || waitMin <= 0 || !setAtStr) {
-            waitBox.style.display = 'none';
-            return;
+    // ✨ 지정 시간에 맞춘 자동 스케줄 및 카운트다운 계산 함수
+    function checkSchedule() {
+        const now = new Date();
+        const timeInSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+
+        const t1 = 12 * 3600 + 30 * 60; // 12:30:00 (3학년)
+        const t2 = 12 * 3600 + 40 * 60; // 12:40:00 (2학년)
+        const t3 = 12 * 3600 + 50 * 60; // 12:50:00 (1학년)
+
+        // 정해진 정각에 관리자/학생 페이지 자동 변경을 위해 DB 업데이트 트리거
+        if (currentIdx !== 5) { // 미운영 상태가 아닐 때만 작동
+            if (timeInSec === t1) supabaseClient.from('lunch_status').update({ current_index: 1 }).eq('id', 1);
+            if (timeInSec === t2) supabaseClient.from('lunch_status').update({ current_index: 2 }).eq('id', 1);
+            if (timeInSec === t3) supabaseClient.from('lunch_status').update({ current_index: 3 }).eq('id', 1);
         }
 
-        const setAt = new Date(setAtStr);
-        waitInterval = setInterval(() => {
-            const now = new Date();
-            const diffSec = Math.floor((now - setAt) / 1000);
-            const remainingSec = (waitMin * 60) - diffSec;
+        // 남은 시간 계산 및 TV 화면 표시
+        let targetSec = 0;
+        let nextGradeStr = "";
+        
+        if (timeInSec < t1) { targetSec = t1; nextGradeStr = "3학년"; }
+        else if (timeInSec < t2) { targetSec = t2; nextGradeStr = "2학년"; }
+        else if (timeInSec < t3) { targetSec = t3; nextGradeStr = "1학년"; }
 
-            if (remainingSec <= 0) {
-                waitBox.style.display = 'none';
-                clearInterval(waitInterval);
-            } else {
-                waitBox.style.display = 'block';
-                const m = Math.floor(remainingSec / 60);
-                const s = remainingSec % 60;
-                document.getElementById('displayTime').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-            }
-        }, 1000);
+        const waitBox = document.getElementById('waitTimeBox');
+        if (targetSec > 0 && currentIdx !== 5 && currentIdx !== 4) {
+            waitBox.style.display = 'block';
+            const diff = targetSec - timeInSec;
+            const min = Math.floor(diff / 60);
+            const sec = diff % 60;
+            document.getElementById('displayTime').innerText = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+            document.getElementById('waitLabel').innerText = `⏳ ${nextGradeStr} 호출까지`;
+        } else {
+            waitBox.style.display = 'none';
+        }
     }
 
     function updateTVUI(idx) {
@@ -249,7 +262,6 @@
         if(s) { 
             currentIdx = s.current_index; 
             updateTVUI(s.current_index); 
-            updateWaitTimeUI(s.wait_minutes, s.wait_set_at);
         }
         
         const { data: nList } = await supabaseClient.from('announcements').select('*');
@@ -272,19 +284,21 @@
         } catch (e) { document.getElementById('tvMenu').innerText = "식단 정보를 불러오지 못했습니다."; }
     }
 
-    supabaseClient.channel('tv-channel')
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'lunch_status' }, p => {
+    supabaseClient.channel('tv').on('postgres_changes', { event: 'UPDATE', schema: 'public' }, p => {
+        if (p.table === 'lunch_status') {
             updateTVUI(p.new.current_index);
-            updateWaitTimeUI(p.new.wait_minutes, p.new.wait_set_at);
-        })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'announcements' }, p => {
+        }
+        if (p.table === 'announcements') {
             if (p.new.id === 1) document.getElementById('tvNotice').innerText = p.new.content;
             if (p.new.id === 2) handlePopup(p.new.content);
             if (p.new.id === 3) document.documentElement.style.fontSize = p.new.content + '%'; 
-        })
-        .subscribe();
+        }
+    }).subscribe();
 
-    setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('ko-KR'); }, 1000);
+    setInterval(() => { 
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString('ko-KR'); 
+        checkSchedule(); // ✨ 1초마다 스케줄 및 카운트다운 갱신
+    }, 1000);
     init();
     resetTimer();
 </script>
