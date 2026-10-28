@@ -498,7 +498,7 @@
         }
 
         /* --- 1. 급식 제어 --- */
-        const grades = ["배식 전", "3학년", "2학년", "1학년", "배식 종료", "미운영"];
+        const grades = ["배식 전", "3학년 급식 순번", "2학년 급식 순번", "1학년 급식 순번", "배식 종료", "미운영"];
         let currentIdx = -1; let tempWaitTime = 0; let adminWaitInterval = null; let liveWaitMin = 0; let liveSetAt = null;
 
         function updateUI(index) {
@@ -511,10 +511,17 @@
                 else { if(subStatus) subStatus.style.display = "none"; if (index === 0 || index === 4) gradeBox.style.color = "#94a3b8"; else gradeBox.style.color = "#3b82f6"; } 
             }
         }
+        
         async function initLunchAdmin() {
             const { data: s } = await db.from('lunch_status').select('*').eq('id', 1).single();
             if(s) { currentIdx = s.current_index; updateUI(s.current_index); updateAdminWaitTimeUI(s.wait_minutes, s.wait_set_at); }
         }
+
+        // DB에서 학년 변경 시 관리자 화면 실시간 동기화
+        db.channel('admin-lunch-channel').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'lunch_status' }, p => { 
+            updateUI(p.new.current_index); 
+            updateAdminWaitTimeUI(p.new.wait_minutes, p.new.wait_set_at); 
+        }).subscribe();
         
         function updateAdminWaitTimeUI(waitMin, setAtStr) {
             liveWaitMin = waitMin || 0; liveSetAt = setAtStr; const display = document.getElementById('activeTimerDisplay');
