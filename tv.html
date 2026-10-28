@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>무룡고등학교 학년 별 급식 순번</title>
+    <title>무룡고등학교 실시간 급식실</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -105,8 +105,9 @@
 </div>
 
 <script>
-    const SUPABASE_URL = 'https://aaszccrhporceolrnroz.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_LMeSKJzTDv8L-boma9QIFA_b8iJ89e9';
+    // 💡 학생/관리자 페이지와 동일한 DB 주소로 일치시킴
+    const SUPABASE_URL = 'https://vfftkdnzjemeipuhlzfv.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_9Q7vn7So6HvUSMPu5BhyDA_9qz928H-';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
     // ✨ 학년명 변경
@@ -125,9 +126,8 @@
         hideTimer = setTimeout(() => { document.body.classList.add('hide-all'); }, 3000);
     }
 
-    // ✨ QR코드 팝업 함수 수정
+    // ✨ QR코드 팝업 함수
     function showQrPopup() {
-        // 중요 팝업이 떠있거나 긴급 알림이 떠있으면 QR코드 안 띄움
         if (document.getElementById('alertOverlay').style.display === 'flex' || isPopupVisible) return;
         const qr = document.getElementById('qrPopup');
         qr.style.display = 'flex';
@@ -172,14 +172,13 @@
             setTimeout(() => { popup.style.display = 'none'; }, 500);
             isPopupVisible = false;
         } else {
-            document.getElementById('qrPopup').style.display = 'none'; // 팝업 뜰 때 QR 숨기기
+            document.getElementById('qrPopup').style.display = 'none'; 
             popup.style.display = 'flex';
             setTimeout(() => { popup.style.opacity = '1'; }, 10);
             isPopupVisible = true;
         }
     }
 
-    // ✨ 팝업 제어
     function handlePopup(text) {
         const textDiv = document.getElementById('importantPopupText');
         if (popupInterval) clearInterval(popupInterval);
@@ -187,8 +186,8 @@
         if (text && text.trim() !== '') {
             textDiv.innerText = text;
             isPopupVisible = false;
-            togglePopupDisplay(); // 1회 즉시 실행
-            popupInterval = setInterval(togglePopupDisplay, 5000); // 5초마다 교대
+            togglePopupDisplay(); 
+            popupInterval = setInterval(togglePopupDisplay, 5000);
         } else {
             const popup = document.getElementById('importantPopup');
             popup.style.opacity = '0';
@@ -197,12 +196,7 @@
         }
     }
 
-    // ✨ 기존 수동 타이머 함수는 자동 로직과 충돌하므로 빈 함수로 변경
-    function updateWaitTimeUI(waitMin, setAtStr) {
-        // 자동 스케줄러를 사용하므로 수동 연동 제거
-    }
-
-    // ✨ 지정 시간에 맞춘 자동 스케줄 및 카운트다운 계산 함수 추가
+    // ✨ 지정 시간에 맞춘 자동 스케줄 및 카운트다운 계산 함수
     function checkSchedule() {
         const now = new Date();
         const timeInSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
@@ -211,14 +205,12 @@
         const t2 = 12 * 3600 + 40 * 60; // 12:40:00 (2학년)
         const t3 = 12 * 3600 + 50 * 60; // 12:50:00 (1학년)
 
-        // 정해진 정각에 관리자/학생 페이지 자동 변경을 위해 DB 업데이트 트리거
-        if (currentIdx !== 5) { // 미운영 상태가 아닐 때만 작동
+        if (currentIdx !== 5) {
             if (timeInSec === t1) supabaseClient.from('lunch_status').update({ current_index: 1 }).eq('id', 1);
             if (timeInSec === t2) supabaseClient.from('lunch_status').update({ current_index: 2 }).eq('id', 1);
             if (timeInSec === t3) supabaseClient.from('lunch_status').update({ current_index: 3 }).eq('id', 1);
         }
 
-        // 남은 시간 계산 및 TV 화면 표시
         let targetSec = 0;
         let nextGradeStr = "";
         
@@ -227,7 +219,6 @@
         else if (timeInSec < t3) { targetSec = t3; nextGradeStr = "1학년"; }
 
         const waitBox = document.getElementById('waitTimeBox');
-        // 배식 전(0), 1~3학년 중이고 다음 호출 타겟이 있을 때만 타이머 표시
         if (targetSec > 0 && currentIdx !== 5 && currentIdx !== 4) {
             waitBox.style.display = 'block';
             const diff = targetSec - timeInSec;
@@ -266,23 +257,33 @@
     }
 
     async function init() {
-        const { data: s } = await supabaseClient.from('lunch_status').select('current_index, wait_minutes, wait_set_at').eq('id', 1).single();
-        if(s) { 
-            currentIdx = s.current_index; 
-            updateTVUI(s.current_index); 
-            updateWaitTimeUI(s.wait_minutes, s.wait_set_at);
-        }
+        // 급식 현황 불러오기
+        try {
+            const { data: s } = await supabaseClient.from('lunch_status').select('current_index').eq('id', 1).single();
+            if(s) { 
+                currentIdx = s.current_index; 
+                updateTVUI(s.current_index); 
+            }
+        } catch(e) { console.log(e); }
         
-        const { data: nList } = await supabaseClient.from('announcements').select('*');
-        if(nList) {
-            nList.forEach(n => {
-                if(n.id === 1) document.getElementById('tvNotice').innerText = n.content;
-                if(n.id === 2) handlePopup(n.content);
-                if(n.id === 3) document.documentElement.style.fontSize = n.content + '%'; 
-            });
-        }
+        // 공지 및 팝업 불러오기
+        try {
+            const { data: nList } = await supabaseClient.from('announcements').select('*');
+            if(nList) {
+                nList.forEach(n => {
+                    if(n.id === 1) document.getElementById('tvNotice').innerText = n.content;
+                    if(n.id === 2) handlePopup(n.content);
+                    if(n.id === 3) document.documentElement.style.fontSize = n.content + '%'; 
+                });
+            }
+        } catch(e) { console.log(e); }
         
-        const d = new Date().toISOString().slice(0,10).replace(/-/g, '');
+        // 💡 KST (한국 표준시) 기준으로 오늘 날짜 포맷 계산 (오전 9시 이전 어제 식단 나오는 문제 해결)
+        const curr = new Date();
+        const utc = curr.getTime() + (curr.getTimezoneOffset() * 60 * 1000);
+        const kstDate = new Date(utc + (9 * 60 * 60 * 1000));
+        const d = kstDate.toISOString().split('T')[0].replace(/-/g, '');
+        
         try {
             const res = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=H10&SD_SCHUL_CODE=7480070&MLSV_YMD=${d}`);
             const data = await res.json();
@@ -296,7 +297,6 @@
     supabaseClient.channel('tv').on('postgres_changes', { event: 'UPDATE', schema: 'public' }, p => {
         if (p.table === 'lunch_status') {
             updateTVUI(p.new.current_index);
-            updateWaitTimeUI(p.new.wait_minutes, p.new.wait_set_at);
         }
         if (p.table === 'announcements') {
             if (p.new.id === 1) document.getElementById('tvNotice').innerText = p.new.content;
